@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Build outputs
+client/build/
+
+# Environment and secrets
+serviceAccountKey.json
+.env
+
+# Lock files (students will generate their own)
+package-lock.json
+client/package-lock.json
+
+# System files
+**/.DS_Store
+
+# Codespaces
+.vscode/settings.json
+.vscode/launch.json
