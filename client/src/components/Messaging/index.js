@@ -1,243 +1,141 @@
 import * as React from 'react';
-import ReviewTitle from './ReviewTitle';
-import ReviewBody from './ReviewBody';
-import ReviewRating from './ReviewRating';
-import MovieSelection from './MovieSelection';
-import NavBar from '../App/NavBar';
-//import all necessary libraries here, e.g., Material-UI Typography, as follows
-import Grid from '@mui/material/Grid'
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box'
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
 import { useTheme } from '@mui/material/styles';
+import ConversationList from './ConversationList';
+import MessageList from './MessageList';
+import MessageInput from './MessageInput';
+
+// Mock data - replace with API calls to your backend
+const MOCK_CONVERSATIONS = [
+  { id: '1', name: 'Alice Chen', lastMessage: 'Thanks for the update!', lastMessageAt: '10:30 AM', unread: 2 },
+  { id: '2', name: 'Bob Smith', lastMessage: 'See you tomorrow', lastMessageAt: 'Yesterday', unread: 0 },
+  { id: '3', name: 'Carol Jones', lastMessage: 'Can we reschedule?', lastMessageAt: 'Mon', unread: 1 },
+];
+
+const MOCK_MESSAGES = {
+  '1': [
+    { id: 'm1', text: 'Hey, how are you?', senderId: 'currentUser', timestamp: '10:25 AM' },
+    { id: 'm2', text: 'I\'m good, thanks! Working on the project.', senderId: '1', timestamp: '10:27 AM' },
+    { id: 'm3', text: 'Let me know when you have updates.', senderId: 'currentUser', timestamp: '10:28 AM' },
+    { id: 'm4', text: 'Thanks for the update!', senderId: '1', timestamp: '10:30 AM' },
+  ],
+  '2': [
+    { id: 'm5', text: 'Meeting at 3pm?', senderId: 'currentUser', timestamp: 'Yesterday' },
+    { id: 'm6', text: 'See you tomorrow', senderId: '2', timestamp: 'Yesterday' },
+  ],
+  '3': [
+    { id: 'm7', text: 'Are we still on for Friday?', senderId: '3', timestamp: 'Mon' },
+    { id: 'm8', text: 'Can we reschedule?', senderId: '3', timestamp: 'Mon' },
+  ],
+};
 
 const Messaging = () => {
   const theme = useTheme();
+  const [conversations, setConversations] = React.useState(MOCK_CONVERSATIONS);
+  const [messages, setMessages] = React.useState(MOCK_MESSAGES);
+  const [selectedConversationId, setSelectedConversationId] = React.useState('1');
 
-  //states declarations
-  const [movies, setMovies] = React.useState([]);
-  
-  const[selectedMovie, setSelectedMovie] = React.useState('');
-  const[error, setError] = React.useState(false);
+  const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
+  const currentMessages = messages[selectedConversationId] || [];
 
-  const [enteredTitle, setEnteredTitle] = React.useState('')
-  const [enteredReview, setEnteredReview] = React.useState('')
-  const [selectedRating, setSelectedRating] = React.useState('')
-
-  const[titleError, setTitleError] = React.useState(false);
-  const[reviewError, setReviewError] = React.useState(false);
-  const[ratingError, setRatingError] = React.useState(false);
-
-  const[hasError, setHasError] = React.useState(true);
-
-  const[loading, setLoading]= React.useState(true);
-
-  const[userID, setUserID] = React.useState(1);
-
-    // load movie records from database
-  React.useEffect(() => {
-    loadMovies();
-  }, []);
-
-  const loadMovies = async() =>{
-    try{
-      const response = await fetch('/api/movies');
-      const data = await response.json();
-      console.log('Movies loaded:', data);
-      setMovies(data);
-      setLoading(false);
-    }catch(error){
-      console.error('Error loading movies:', error);
-      setLoading(false);
-    }
-  }
-    
-  const handleChange = (event) => {
-    setSelectedMovie(event.target.value);
-    setError(false);
+  const handleSelectConversation = (conversationId) => {
+    setSelectedConversationId(conversationId);
+    // Clear unread when selecting - in real app, call API to mark as read
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === conversationId ? { ...c, unread: 0 } : c
+      )
+    );
   };
 
-  const handleTitleChange = (event) =>{
-    setEnteredTitle(event.target.value);
-    setTitleError(false);
+  const handleSendMessage = (text) => {
+    if (!text.trim()) return;
+
+    const newMessage = {
+      id: `m${Date.now()}`,
+      text: text.trim(),
+      senderId: 'currentUser',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setMessages((prev) => ({
+      ...prev,
+      [selectedConversationId]: [...(prev[selectedConversationId] || []), newMessage],
+    }));
+
+    // Update last message in conversation list
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === selectedConversationId
+          ? { ...c, lastMessage: text.trim(), lastMessageAt: newMessage.timestamp, unread: 0 }
+          : c
+      )
+    );
   };
-
-  const handleReviewChange = (event) =>{
-    setEnteredReview(event.target.value);
-    setReviewError(false);
-  };
-
-  const handleRatingChange = (event) =>{
-    setSelectedRating(event.target.value);
-    setRatingError(false);
-  };
-
-
-  const handleSubmit = async (event) => {
-    let hasError = false;
-    if(!selectedMovie){
-      setError(true);
-      hasError = true;
-    }else{
-      setError(false);
-    }
-
-    if(!enteredTitle){
-      setTitleError(true);
-      hasError = true;
-    }else{
-      setTitleError(false);
-    }
-
-    if(!enteredReview){
-      setReviewError(true);
-      hasError = true;
-    }else{
-      setReviewError(false);
-    }
-
-    if(!selectedRating){
-      setRatingError(true);
-      hasError = true;
-    }else{
-      setRatingError(false);
-    }
-    console.log('Submitted')
-
-    if(!hasError){
-      setHasError(false);
-      const selectedMovieObj = movies.find(movie => movie.name === selectedMovie);
-      const selectedMovieID = selectedMovieObj ? selectedMovieObj.id : null;
-
-      const reviewData = {
-        movieID: selectedMovieID,
-        userID: userID,
-        reviewTitle: enteredTitle,
-        reviewContent: enteredReview, 
-        reviewScore: selectedRating
-      }
-
-      console.log(reviewData);
-      try{
-        const response = await fetch('/api/reviews', {
-          method: 'POST', 
-          headers:{
-            'Content-Type': 'application/json',
-          },
-          body:JSON.stringify(reviewData)
-        });
-
-        if(!response.ok){
-          throw new Error('Failed to add review.');
-        }
-        //const newReview = await response.json();
-      }catch(error){
-        console.error('Error adding review:', error);
-        //setLoading(false);
-      }
-    }
-  }
-
-  if (loading) return <div>Loading recipes ...</div>;
 
   return (
-    <>
-    <NavBar/>
-    <Box 
-      component="section"
-        sx={{
-          width: '100%',
-          maxWidth: '600px',
-          backgroundColor: theme.palette.background.container,
-          margin: '0 auto',
-          py: 5,
-          px: 4,
-          borderRadius: 2,
-        }}
+    <Box
+      sx={{
+        display: 'flex',
+        height: 'calc(100vh - 64px)',
+        minHeight: 400,
+        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+      }}
     >
-      <Grid 
-        container 
-        spacing={2} 
-        direction ="column"
-        px={2}
-        sx={{ py: 2 , maxWidth: '600px', backgroundColor: theme.palette.container.main, margin: '0 auto', borderRadius: 2}}
-        
+      <Paper
+        elevation={0}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: 360,
+          minWidth: 280,
+          borderRight: 1,
+          borderColor: 'divider',
+          backgroundColor: 'background.paper',
+        }}
       >
-        <Grid item xs={12} sx={{ width: '100%' }}>
-          <Typography variant="h3">Review a Movie</Typography>
-        </Grid>
-        <Grid item xs={12} >
-          <MovieSelection 
-            movies = {movies}
-            selectedMovie = {selectedMovie}
-            handleChange = {handleChange}
-          />
-          {error &&
-            <Typography color="red" sx={{ mt: 1 }}>
-              Select your movie
-            </Typography>
-          }
-        </Grid>
-        
-        <Grid item xs={12}>
-          <ReviewTitle 
-            enteredTitle = {enteredTitle}
-            handleTitleChange = {handleTitleChange}
-          />
-          {titleError &&
-            <Typography color="red" sx={{ mt: 1 }}>
-              Enter your review title
-            </Typography>
-          }
-        </Grid>
-        <Grid item xs={12}>
-          <ReviewBody
-            enteredReview = {enteredReview}
-            handleReviewChange={handleReviewChange}
-          />
-          {reviewError &&
-            <Typography color="red" sx={{ mt: 1 }}>
-              Enter your review
-            </Typography>
-          }
-        </Grid>
-        <Grid item xs={12}>
-          <ReviewRating
-            selectedRating = {selectedRating}
-            handleRatingChange={handleRatingChange}
-          />
-          {ratingError &&
-            <Typography color="red" sx={{ mt: 1 }}>
-              Select the rating
-            </Typography>
-          }
-        </Grid>
-        <Grid item xs={12}>
-          <Button 
-            id = "submit-button"
-            variant="contained"
-            onClick={handleSubmit}
-            sx={{ mb: 2 }}
-          >Submit
-          </Button>
-          {!hasError &&
-            <>
-              <Typography id="confirmation-message" sx={{ mt: 1 }}>
-                Your review has been received
-              </Typography>
-              <Typography>Movie: {selectedMovie}</Typography>
-              <Typography>Review Title: {enteredTitle}</Typography>
-              <Typography>Review Body: {enteredReview}</Typography>
-              <Typography>Rating: {selectedRating}</Typography>
-            </>
-          }
-        </Grid>
-      </Grid>
+        <ConversationList
+          conversations={conversations}
+          selectedId={selectedConversationId}
+          onSelect={handleSelectConversation}
+        />
+      </Paper>
+
+      <Paper
+        elevation={0}
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+          backgroundColor: 'background.default',
+        }}
+      >
+        {selectedConversation ? (
+          <>
+            <MessageList
+              conversationName={selectedConversation.name}
+              messages={currentMessages}
+            />
+            <MessageInput onSend={handleSendMessage} />
+          </>
+        ) : (
+          <Box
+            sx={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'text.secondary',
+            }}
+          >
+            Select a conversation to start messaging
+          </Box>
+        )}
+      </Paper>
     </Box>
-
-
-    </>
   );
-}
+};
 
 export default Messaging;
