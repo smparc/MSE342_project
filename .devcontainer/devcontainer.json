@@ -7,6 +7,12 @@
     "vncPort": "5901"
     }
   },
+
+    "remoteEnv": {
+    "DISPLAY": ":1",
+    "CYPRESS_CACHE_FOLDER": "/home/node/.cache/Cypress"
+  },
+
   "postCreateCommand": "bash ./install-dependencies.sh",
   "forwardPorts": [3000, 6080],
   "portsAttributes": {
