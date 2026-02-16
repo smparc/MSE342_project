@@ -44,7 +44,7 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
                     height: 48,
                   }}
                 >
-                  {conv.name.charAt(0)}
+                  {conv.senderName.charAt(0)}
                 </Avatar>
               </Badge>
               <ListItemText
@@ -55,7 +55,7 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
                       fontWeight={conv.unread > 0 ? 600 : 400}
                       noWrap
                     >
-                      {conv.name}
+                      {conv.senderName}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {conv.lastMessageAt}

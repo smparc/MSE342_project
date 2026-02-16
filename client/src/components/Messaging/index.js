@@ -32,12 +32,28 @@ const MOCK_MESSAGES = {
 
 const Messaging = () => {
   const theme = useTheme();
-  const [conversations, setConversations] = React.useState(MOCK_CONVERSATIONS);
+  const [conversations, setConversations] = React.useState('');
   const [messages, setMessages] = React.useState(MOCK_MESSAGES);
   const [selectedConversationId, setSelectedConversationId] = React.useState('1');
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
   const currentMessages = messages[selectedConversationId] || [];
+
+  React.useEffect(() => {
+    loadMessages();
+  }, []);
+
+  const loadMessages = async() =>{
+    try{
+      const response = await fetch(`/api/messages-list?userId=1`);
+      const data = await response.json();
+      console.log('Messages loaded:', data);
+      const list = data.map((c) => ({ ...c, name: c.senderName }));
+      setConversations(list);
+    }catch(error){
+      console.error('Error loading messages:', error);
+    }
+  }
 
   const handleSelectConversation = (conversationId) => {
     setSelectedConversationId(conversationId);
