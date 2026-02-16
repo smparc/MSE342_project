@@ -78,7 +78,7 @@ const Messaging = () => {
     <Box
       sx={{
         display: 'flex',
-        height: 'calc(100vh - 64px)',
+        height: 'calc(100vh - 56px)', // Account for bottom nav bar
         minHeight: 400,
         backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
       }}
