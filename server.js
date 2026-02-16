@@ -1,4 +1,4 @@
-import mysql from 'mysql';
+import mysql from 'mysql2';
 import config from './config.js';
 import express from 'express';
 import path from 'path';
@@ -36,7 +36,7 @@ app.get('/api/messages-list', (req, res) => {
     const sql = `
         SELECT 
             c.id,
-            CASE WHEN c.user1_id = ? THEN u2.name ELSE u1.name END,
+            CASE WHEN c.user1_id = ? THEN u2.name ELSE u1.name END AS senderName,
             last_msg.content AS lastMessage,
             last_msg.created_at AS lastMessageAt,
             COALESCE(unread.cnt, 0) AS unread
