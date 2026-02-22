@@ -1,67 +1,96 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import ConversationList from './ConversationList';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 
-// Mock data - replace with API calls to your backend
-const MOCK_CONVERSATIONS = [
-  { id: '1', name: 'Alice Chen', lastMessage: 'Thanks for the update!', lastMessageAt: '10:30 AM', unread: 2 },
-  { id: '2', name: 'Bob Smith', lastMessage: 'See you tomorrow', lastMessageAt: 'Yesterday', unread: 0 },
-  { id: '3', name: 'Carol Jones', lastMessage: 'Can we reschedule?', lastMessageAt: 'Mon', unread: 1 },
-];
+// Current user id - matches userId used for conversation list (replace with auth when available)
+const CURRENT_USER_ID = 2;
 
-const MOCK_MESSAGES = {
-  '1': [
-    { id: 'm1', text: 'Hey, how are you?', senderId: 'currentUser', timestamp: '10:25 AM' },
-    { id: 'm2', text: 'I\'m good, thanks! Working on the project.', senderId: '1', timestamp: '10:27 AM' },
-    { id: 'm3', text: 'Let me know when you have updates.', senderId: 'currentUser', timestamp: '10:28 AM' },
-    { id: 'm4', text: 'Thanks for the update!', senderId: '1', timestamp: '10:30 AM' },
-  ],
-  '2': [
-    { id: 'm5', text: 'Meeting at 3pm?', senderId: 'currentUser', timestamp: 'Yesterday' },
-    { id: 'm6', text: 'See you tomorrow', senderId: '2', timestamp: 'Yesterday' },
-  ],
-  '3': [
-    { id: 'm7', text: 'Are we still on for Friday?', senderId: '3', timestamp: 'Mon' },
-    { id: 'm8', text: 'Can we reschedule?', senderId: '3', timestamp: 'Mon' },
-  ],
+const formatMessageTimestamp = (createdAt) => {
+  if (!createdAt) return '';
+  const d = new Date(createdAt);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  if (isToday) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
 
 const Messaging = () => {
   const theme = useTheme();
   const [conversations, setConversations] = React.useState([]);
-  const [messages, setMessages] = React.useState(MOCK_MESSAGES);
-  const [selectedConversationId, setSelectedConversationId] = React.useState('1');
+  const [messages, setMessages] = React.useState({});
+  const [selectedConversationId, setSelectedConversationId] = React.useState(null);
+  const [messagesLoading, setMessagesLoading] = React.useState(false);
+  const [listLoadError, setListLoadError] = React.useState(false);
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
   const currentMessages = messages[selectedConversationId] || [];
 
   React.useEffect(() => {
-    loadMessages();
+    loadConversationList();
   }, []);
 
-  const loadMessages = async () => {
-    try {
-      const response = await fetch(`/api/messages-list?userId=2`);
-      const data = await response.json();
-      console.log('Messages loaded:', data);
-      const list = data.map((c) => ({ ...c, name: c.senderName }));
-      setConversations(list);
-    } catch (error) {
-      console.error('Error loading messages:', error);
+  React.useEffect(() => {
+    if (selectedConversationId) {
+      loadConversationMessages(selectedConversationId);
     }
-  }
+  }, [selectedConversationId]);
+
+  const loadConversationList = async () => {
+    setListLoadError(false);
+    try {
+      const response = await fetch(`/api/messages-list?userId=${CURRENT_USER_ID}`);
+      const data = await response.json();
+      if (!response.ok || !Array.isArray(data)) {
+        setConversations([]);
+        setListLoadError(true);
+        return;
+      }
+      setConversations(data);
+    } catch (error) {
+      console.error('Error loading conversation list:', error);
+      setConversations([]);
+      setListLoadError(true);
+    }
+  };
+
+  const loadConversationMessages = async (conversationId) => {
+    setMessagesLoading(true);
+    try {
+      const response = await fetch(
+        `/api/conversations/${conversationId}/messages?userId=${CURRENT_USER_ID}`
+      );
+      const data = await response.json();
+      if (!response.ok || !Array.isArray(data)) {
+        setMessages((prev) => ({ ...prev, [conversationId]: [] }));
+        return;
+      }
+      const mapped = data.map((msg) => ({
+        id: msg.id,
+        text: msg.content,
+        senderId: String(msg.senderId) === String(CURRENT_USER_ID) ? 'currentUser' : String(msg.senderId),
+        timestamp: formatMessageTimestamp(msg.created_at),
+      }));
+      setMessages((prev) => ({ ...prev, [conversationId]: mapped }));
+    } catch (error) {
+      console.error('Error loading conversation messages:', error);
+      setMessages((prev) => ({ ...prev, [conversationId]: [] }));
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
 
   const handleSelectConversation = (conversationId) => {
     setSelectedConversationId(conversationId);
-    // Clear unread when selecting - in real app, call API to mark as read
     setConversations((prev) =>
-      prev.map((c) =>
-        c.id === conversationId ? { ...c, unread: 0 } : c
-      )
+      prev.map((c) => (c.id === conversationId ? { ...c, unread: 0 } : c))
     );
   };
 
@@ -89,6 +118,28 @@ const Messaging = () => {
       )
     );
   };
+
+  if (listLoadError) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: 'calc(100vh - 56px)',
+          minHeight: 400,
+          backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+          p: 3,
+        }}
+      >
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            Messages failed to load. Please try again later.
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -131,8 +182,9 @@ const Messaging = () => {
         {selectedConversation ? (
           <>
             <MessageList
-              conversationName={selectedConversation.name}
+              conversationName={selectedConversation.senderName || selectedConversation.name || 'Unknown'}
               messages={currentMessages}
+              loading={messagesLoading}
             />
             <MessageInput onSend={handleSendMessage} />
           </>

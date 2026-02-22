@@ -20,11 +20,9 @@ app.use(express.static(path.join(__dirname, "client/build")));
 // GET /api/movies - retrieve all movies from database  
 // POST /api/reviews - create a new movie review
 
-// GET /api/messages-list - retrieve conversation list for display
-// Query param: userId (required) - current logged-in user's id
+// 1) GET /api/messages-list - conversation list (left sidebar)
+// Query param: userId (required)
 // Returns: [{ id, senderName, lastMessage, lastMessageAt, unread }]
-// Expected schema: conversations(id, user1_id, user2_id), messages(conversation_id, sender_id, content, created_at, is_read), users(id, name)
-// Adjust table/column names if your schema differs.
 app.get('/api/messages-list', (req, res) => {
     const userId = req.query.userId;
     if (!userId) {
@@ -75,6 +73,41 @@ app.get('/api/messages-list', (req, res) => {
                 unread: Number(row.unread) || 0,
             }));
             res.json(list);
+        }
+        connection.end();
+    });
+});
+
+// 2) GET /api/conversations/:conversationId/messages - messages in selected conversation
+// Query param: userId (optional, for future read receipts)
+// Returns: [{ id, senderId, senderName, content, created_at }]
+app.get('/api/conversations/:conversationId/messages', (req, res) => {
+    const { conversationId } = req.params;
+    const userId = req.query.userId;
+
+    const connection = mysql.createConnection(config);
+
+    const sql = `
+        SELECT m.id, m.sender_id AS senderId, u.name AS senderName, m.content, m.created_at
+        FROM messages m
+        JOIN users u ON u.id = m.sender_id
+        WHERE m.conversation_id = ?
+        ORDER BY m.created_at ASC
+    `;
+
+    connection.query(sql, [conversationId], (err, results) => {
+        if (err) {
+            console.error('Error fetching conversation messages:', err);
+            res.status(500).json({ error: 'Failed to retrieve messages' });
+        } else {
+            const messages = results.map((row) => ({
+                id: String(row.id),
+                senderId: String(row.senderId),
+                senderName: row.senderName,
+                content: row.content,
+                created_at: row.created_at,
+            }));
+            res.json(messages);
         }
         connection.end();
     });

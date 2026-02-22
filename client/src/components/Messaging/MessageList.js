@@ -5,7 +5,7 @@ import Paper from '@mui/material/Paper';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 
-const MessageList = ({ conversationName, messages }) => {
+const MessageList = ({ conversationName, messages, loading }) => {
   const messageListRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -29,6 +29,11 @@ const MessageList = ({ conversationName, messages }) => {
           {conversationName}
         </Typography>
       </Box>
+      {loading ? (
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+          <Typography variant="body2" color="text.secondary">Loading messages…</Typography>
+        </Box>
+      ) : (
       <List
         ref={messageListRef}
         sx={{
@@ -86,6 +91,7 @@ const MessageList = ({ conversationName, messages }) => {
           })
         )}
       </List>
+      )}
     </>
   );
 };
