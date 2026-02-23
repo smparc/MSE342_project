@@ -1,7 +1,24 @@
 {
   "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
   "features": {
+    "ghcr.io/devcontainers/features/desktop-lite:1": {
+    "password": "vscode",
+    "webPort": "6080",
+    "vncPort": "5901"
+    }
   },
+
+    "remoteEnv": {
+    "DISPLAY": ":1",
+    "CYPRESS_CACHE_FOLDER": "/home/node/.cache/Cypress"
+  },
+
   "postCreateCommand": "bash ./install-dependencies.sh",
-  "forwardPorts": [3000]
+  "forwardPorts": [3000, 6080],
+  "portsAttributes": {
+    "6080": {
+    "label": "Desktop (noVNC)",
+    "onAutoForward": "silent"
+    }
+  }
 }
