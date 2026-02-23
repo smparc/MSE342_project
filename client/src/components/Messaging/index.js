@@ -11,6 +11,14 @@ import { formatMessageTimestamp } from './utils';
 // Current user id - matches userId used for conversation list (replace with auth when available)
 const CURRENT_USER_ID = 2;
 
+const sortConversationsByLastActive = (list) => {
+  return [...list].sort((a, b) => {
+    const timeA = new Date(a.lastMessageAt || 0).getTime();
+    const timeB = new Date(b.lastMessageAt || 0).getTime();
+    return timeB - timeA; // most recent first
+  });
+};
+
 const Messaging = () => {
   const theme = useTheme();
   const [conversations, setConversations] = React.useState([]);
@@ -32,6 +40,11 @@ const Messaging = () => {
     }
   }, [selectedConversationId]);
 
+  React.useEffect(() => {
+    const interval = setInterval(loadConversationList, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const loadConversationList = async () => {
     setListLoadError(false);
     try {
@@ -42,7 +55,7 @@ const Messaging = () => {
         setListLoadError(true);
         return;
       }
-      setConversations(data);
+      setConversations(sortConversationsByLastActive(data));
     } catch (error) {
       console.error('Error loading conversation list:', error);
       setConversations([]);
@@ -68,6 +81,7 @@ const Messaging = () => {
         timestamp: formatMessageTimestamp(msg.created_at),
       }));
       setMessages((prev) => ({ ...prev, [conversationId]: mapped }));
+      loadConversationList();
     } catch (error) {
       console.error('Error loading conversation messages:', error);
       setMessages((prev) => ({ ...prev, [conversationId]: [] }));
@@ -116,10 +130,12 @@ const Messaging = () => {
       }));
 
       setConversations((prev) =>
-        prev.map((c) =>
-          c.id === selectedConversationId
-            ? { ...c, lastMessage: content, lastMessageAt: newMessage.timestamp, unread: 0 }
-            : c
+        sortConversationsByLastActive(
+          prev.map((c) =>
+            c.id === selectedConversationId
+              ? { ...c, lastMessage: content, lastMessageAt: data.created_at, unread: 0 }
+              : c
+          )
         )
       );
     } catch (error) {
