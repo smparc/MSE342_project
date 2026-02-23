@@ -19,21 +19,17 @@ const Profile = () => {
                 alignItems={'center'}
                 // justifyContent={'center'}
                 sx={{minHeight: '100vh'}}
-                
-            >
+                >
 
                 <Grid item>
                         <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
                 </Grid>
+
                 <Grid item width={'75%'}>
                     <Divider variant="middle" />
                 </Grid>
-
+                
             </Grid>
-
-
-
-
         </>
     )
 
