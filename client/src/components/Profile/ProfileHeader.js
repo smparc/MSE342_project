@@ -23,11 +23,12 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                 {/* later move container to index and add this profile header as an item */}
                 {/* profile card */}
                 <Grid item xs={12} sm={10} md={8} lg={7}
-                    sx={{ border: '2px solid brown' }}>
+                    // sx={{ border: '2px solid brown' }}
+                    >
 
 
                     <Grid container
-                        columnGap={'30px'}
+                        columnGap={'40px'}
                         rowGap={'30px'}
                         direction={{ xs: 'column', sm: 'row' }}
                         alignItems={{ xs: 'center', sm: 'stretch' }}
@@ -92,7 +93,8 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                                     height: '44px',
                                     textTransform: 'none',
                                     color: 'black', ":hover": { bgcolor: '#E7EAEE' },
-                                    fontWeight: '500', fontSize: '16px'
+                                    fontWeight: '500', fontSize: '16px',
+                                    borderRadius: '12px'
                                 }}
                                 disableElevation={true}
                                 onClick={() => setModalStatus(true)}>
@@ -100,9 +102,16 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                             </Button>
                         </Grid>
                         <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username}/>
-
+                        
+                        <Grid item xs={12}>
+                            <Grid container justifyContent={'space-between'} alignItems={'center'}>
+                                <Button borderRadius='30%' variant='outlined' sx={{width: '25%', ":hover": { bgcolor: '#E7EAEE'}, color: 'black'}} onClick={() => {console.log('test')}}>Program</Button>
+                                <Button borderRadius='30%' variant='outlined' sx={{width: '25%', ":hover": { bgcolor: '#E7EAEE'}, color: 'black'}} onClick={() => {console.log('test')}}>Year</Button>
+                                <Button borderRadius='30%' variant='outlined' sx={{width: '25%', ":hover": { bgcolor: '#E7EAEE'}, color: 'black'}} onClick={() => {console.log('test')}}>School</Button>
+                            </Grid>
+                        </Grid>
                     </Grid>
-
+                    
 
 
                     <Divider variant="middle" />
