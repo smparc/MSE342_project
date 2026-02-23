@@ -22,7 +22,7 @@ const Profile = () => {
                 // }}
             > */}
                 {/* display name must be first and last name */}
-                <ProfileHeader bio={bio} displayName={displayName} username={username} />
+                <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
 
 
 
