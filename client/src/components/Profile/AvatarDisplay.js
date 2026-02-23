@@ -23,17 +23,20 @@ const AvatarDisplay = ({ name }) => {
     }
 
     function stringAvatar(name) {
+        const nameParts = name.split(' ')
+        const initials = nameParts.length > 1 ? `${nameParts[0][0]}${nameParts[1][0]}` : 
+        `${nameParts[0][0]}`
         return {
             sx: {
                 bgcolor: stringToColor(name),
             },
-            children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
+            children: initials.toUpperCase(),
         };
     }
 
     return (
         // used AI to find to out that MUI Avatar has its own size and needs to be changed within this component (only changing size of parent component didnt work)
-        <Avatar {...stringAvatar(name)} sx={{width: '100%', height: '100%'}} />
+        <Avatar {...stringAvatar(name)} sx={{...stringAvatar(name).sx, width: '100%', height: '100%', fontSize: '40px', fontWeight: 700}} />
     );
 }
 

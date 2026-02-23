@@ -7,7 +7,7 @@ import { Grid } from '@mui/material'
 const Profile = () => {
 
     const [bio, setBio] = React.useState('hi this is my bio \n feel free to reach out if you have any questions about exchange!')
-    const [displayName, setDisplayName] = React.useState('Olga Vecht.')
+    const [displayName, setDisplayName] = React.useState('John Doe')
     const username = "olga.vecht"
 
 
