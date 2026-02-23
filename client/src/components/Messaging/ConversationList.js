@@ -5,7 +5,6 @@ import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
 import { formatMessageTimestamp } from './utils';
 
 const ConversationList = ({ conversations, selectedId, onSelect }) => {
@@ -33,30 +32,20 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
                 },
               }}
             >
-              <Badge
-                badgeContent={conv.unread}
-                color="primary"
-                invisible={conv.unread === 0}
-                sx={{ mr: 2 }}
+              <Avatar
+                sx={{
+                  bgcolor: isSelected ? 'primary.main' : 'grey.400',
+                  width: 48,
+                  height: 48,
+                  mr: 2,
+                }}
               >
-                <Avatar
-                  sx={{
-                    bgcolor: isSelected ? 'primary.main' : 'grey.400',
-                    width: 48,
-                    height: 48,
-                  }}
-                >
-                  {conv.senderName.charAt(0)}
-                </Avatar>
-              </Badge>
+                {(conv.senderName || '?').charAt(0)}
+              </Avatar>
               <ListItemText
                 primary={
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={conv.unread > 0 ? 600 : 400}
-                      noWrap
-                    >
+                    <Typography variant="subtitle1" noWrap>
                       {conv.senderName}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
