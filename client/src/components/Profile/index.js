@@ -2,7 +2,7 @@ import * as React from 'react'
 // import Biography from './Biography'
 import Avatar from './AvatarDisplay'
 import ProfileHeader from './ProfileHeader'
-import { Grid } from '@mui/material'
+import { Grid, Divider } from '@mui/material'
 
 const Profile = () => {
 
@@ -13,20 +13,24 @@ const Profile = () => {
 
     return (
         <>
-            {/* entire screen */}
-            {/* <Grid container
+
+            <Grid container
+                direction={'column'}
+                alignItems={'center'}
                 // justifyContent={'center'}
-                // sx={{
-                //     minHeight: '100vh',
-                //     bgcolor: 'lightgrey'
-                // }}
-            > */}
-                {/* display name must be first and last name */}
-                <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
+                sx={{minHeight: '100vh'}}
+                
+            >
 
+                <Grid item>
+                        <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
+                </Grid>
+                <Grid item width={'75%'}>
+                    <Divider variant="middle" />
+                </Grid>
 
+            </Grid>
 
-            {/* </Grid> */}
 
 
 
