@@ -6,21 +6,10 @@ import { useTheme } from '@mui/material/styles';
 import ConversationList from './ConversationList';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import { formatMessageTimestamp } from './utils';
 
 // Current user id - matches userId used for conversation list (replace with auth when available)
 const CURRENT_USER_ID = 2;
-
-const formatMessageTimestamp = (createdAt) => {
-  if (!createdAt) return '';
-  const d = new Date(createdAt);
-  const now = new Date();
-  const isToday = d.toDateString() === now.toDateString();
-  if (isToday) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-};
 
 const Messaging = () => {
   const theme = useTheme();

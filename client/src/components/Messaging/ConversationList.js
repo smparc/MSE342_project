@@ -6,6 +6,8 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
+import { formatMessageTimestamp } from './utils';
+
 const ConversationList = ({ conversations, selectedId, onSelect }) => {
   return (
     <Box sx={{ flex: 1, overflow: 'auto' }}>
@@ -58,7 +60,7 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
                       {conv.senderName}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {conv.lastMessageAt}
+                      {formatMessageTimestamp(conv.lastMessageAt)}
                     </Typography>
                   </Box>
                 }

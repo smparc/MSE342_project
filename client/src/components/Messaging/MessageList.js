@@ -43,7 +43,6 @@ const MessageList = ({ conversationName, messages, loading }) => {
           px: 2,
           display: 'flex',
           flexDirection: 'column',
-          gap: 1,
         }}
       >
         {messages.length === 0 ? (
@@ -51,14 +50,17 @@ const MessageList = ({ conversationName, messages, loading }) => {
             No messages yet. Start the conversation!
           </Typography>
         ) : (
-          messages.map((msg) => {
+          messages.map((msg, index) => {
             const isOwn = msg.senderId === 'currentUser';
+            const prevSameSender = index > 0 && messages[index - 1].senderId === msg.senderId;
             return (
               <ListItem
                 key={msg.id}
                 sx={{
                   justifyContent: isOwn ? 'flex-end' : 'flex-start',
                   px: 0,
+                  py: 0,
+                  mt: prevSameSender ? 0.25 : 1,
                 }}
               >
                 <Paper
@@ -70,8 +72,6 @@ const MessageList = ({ conversationName, messages, loading }) => {
                     backgroundColor: isOwn ? 'primary.main' : 'action.hover',
                     color: isOwn ? 'primary.contrastText' : 'text.primary',
                     borderRadius: 2,
-                    borderTopRightRadius: isOwn ? 0 : 2,
-                    borderTopLeftRadius: isOwn ? 2 : 0,
                   }}
                 >
                   <Typography variant="body1">{msg.text}</Typography>
