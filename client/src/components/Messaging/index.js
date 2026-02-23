@@ -94,29 +94,48 @@ const Messaging = () => {
     );
   };
 
-  const handleSendMessage = (text) => {
-    if (!text.trim()) return;
+  const handleSendMessage = async (text) => {
+    const content = text.trim();
+    if (!content || !selectedConversationId) return;
 
-    const newMessage = {
-      id: `m${Date.now()}`,
-      text: text.trim(),
-      senderId: 'currentUser',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
+    try {
+      const response = await fetch(
+        `/api/conversations/${selectedConversationId}/messages?userId=${CURRENT_USER_ID}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content }),
+        }
+      );
+      const data = await response.json();
 
-    setMessages((prev) => ({
-      ...prev,
-      [selectedConversationId]: [...(prev[selectedConversationId] || []), newMessage],
-    }));
+      if (!response.ok) {
+        console.error('Failed to send message:', data);
+        return;
+      }
 
-    // Update last message in conversation list
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === selectedConversationId
-          ? { ...c, lastMessage: text.trim(), lastMessageAt: newMessage.timestamp, unread: 0 }
-          : c
-      )
-    );
+      const newMessage = {
+        id: data.id,
+        text: data.content,
+        senderId: String(data.senderId) === String(CURRENT_USER_ID) ? 'currentUser' : String(data.senderId),
+        timestamp: formatMessageTimestamp(data.created_at),
+      };
+
+      setMessages((prev) => ({
+        ...prev,
+        [selectedConversationId]: [...(prev[selectedConversationId] || []), newMessage],
+      }));
+
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === selectedConversationId
+            ? { ...c, lastMessage: content, lastMessageAt: newMessage.timestamp, unread: 0 }
+            : c
+        )
+      );
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   if (listLoadError) {

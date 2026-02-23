@@ -113,4 +113,56 @@ app.get('/api/conversations/:conversationId/messages', (req, res) => {
     });
 });
 
+// 3) POST /api/conversations/:conversationId/messages - send a new message
+// Body: { content }
+// Query: userId (required) - sender
+// Returns: { id, senderId, senderName, content, created_at }
+app.post('/api/conversations/:conversationId/messages', (req, res) => {
+    const { conversationId } = req.params;
+    const userId = req.query.userId;
+    const { content } = req.body;
+
+    if (!userId || content == null || String(content).trim() === '') {
+        return res.status(400).json({ error: 'userId and content are required' });
+    }
+
+    const connection = mysql.createConnection(config);
+
+    const insertSql = `
+        INSERT INTO messages (conversation_id, sender_id, content)
+        VALUES (?, ?, ?)
+    `;
+    connection.query(insertSql, [conversationId, userId, String(content).trim()], (err, result) => {
+        if (err) {
+            console.error('Error inserting message:', err);
+            res.status(500).json({ error: 'Failed to send message' });
+            connection.end();
+            return;
+        }
+
+        const newId = result.insertId;
+        const selectSql = `
+            SELECT m.id, m.sender_id AS senderId, u.name AS senderName, m.content, m.created_at
+            FROM messages m
+            JOIN users u ON u.id = m.sender_id
+            WHERE m.id = ?
+        `;
+        connection.query(selectSql, [newId], (selectErr, rows) => {
+            if (selectErr || !rows || rows.length === 0) {
+                res.status(500).json({ error: 'Failed to retrieve sent message' });
+            } else {
+                const row = rows[0];
+                res.status(201).json({
+                    id: String(row.id),
+                    senderId: String(row.senderId),
+                    senderName: row.senderName,
+                    content: row.content,
+                    created_at: row.created_at,
+                });
+            }
+            connection.end();
+        });
+    });
+});
+
 app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
