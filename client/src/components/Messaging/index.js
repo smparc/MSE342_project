@@ -150,7 +150,7 @@ const Messaging = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          height: 'calc(100vh - 56px)',
+          height: '100vh',
           minHeight: 400,
           backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
           p: 3,
@@ -169,7 +169,7 @@ const Messaging = () => {
     <Box
       sx={{
         display: 'flex',
-        height: 'calc(100vh - 56px)', // Account for bottom nav bar
+        height: '100vh',
         minHeight: 400,
         backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
       }}
