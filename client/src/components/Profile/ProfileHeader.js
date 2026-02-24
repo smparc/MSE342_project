@@ -31,9 +31,10 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                     direction={{ xs: 'column', sm: 'row' }}
                     alignItems={{ xs: 'center', sm: 'stretch' }}
                     // justifyContent={{xs: 'center', sm:'flex-start'}}
-                    paddingTop={'40px'}
+                    paddingTop={'60px'}
                     paddingX={'30px'}
-                    marginY={'30px'}>
+                    // paddingTop={'30px'}
+                    >
 
                     <Grid item
                     // sx={{border: '1px solid pink'}}
@@ -98,6 +99,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                             onClick={() => setModalStatus(true)}>
                             Edit Profile
                         </Button>
+                        
                     </Grid>
                     <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} />
 

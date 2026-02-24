@@ -1,10 +1,8 @@
 import * as React from 'react'
 import ProfileHeader from './ProfileHeader'
-import { Grid, Divider, Box, Tabs, Tab, Typography } from '@mui/material'
-import grid from '../../images/squares-four.png'
-import books from '../../images/books.png'
-import star from '../../images/star.png'
+import { Grid, Divider, Typography } from '@mui/material'
 import SectionTab from './SectionTab'
+import UploadContent from './UploadContent'
 
 
 const Profile = () => {
@@ -15,8 +13,8 @@ const Profile = () => {
 
     const [tabIndex, setTabIndex] = React.useState(0)
 
-    
-    
+
+
     return (
         <>
 
@@ -24,15 +22,15 @@ const Profile = () => {
                 direction={'column'}
                 alignItems={'center'}
                 // justifyContent={'center'}
-                sx={{minHeight: '100vh'}}
-                // rowGap={'20px'}
-                >
+                sx={{ minHeight: '95vh' }}
+            // rowGap={'20px'}
+            >
 
                 <Grid item>
-                        <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
+                    <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
                 </Grid>
 
-                <Grid item mt={'20px'}>
+                <Grid item mt={'20px'} paddingTop={'20px'}>
                     <SectionTab tabIndex={tabIndex} setTabIndex={setTabIndex} />
                 </Grid>
 
@@ -40,10 +38,16 @@ const Profile = () => {
                     <Divider variant="middle" />
                 </Grid>
 
-                {tabIndex === 0 && <Typography>This will display posts</Typography>}
-                {tabIndex === 1 && <Typography>This will display courses</Typography>}
-                {tabIndex === 2 && <Typography>This will display ratings</Typography>}
-            
+                <Grid container
+                    direction={'column'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                    flexGrow={1}
+                    rowSpacing={0.5}>
+                    {tabIndex === 0 && <UploadContent />}
+                    {tabIndex === 1 && <Typography>This will display courses</Typography>}
+                    {tabIndex === 2 && <Typography>This will display ratings</Typography>}
+                </Grid>
             </Grid>
         </>
     )
