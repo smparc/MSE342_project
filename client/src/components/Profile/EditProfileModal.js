@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
 
 
 // skipping dialog content text for now
 
-const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio, setBio, username }) => {
+const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio, setBio, username, profileChanged, setProfileChanged }) => {
 
 
     const [tempName, setTempName] = React.useState(displayName)
@@ -22,6 +22,7 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
 
         setDisplayName(tempName)
         setBio(tempBio)
+        setProfileChanged(true)
 
         handleClose()
     }

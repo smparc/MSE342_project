@@ -1,6 +1,6 @@
 import * as React from 'react'
 import ProfileHeader from './ProfileHeader'
-import { Grid, Divider, Typography } from '@mui/material'
+import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ListItemSecondaryAction } from '@mui/material'
 import SectionTab from './SectionTab'
 import UploadContent from './UploadContent'
 
@@ -12,7 +12,7 @@ const Profile = () => {
     const username = "olga.vecht"
 
     const [tabIndex, setTabIndex] = React.useState(0)
-
+    const [files, setFiles] = React.useState([])
 
 
     return (
@@ -43,12 +43,21 @@ const Profile = () => {
                     justifyContent={'center'}
                     alignItems={'center'}
                     flexGrow={1}
-                    rowSpacing={0.5}>
-                    {tabIndex === 0 && <UploadContent />}
+                    rowSpacing={1.3}>
+                    {tabIndex === 0 && <UploadContent files={files} setFiles={setFiles}/>}
                     {tabIndex === 1 && <Typography>This will display courses</Typography>}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}
                 </Grid>
+
+                {/* <ImageList sx={{width: 500, height: 450 }} cols={3} rowHeight={164} >
+                    {files.map((item) => (
+                        <ImageListItem key={item.img}>
+                            <img 
+                        </ImageListItem>
+                    ))}
+                </ImageList> */}
             </Grid>
+            
         </>
     )
 
