@@ -31,7 +31,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                     direction={{ xs: 'column', sm: 'row' }}
                     alignItems={{ xs: 'center', sm: 'stretch' }}
                     // justifyContent={{xs: 'center', sm:'flex-start'}}
-                    paddingTop={'30px'}
+                    paddingTop={'40px'}
                     paddingX={'30px'}
                     marginY={'30px'}>
 
