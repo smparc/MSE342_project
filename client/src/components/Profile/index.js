@@ -12,7 +12,7 @@ const Profile = () => {
     const username = "olga.vecht"
 
     const [tabIndex, setTabIndex] = React.useState(0)
-    const [files, setFiles] = React.useState([])
+    const [file, setFile] = React.useState([])
 
 
     return (
@@ -44,7 +44,7 @@ const Profile = () => {
                     alignItems={'center'}
                     flexGrow={1}
                     rowSpacing={1.3}>
-                    {tabIndex === 0 && <UploadContent files={files} setFiles={setFiles}/>}
+                    {tabIndex === 0 && <UploadContent file={file} setFil={setFile}/>}
                     {tabIndex === 1 && <Typography>This will display courses</Typography>}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}
                 </Grid>

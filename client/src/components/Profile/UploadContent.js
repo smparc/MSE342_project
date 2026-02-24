@@ -3,14 +3,22 @@ import { Grid, Box, Typography, Button, styled } from '@mui/material'
 import camera from '../../images/camera-thin.svg'
 import uploadicon from '../../images/upload-simple-light-color.svg'
 
-const UploadContent = ({files, setFiles}) => {
+const UploadContent = ({file, setFile}) => {
 
+    const [fileUrl, setFileUrl] = React.useState('')
 
-    console.log(files)
+    console.log(file)
 
-    // const handleFileUpload = (event) => {
-    //     setFiles(event.target.files)
-    // }
+    const handleFileUpload = (event) => {
+        event.preventDefault()
+        
+        const fileReader = new FileReader()
+        fileReader.onload = () => {
+            setFileUrl(fileReader.result)
+        }
+        fileReader.readAsDataURL(event.target.files[0])
+    }
+    console.log(fileUrl)
 
 
     const VisuallyHidddenInput = styled('input') ({
@@ -52,7 +60,7 @@ const UploadContent = ({files, setFiles}) => {
                 Share your first photo
                 <VisuallyHidddenInput type='file'
                     accept='image/*'
-                    onChange={(event) => setFiles(event.target.files)}
+                    onChange={handleFileUpload}
                     multiple/>
             </Button>
             </Grid>
