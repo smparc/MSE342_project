@@ -52,9 +52,9 @@ const UploadContent = ({file, setFile}) => {
             <Grid item>
             <Button component="label"
                 role={undefined}
-                variant="text"
+                variant="outlined"
                 startIcon={<Box component={'img'} src={uploadicon} alt='upload-icon' />}
-                sx={{textTransform: 'none', color: '#3143E3', fontWeight: '400', fontSize: '18px', ":hover": {bgcolor: '#FFFF'}}}
+                sx={{marginTop: '20px', p: '10px', px: '20px', textTransform: 'none', borderRadius: 3, border: '1px solid #3143E3', color: '#3143E3', fontWeight: '400', fontSize: '18px', ":hover": {bgcolor: '#3143E3', color: 'white'}}}
                 // sx={{color: 'black', bgcolor: '#F0F2F5', ":hover": { bgcolor: '#E7EAEE' }, borderRadius: '12px', textTransform: 'none', fontSize: '17px'}}
             >
                 Share your first photo

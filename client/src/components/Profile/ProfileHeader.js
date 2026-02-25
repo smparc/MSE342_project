@@ -117,13 +117,13 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                     </Grid>
                     <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} profileChanged={profileChanged} setProfileChanged={setProfileChanged} />
 
-                    <Grid item xs={12}>
+                    {/* <Grid item xs={12}>
                         <Grid container justifyContent={'space-between'} alignItems={'center'}>
                             <Button borderRadius='30%' variant='outlined' sx={{ width: '25%', ":hover": { bgcolor: '#E7EAEE' }, color: 'black' }} onClick={() => { console.log('test') }}>Program</Button>
                             <Button borderRadius='30%' variant='outlined' sx={{ width: '25%', ":hover": { bgcolor: '#E7EAEE' }, color: 'black' }} onClick={() => { console.log('test') }}>Year</Button>
                             <Button borderRadius='30%' variant='outlined' sx={{ width: '25%', ":hover": { bgcolor: '#E7EAEE' }, color: 'black' }} onClick={() => { console.log('test') }}>School</Button>
                         </Grid>
-                    </Grid>
+                    </Grid> */}
                 </Grid>
                 {/* <Divider variant="middle" /> */}
             </Grid>
