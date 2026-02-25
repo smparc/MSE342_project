@@ -15,3 +15,22 @@ export const formatMessageTimestamp = (createdAt) => {
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
   return d.toLocaleDateString([], { month: 'short', day: 'numeric', timeZone: tz });
 };
+
+export const formatDayHeader = (createdAt) => {
+  if (!createdAt) return '';
+  const d = new Date(createdAt);
+  if (isNaN(d.getTime())) return '';
+  const tz = systemTimeZone();
+  const datePart = d.toLocaleDateString([], {
+    month: 'long',
+    day: 'numeric',
+    timeZone: tz,
+  });
+  const timePart = d.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: tz,
+  });
+  return `${datePart} ${timePart}`;
+};
