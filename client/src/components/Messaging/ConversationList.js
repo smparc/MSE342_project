@@ -10,7 +10,7 @@ import { formatMessageTimestamp } from './utils';
 const ConversationList = ({ conversations, selectedId, onSelect }) => {
   return (
     <Box sx={{ flex: 1, overflow: 'auto' }}>
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ py: 1.5, px: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h6" component="h2">
           Messages
         </Typography>
@@ -25,7 +25,7 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
               onClick={() => onSelect(conv.id)}
               sx={{
                 borderBottom: 1,
-                borderColor: 'divider',
+                borderColor: 'white',
                 py: 1.5,
                 '&.Mui-selected': {
                   backgroundColor: 'action.selected',

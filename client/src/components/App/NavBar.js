@@ -59,19 +59,29 @@ const NavBar = () => {
               sx={{
                 py: 1.5,
                 px: 2,
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: expanded ? 'flex-start' : 'center',
                 '&.Mui-selected': {
                   backgroundColor: 'action.selected',
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: expanded ? 56 : 0, justifyContent: 'center' }}>
+              <ListItemIcon
+                sx={{
+                  minWidth: expanded ? 56 : 0,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  display: 'flex',
+                }}
+              >
                 <Icon fontSize="medium" />
               </ListItemIcon>
               {expanded && (
                 <ListItemText
                   primary={<Typography variant="body1">{item.label}</Typography>}
                   primaryTypographyProps={{ noWrap: true }}
+                  sx={{ py: 0, my: 0 }}
                 />
               )}
             </ListItemButton>

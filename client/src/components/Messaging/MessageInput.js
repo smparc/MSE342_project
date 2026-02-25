@@ -46,6 +46,7 @@ const MessageInput = ({ onSend }) => {
           sx={{
             '& .MuiOutlinedInput-root': {
               backgroundColor: 'background.default',
+              borderRadius: 18,
             },
           }}
         />
@@ -53,7 +54,7 @@ const MessageInput = ({ onSend }) => {
           type="submit"
           variant="contained"
           disabled={!message.trim()}
-          sx={{ flexShrink: 0, minWidth: 80 }}
+          sx={{ flexShrink: 0, minWidth: 80, height: 40, borderRadius: 18 }}
         >
           Send
         </Button>
