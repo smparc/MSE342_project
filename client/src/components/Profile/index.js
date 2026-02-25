@@ -3,6 +3,7 @@ import ProfileHeader from './ProfileHeader'
 import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ListItemSecondaryAction } from '@mui/material'
 import SectionTab from './SectionTab'
 import UploadContent from './UploadContent'
+import CourseTable from './CourseTable'
 
 
 const Profile = () => {
@@ -45,7 +46,7 @@ const Profile = () => {
                     flexGrow={1}
                     rowSpacing={1.3}>
                     {tabIndex === 0 && <UploadContent file={file} setFil={setFile}/>}
-                    {tabIndex === 1 && <Typography>This will display courses</Typography>}
+                    {tabIndex === 1 && <CourseTable />}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}
                 </Grid>
 
