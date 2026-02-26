@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 
 
 // skipping dialog content text for now
@@ -9,9 +9,18 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
 
     const [tempName, setTempName] = React.useState(displayName)
     const [tempBio, setTempBio] = React.useState(bio)
+    const [error, setError] = React.useState(false)
 
     const handleSubmit = async (event) => {
         event.preventDefault()
+
+        if (!tempName.trim() || !tempBio.trim()) { 
+            setError(true)
+            setTempName(displayName)
+            setTempBio(bio)
+            return
+        } 
+        setError(false)
 
         try {
             const response = await fetch('/api/user/1', {
@@ -87,6 +96,9 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
                             </Grid>
                         </Grid>
                     </form>
+                    <Grid item>
+                    {error && <Typography textAlign='center' color="red">All entries must have a value. Please try again.</Typography>}
+                    </Grid>
                 </DialogContent>
                 <DialogActions>
 

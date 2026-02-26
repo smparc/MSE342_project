@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography } from '@mui/material'
+import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Box } from '@mui/material'
+import trashIcon from '../../images/trash-light.svg'
+import pencilIcon from '../../images/pencil-light.svg'
 
 const CourseTable = () => {
 
@@ -10,7 +12,6 @@ const CourseTable = () => {
         { id: 3, uwCourseCode: 'MSE 431', uwCourseName: 'Optimization & Operations Planning', hostCourseCode: 'XXX111', hostCourseName: 'Not Optimization and Operations' },
         { id: 4, uwCourseCode: 'MSE 531', uwCourseName: 'Optimization & Operations Planning', hostCourseCode: 'XXX111', hostCourseName: 'Not Optimization and Operations' }
     ])
-
     const [dataFormStatus, setDataFormStatus] = React.useState(false)
 
     const [newUWCode, setNewUWCode] = React.useState('')
@@ -18,15 +19,59 @@ const CourseTable = () => {
     const [newHostCode, setNewHostCode] = React.useState('')
     const [newHostName, setNewHostName] = React.useState('')
 
+    const [error, setError] = React.useState(false)
+    const [editID, setEditID] = React.useState(null)
 
-    function handleSubmit() {
-        setDataFormStatus(false)
 
-        const newRow = {id: newUWCode, uwCourseCode: newUWCode, uwCourseName: newUWName, hostCourseCode: newHostCode, hostCourseName: newHostName }
+    function handleSubmit(event) {
+        event.preventDefault()
+        if (!newUWCode.trim() || !newUWName.trim() || !newHostCode.trim() || !newHostName.trim()) {
+            setError(true)
+            // setNewUWCode('')
+            // setNewUWName('')
+            // setNewHostCode('')
+            // setNewHostName('')
+            return
+        }
+        
+
+        if (editID) {
+            const updatedList = list.map(row => 
+                row.id === editID ?
+                {...row, uwCourseCode: newUWCode.toUpperCase().trim(), uwCourseName: newUWName.trim(), hostCourseCode: newHostCode.toUpperCase().trim(), hostCourseName: newHostName.trim()}
+                : row
+            )
+            setList(updatedList)
+        }
+
+        else {
+        const newRow = {id: Date.now(), uwCourseCode: newUWCode.toUpperCase().trim(), uwCourseName: newUWName.trim(), hostCourseCode: newHostCode.toUpperCase().trim(), hostCourseName: newHostName.trim() }
         
         setList([...list, newRow])
+        setNewUWCode('')
+        setNewUWName('')
+        setNewHostCode('')
+        setNewHostName('')
+    }
+        setEditID(null)
+        setError(false)
+        setDataFormStatus(false)
+}
+
+    function editRow(row) {
+        setEditID(row.id)
+        setNewUWCode(row.uwCourseCode)
+        setNewUWName(row.uwCourseName)
+        setNewHostCode(row.hostCourseCode)
+        setNewHostName(row.hostCourseName)
+        setDataFormStatus(true)
     }
 
+
+    function deleteRow(id) {
+        const updatedList = list.filter(row => row.id !== id)
+        setList(updatedList)
+    }
 
 
     function handleClick() {
@@ -55,6 +100,12 @@ const CourseTable = () => {
                                     <TableCell align={'left'}>{row.uwCourseName}</TableCell>
                                     <TableCell align={'center'}>{row.hostCourseCode}</TableCell>
                                     <TableCell align={'left'}>{row.hostCourseName}</TableCell>
+                                    <TableCell align={'center'} sx={{p: 0 }}>
+                                        <Button sx={{minWidth: 'auto', marginLeft: '20px'}} variant="text" onClick={() => editRow(row)}>
+                                            <Box component={'img'} src={pencilIcon} alt='pencilIcon'/></Button>
+                                        <Button sx={{minWidth: 'auto'}} variant="text" onClick={() => deleteRow(row.id)}>
+                                            <Box component={'img'} src={trashIcon} alt='trashIcon' /></Button>
+                                        </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -74,7 +125,7 @@ const CourseTable = () => {
                         <Grid item>
                             
                         <form onSubmit={handleSubmit} id='add-course-form'>
-                            <Grid container spacing={2}>
+                            <Grid container spacing={2} justifyContent={'space-between'}>
                             <Grid item xs={2}>
                             <TextField required fullWidth
                                 value={newUWCode}
@@ -112,16 +163,12 @@ const CourseTable = () => {
                         
                         </Grid>
                         <Grid item>
-                        <Button type='submit' form='add-course-form'>Add Course</Button>
+                        <Button type='submit' form='add-course-form'>{editID ? "Update Course" : "Add Course"}</Button>
                         </Grid>
+
+                        {error && <Typography color='red'>All entries must have a value. Please try again.</Typography>}
                     </Grid></>}
-
-
-
-
             </Paper>
-
-
         </>
     )
 }
