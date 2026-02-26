@@ -45,7 +45,7 @@ describe('Messaging', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\/messages-list\?userId=\d+/)
+          expect.stringMatching(/\/api\/messages-list\?username=\d+/)
         );
       });
     });
