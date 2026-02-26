@@ -12,7 +12,7 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
     const handleNext = (e) => {
         e.stopPropagation();
         if (!selectedPost || !posts || posts.length <= 1) return;
-        const currentIndex = posts.findIndex(post => post.id === selectedPost.id);
+        const currentIndex = posts.findIndex(post => post.photo_id === selectedPost.photo_id);
         if (currentIndex === -1) return;
         const nextIndex = (currentIndex + 1) % posts.length;
         setSelectedPost(posts[nextIndex]);
@@ -21,7 +21,7 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
     const handlePrevious = (e) => {
         e.stopPropagation();
         if (!selectedPost || !posts || posts.length <= 1) return;
-        const currentIndex = posts.findIndex(post => post.id === selectedPost.id);
+        const currentIndex = posts.findIndex(post => post.photo_id === selectedPost.photo_id);
         if (currentIndex === -1) return;
         const prevIndex = (currentIndex - 1 + posts.length) % posts.length;
         setSelectedPost(posts[prevIndex]);
@@ -114,10 +114,10 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
             {posts && posts.length > 0 && (
                 <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
                     {posts.map((post) => (
-                        <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px', cursor: 'pointer' }} onClick={() => setSelectedPost(post)}>
+                        <ImageListItem key={post.photo_id} sx={{ overflow: 'hidden', borderRadius: '12px', cursor: 'pointer' }} onClick={() => setSelectedPost(post)}>
                             <img
                                 src={`/${post.image_path}`}
-                                alt={`Post ${post.id}`}
+                                alt={`Post ${post.photo_id}`}
                                 loading="lazy"
                                 style={{ height: '100%', width: '100%', objectFit: 'cover' }}
                             />
@@ -161,7 +161,7 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
                     {selectedPost && (
                         <img
                             src={`/${selectedPost.image_path}`}
-                            alt={`Post ${selectedPost.id}`}
+                            alt={`Post ${selectedPost.photo_id}`}
                             loading="lazy"
                             style={{ 
                                 width: 'auto', 

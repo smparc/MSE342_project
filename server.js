@@ -68,7 +68,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
             success: true,
             message: 'File uploaded and saved to database',
             filePath: filePath,
-            postId: results.insertId
+            photoId: results.insertId
         });
     });
 });
@@ -103,7 +103,7 @@ app.put('/api/user/:username', (req, res) => {
 // API to get all posts for a user
 app.get('/api/posts/:username', (req, res) => {
     const username = req.params.username;
-    const sql = "SELECT * FROM posts WHERE username = ? ORDER BY created_at DESC";
+    const sql = "SELECT * FROM posts WHERE username = ? ORDER BY uploaded_at DESC";
     connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
