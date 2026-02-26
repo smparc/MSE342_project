@@ -4,20 +4,6 @@ import './CourseSubmit.css';
 const API = process.env.REACT_APP_API_URL || '';
 
 const CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'];
-const UW_FACULTIES = [
-  { code: 'MSCI', label: 'Management Sciences' },
-  { code: 'CS', label: 'Computer Science' },
-  { code: 'ECE', label: 'Electrical & Computer Eng.' },
-  { code: 'SYDE', label: 'Systems Design Engineering' },
-  { code: 'MATH', label: 'Mathematics' },
-  { code: 'STAT', label: 'Statistics' },
-  { code: 'BUS', label: 'Business' },
-  { code: 'ECON', label: 'Economics' },
-  { code: 'PHYS', label: 'Physics' },
-  { code: 'CHEM', label: 'Chemistry' },
-  { code: 'BIOL', label: 'Biology' },
-  { code: 'ENGL', label: 'English' },
-];
 
 const INITIAL_FORM = {
   username: '',
