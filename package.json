@@ -10,6 +10,7 @@
     "cypress:run": "cypress run"
   },
   "dependencies": {
+    "@mui/icons-material": "^7.3.8",
     "body-parser": "^2.2.2",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
