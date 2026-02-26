@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
+import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
 
 // skipping dialog content text for now
@@ -82,6 +82,7 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
                                     id='edit-bio-field'
                                     label="Bio"
                                     value={tempBio}
+                                    inputProps={{maxLength: 200}}
                                     onChange={(event) => setTempBio(event.target.value)} />
                             </Grid>
                         </Grid>
