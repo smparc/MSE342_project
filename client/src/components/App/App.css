@@ -1,0 +1,77 @@
+/* App.css — global layout */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'DM Sans', sans-serif;
+  background: #f4f5f9;
+  color: #1a1a2e;
+}
+
+.app-root { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ── Nav ── */
+.app-nav {
+  background: #1a1a2e;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.app-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  gap: 2rem;
+}
+.app-logo {
+  font-family: 'DM Serif Display', serif;
+  color: #f0b429;
+  font-size: 1.2rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.app-nav-links {
+  display: flex;
+  gap: 0.3rem;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.app-nav-links::-webkit-scrollbar { display: none; }
+.app-nav-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.65);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.45rem 0.9rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.app-nav-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.app-nav-btn.active {
+  color: #f0b429;
+  background: rgba(240,180,41,0.12);
+  font-weight: 600;
+}
+
+/* ── Main ── */
+.app-main {
+  flex: 1;
+  padding: 1.5rem 1rem;
+}
+
+@media (max-width: 480px) {
+  .app-nav-inner { gap: 1rem; padding: 0 1rem; }
+  .app-main { padding: 1rem 0.5rem; }
+}
