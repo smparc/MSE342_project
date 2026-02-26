@@ -82,24 +82,9 @@ const Profile = () => {
                     rowSpacing={1.3}
                     sx={{ mt: 2, mb: 4 }}>
                     {tabIndex === 0 && (
-                        // <>
                             <UploadContent 
                             fetchPosts={fetchPosts} posts={posts} cols={cols}
                             />
-
-                        //     <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
-                        //         {posts.map((post) => (
-                        //             <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px' }}>
-                        //                 <img
-                        //                     src={`/${post.image_path}`}
-                        //                     alt={`Post ${post.id}`}
-                        //                     loading="lazy"
-                        //                     style={{ height: '100%', width: '100%', objectFit: 'cover' }}
-                        //                 />
-                        //             </ImageListItem>
-                        //         ))}
-                        //     </ImageList>
-                        // </>
                     )}
                     {tabIndex === 1 && <CourseTable />}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}

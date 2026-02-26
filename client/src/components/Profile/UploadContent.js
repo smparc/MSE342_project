@@ -93,26 +93,45 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
                 </Button>
             </Grid>
 
-            {/* <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
-                {posts.map((post) => (
-                    <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px' }} onClick={(post) => setSelectedPost(post)}>
-                        <img
-                            src={`/${post.image_path}`}
-                            alt={`Post ${post.id}`}
-                            loading="lazy"
-                            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
-                        />
-                    </ImageListItem>
-                ))}
-            </ImageList> */}
+            {posts && posts.length > 0 && (
+                <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
+                    {posts.map((post) => (
+                        <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px', cursor: 'pointer' }} onClick={() => setSelectedPost(post)}>
+                            <img
+                                src={`/${post.image_path}`}
+                                alt={`Post ${post.id}`}
+                                loading="lazy"
+                                style={{ height: '100%', width: '100%', objectFit: 'cover' }}
+                            />
+                        </ImageListItem>
+                    ))}
+                </ImageList>
+            )}
 
-            <Modal open={selectedPost} onClose={() => setSelectedPost(null)}>
-                <img
+            <Modal open={Boolean(selectedPost)} onClose={() => setSelectedPost(null)}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 'auto',
+                    maxWidth: '90vw',
+                    maxHeight: '90vh',
+                    bgcolor: 'background.paper',
+                    boxShadow: 24,
+                    p: 4,
+                    outline: 'none',
+                    borderRadius: '12px'
+                }}>
+                    {selectedPost && (
+                        <img
                             src={`/${selectedPost.image_path}`}
                             alt={`Post ${selectedPost.id}`}
                             loading="lazy"
-                            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
+                            style={{ width: '100%', height: 'auto', display: 'block', maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }}
                         />
+                    )}
+                </Box>
             </Modal>
 
         </>
