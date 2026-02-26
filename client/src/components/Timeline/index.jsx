@@ -3,13 +3,6 @@ import './Timeline.css';
 
 const API = process.env.REACT_APP_API_URL || '';
 
-const fmtDate = (d) =>
-  d
-    ? new Date(d).toLocaleDateString('en-CA', {
-        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-      })
-    : '—';
-
 // Format date in both local EST and host timezone (AC#6)
 const fmtDualTime = (utcStr) => {
   if (!utcStr) return { est: '—', utc: '—' };
