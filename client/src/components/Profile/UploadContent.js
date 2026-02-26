@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal } from '@mui/material'
+import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal, IconButton } from '@mui/material'
+import { ChevronLeft, ChevronRight } from '@mui/icons-material'
 import camera from '../../images/camera-thin.svg'
 import uploadicon from '../../images/upload-simple-light-color.svg'
 
@@ -8,6 +9,23 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
     const [fileUrl, setFileUrl] = React.useState('')
     const [selectedPost, setSelectedPost] = React.useState(null)
 
+    const handleNext = (e) => {
+        e.stopPropagation();
+        if (!selectedPost || !posts || posts.length <= 1) return;
+        const currentIndex = posts.findIndex(post => post.id === selectedPost.id);
+        if (currentIndex === -1) return;
+        const nextIndex = (currentIndex + 1) % posts.length;
+        setSelectedPost(posts[nextIndex]);
+    };
+
+    const handlePrevious = (e) => {
+        e.stopPropagation();
+        if (!selectedPost || !posts || posts.length <= 1) return;
+        const currentIndex = posts.findIndex(post => post.id === selectedPost.id);
+        if (currentIndex === -1) return;
+        const prevIndex = (currentIndex - 1 + posts.length) % posts.length;
+        setSelectedPost(posts[prevIndex]);
+    };
 
     const handleFileUpload = async (event) => {
         event.preventDefault()
@@ -115,21 +133,58 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
                     width: 'auto',
-                    maxWidth: '90vw',
+                    maxWidth: '95vw',
                     maxHeight: '90vh',
                     bgcolor: 'background.paper',
                     boxShadow: 24,
-                    p: 4,
+                    p: 2,
                     outline: 'none',
-                    borderRadius: '12px'
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 1
                 }}>
+                    {posts && posts.length > 1 && (
+                        <IconButton
+                            onClick={handlePrevious}
+                            sx={{
+                                flexShrink: 0,
+                                bgcolor: 'rgba(0, 0, 0, 0.05)',
+                                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.1)' }
+                            }}
+                        >
+                            <ChevronLeft />
+                        </IconButton>
+                    )}
+                    
                     {selectedPost && (
                         <img
                             src={`/${selectedPost.image_path}`}
                             alt={`Post ${selectedPost.id}`}
                             loading="lazy"
-                            style={{ width: '100%', height: 'auto', display: 'block', maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+                            style={{ 
+                                width: 'auto', 
+                                height: 'auto', 
+                                display: 'block', 
+                                maxWidth: 'calc(95vw - 150px)', 
+                                maxHeight: '85vh', 
+                                objectFit: 'contain' 
+                            }}
                         />
+                    )}
+
+                    {posts && posts.length > 1 && (
+                        <IconButton
+                            onClick={handleNext}
+                            sx={{
+                                flexShrink: 0,
+                                bgcolor: 'rgba(0, 0, 0, 0.05)',
+                                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.1)' }
+                            }}
+                        >
+                            <ChevronRight />
+                        </IconButton>
                     )}
                 </Box>
             </Modal>
