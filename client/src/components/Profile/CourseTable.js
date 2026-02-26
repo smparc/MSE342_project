@@ -19,14 +19,14 @@ const CourseTable = () => {
     const [newHostCode, setNewHostCode] = React.useState('')
     const [newHostName, setNewHostName] = React.useState('')
 
-    const [error, setError] = React.useState(false)
+    const [error, setError] = React.useState('')
     const [editID, setEditID] = React.useState(null)
 
 
     function handleSubmit(event) {
         event.preventDefault()
         if (!newUWCode.trim() || !newUWName.trim() || !newHostCode.trim() || !newHostName.trim()) {
-            setError(true)
+            setError("All entries must have a value. Please try again.")
             // setNewUWCode('')
             // setNewUWName('')
             // setNewHostCode('')
@@ -45,6 +45,11 @@ const CourseTable = () => {
         }
 
         else {
+        if (list.some(row => row.uwCourseCode.trim().toUpperCase() === newUWCode.trim().toUpperCase())) {
+            setError("Duplicate course entries are not allowed. Please try again.")
+            return
+        }
+
         const newRow = {id: Date.now(), uwCourseCode: newUWCode.toUpperCase().trim(), uwCourseName: newUWName.trim(), hostCourseCode: newHostCode.toUpperCase().trim(), hostCourseName: newHostName.trim() }
         
         setList([...list, newRow])
@@ -54,7 +59,7 @@ const CourseTable = () => {
         setNewHostName('')
     }
         setEditID(null)
-        setError(false)
+        setError('')
         setDataFormStatus(false)
 }
 
@@ -166,7 +171,7 @@ const CourseTable = () => {
                         <Button type='submit' form='add-course-form'>{editID ? "Update Course" : "Add Course"}</Button>
                         </Grid>
 
-                        {error && <Typography color='red'>All entries must have a value. Please try again.</Typography>}
+                        {error && <Typography color='red'>{error}</Typography>}
                     </Grid></>}
             </Paper>
         </>
