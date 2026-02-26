@@ -1,46 +1,39 @@
-import React, { useState } from 'react';
-import CourseSearch from '../CourseSearch';
-import CourseSubmit from '../CourseSubmit';
-import Timeline from '../Timeline';
-import './App.css';
+import * as React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import NavBar, { NAV_WIDTH_COLLAPSED } from './NavBar';
+import Profile from '../Profile';
+import Search from './Search';
+import CourseEquivalency from './CourseEquivalency';
+import Messaging from '../Messaging';
 
-const DEMO_USER = 'demo_user';
+const MainLayout = ({ children }) => (
+  <Box
+    sx={{
+      minHeight: '100vh',
+      backgroundColor: 'background.default',
+      pl: `${NAV_WIDTH_COLLAPSED}px`,
+    }}
+  >
+    {children}
+  </Box>
+);
 
-const NAV_ITEMS = [
-  { id: 'search', label: '🔍 Search Courses' },
-  { id: 'upload', label: '⬆ Upload Equivalency' },
-  { id: 'timeline', label: '📅 Timeline' },
-];
-
-export default function App() {
-  const [page, setPage] = useState('search');
-
+const App = () => {
   return (
-    <div className="app-root">
-      {/* ── Top nav bar ── */}
-      <nav className="app-nav">
-        <div className="app-nav-inner">
-          <span className="app-logo">UW Exchange</span>
-          <div className="app-nav-links">
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                className={`app-nav-btn ${page === item.id ? 'active' : ''}`}
-                onClick={() => setPage(item.id)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
-
-      {/* ── Page content ── */}
-      <main className="app-main">
-        {page === 'search' && <CourseSearch currentUser={DEMO_USER} />}
-        {page === 'upload' && <CourseSubmit currentUser={DEMO_USER} />}
-        {page === 'timeline' && <Timeline currentUser={DEMO_USER} />}
-      </main>
-    </div>
+    <BrowserRouter>
+      <NavBar />
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/profile" replace />} />
+          <Route path="/messages" element={<Messaging />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/course-equivalency" element={<CourseEquivalency />} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </MainLayout>
+    </BrowserRouter>
   );
-}
+};
+
+export default App;
