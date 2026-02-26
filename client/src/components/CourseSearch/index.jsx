@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './CourseSearch.css';
 
 const API = process.env.REACT_APP_API_URL || '';
@@ -14,6 +15,7 @@ const STATUS_COLORS = {
 };
 
 export default function CourseSearch({ currentUser }) {
+  const navigate = useNavigate();
   // Search & filter state
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({ country: '', continent: '', faculty: '', term: '' });
@@ -137,10 +139,19 @@ export default function CourseSearch({ currentUser }) {
           <h1 className="cs-title">Course Equivalency Database</h1>
           <p className="cs-subtitle">Search courses matched at partner universities</p>
         </div>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <button
+          type="button"
+          className="cs-shortlist-btn"
+          onClick={() => navigate('/course-equivalency/submit')}
+        >
+          Add course
+        </button>
         <button className="cs-shortlist-btn" onClick={() => setShowSaved(true)}>
           <span className="cs-shortlist-count">{savedIds.size}</span>
           My Shortlist
         </button>
+      </div>
       </div>
 
       {/* ── Search bar ── */}
