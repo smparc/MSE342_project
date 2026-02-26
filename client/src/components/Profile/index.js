@@ -1,12 +1,18 @@
 import * as React from 'react'
 import ProfileHeader from './ProfileHeader'
-import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ImageListItem } from '@mui/material'
+import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ImageListItem, useMediaQuery, useTheme } from '@mui/material'
 import SectionTab from './SectionTab'
 import UploadContent from './UploadContent'
 import CourseTable from './CourseTable'
 
 
 const Profile = () => {
+
+    const theme = useTheme()
+    const isSmall = useMediaQuery(theme.breakpoints.down('sm'))
+    const isMedium = useMediaQuery(theme.breakpoints.down('md'))
+
+    const cols = isSmall ? 1 : isMedium ? 2 : 3
 
     const [bio, setBio] = React.useState('')
     const [displayName, setDisplayName] = React.useState('')
@@ -78,14 +84,14 @@ const Profile = () => {
                     {tabIndex === 0 && (
                         <>
                             <UploadContent fetchPosts={fetchPosts} posts={posts} />
-                            <ImageList sx={{ width: '80%', height: 'auto', mt: 4 }} cols={3} rowHeight={200} gap={8}>
+                            <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
                                 {posts.map((post) => (
-                                    <ImageListItem key={post.id}>
+                                    <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px' }}>
                                         <img
                                             src={`/${post.image_path}`}
                                             alt={`Post ${post.id}`}
                                             loading="lazy"
-                                            style={{ height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                                            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
                                         />
                                     </ImageListItem>
                                 ))}
