@@ -10,21 +10,30 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
     const [tempName, setTempName] = React.useState(displayName)
     const [tempBio, setTempBio] = React.useState(bio)
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault()
 
-        // can't change name unless form is submitted
-        // name has to change in input field but not in display
-
-        console.log('handle submit')
-        console.log(displayName)
-        console.log(bio)
-
-        setDisplayName(tempName)
-        setBio(tempBio)
-        setProfileChanged(true)
-
-        handleClose()
+        try {
+            const response = await fetch('/api/user/1', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    full_name: tempName,
+                    bio: tempBio
+                }),
+            })
+            const data = await response.json()
+            if (data.success) {
+                setDisplayName(tempName)
+                setBio(tempBio)
+                setProfileChanged(true)
+                handleClose()
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error)
+        }
     }
 
 

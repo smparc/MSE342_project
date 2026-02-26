@@ -8,16 +8,30 @@ import CourseTable from './CourseTable'
 
 const Profile = () => {
 
-    const [bio, setBio] = React.useState('hi this is my bio \n feel free to reach out if you have any questions about exchange!')
-    const [displayName, setDisplayName] = React.useState('John Doe')
-    const username = "olga.vecht"
+    const [bio, setBio] = React.useState('')
+    const [displayName, setDisplayName] = React.useState('')
+    const [username, setUsername] = React.useState('')
+
+    const userId = 1 // TODO: Replace with actual user ID from context or auth
 
     const [tabIndex, setTabIndex] = React.useState(0)
     const [posts, setPosts] = React.useState([])
 
+    const fetchUserData = React.useCallback(async () => {
+        try {
+            const response = await fetch(`/api/user/${userId}`)
+            const data = await response.json()
+            setDisplayName(data.full_name || '')
+            setBio(data.bio || '')
+            setUsername(data.username || '')
+        } catch (error) {
+            console.error('Error fetching user data:', error)
+        }
+    }, [])
+
     const fetchPosts = React.useCallback(async () => {
         try {
-            const response = await fetch('/api/posts/1') // Using hardcoded ID 1
+            const response = await fetch(`/api/posts/${userId}`)
             const data = await response.json()
             setPosts(data)
         } catch (error) {
@@ -26,8 +40,9 @@ const Profile = () => {
     }, [])
 
     React.useEffect(() => {
+        fetchUserData()
         fetchPosts()
-    }, [fetchPosts])
+    }, [fetchUserData, fetchPosts])
 
 
     return (

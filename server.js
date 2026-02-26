@@ -71,6 +71,33 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 });
 });
 
+// API to get a user
+app.get('/api/user/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const sql = "SELECT * FROM users WHERE id = ?";
+    connection.query(sql, [userId], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.send(results[0]);
+    });
+});
+
+// API to update a user
+app.put('/api/user/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const { full_name, bio } = req.body;
+    const sql = "UPDATE users SET full_name = ?, bio = ? WHERE id = ?";
+    connection.query(sql, [full_name, bio, userId], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.send({ success: true });
+    });
+});
+
 // API to get all posts for a user
 app.get('/api/posts/:userId', (req, res) => {
   const userId = req.params.userId;
