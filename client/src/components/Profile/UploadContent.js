@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal, IconButton } from '@mui/material'
+import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal, IconButton, Snackbar, Alert } from '@mui/material'
 import { ChevronLeft, ChevronRight } from '@mui/icons-material'
 import camera from '../../images/camera-thin.svg'
 import uploadicon from '../../images/upload-simple-light-color.svg'
@@ -8,6 +8,14 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
 
     const [fileUrl, setFileUrl] = React.useState('')
     const [selectedPost, setSelectedPost] = React.useState(null)
+    const [openSnackbar, setOpenSnackbar] = React.useState(false)
+
+    const handleCloseSnackbar = (event, reason) => {
+        if (reason === 'clickaway') {
+            return
+        }
+        setOpenSnackbar(false)
+    }
 
     const handleNext = (e) => {
         e.stopPropagation();
@@ -53,6 +61,7 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
             const data = await response.json()
             if (data.success) {
                 console.log('Upload successful:', data.filePath)
+                setOpenSnackbar(true)
                 // Trigger re-fetch of posts
                 if (fetchPosts) {
                     fetchPosts()
@@ -188,6 +197,12 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
                     )}
                 </Box>
             </Modal>
+
+            <Snackbar open={openSnackbar} autoHideDuration={3500} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                <Alert severity="success">
+                    Photo uploaded successfully
+                </Alert>
+            </Snackbar>
 
         </>
     )
