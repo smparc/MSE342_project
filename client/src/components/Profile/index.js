@@ -1,6 +1,6 @@
 import * as React from 'react'
 import ProfileHeader from './ProfileHeader'
-import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ListItemSecondaryAction } from '@mui/material'
+import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ImageListItem } from '@mui/material'
 import SectionTab from './SectionTab'
 import UploadContent from './UploadContent'
 import CourseTable from './CourseTable'
@@ -13,7 +13,21 @@ const Profile = () => {
     const username = "olga.vecht"
 
     const [tabIndex, setTabIndex] = React.useState(0)
-    const [file, setFile] = React.useState([])
+    const [posts, setPosts] = React.useState([])
+
+    const fetchPosts = React.useCallback(async () => {
+        try {
+            const response = await fetch('/api/posts/1') // Using hardcoded ID 1
+            const data = await response.json()
+            setPosts(data)
+        } catch (error) {
+            console.error('Error fetching posts:', error)
+        }
+    }, [])
+
+    React.useEffect(() => {
+        fetchPosts()
+    }, [fetchPosts])
 
 
     return (
@@ -44,21 +58,30 @@ const Profile = () => {
                     justifyContent={'center'}
                     alignItems={'center'}
                     flexGrow={1}
-                    rowSpacing={1.3}>
-                    {tabIndex === 0 && <UploadContent file={file} setFile={setFile}/>}
+                    rowSpacing={1.3}
+                    sx={{ mt: 2, mb: 4 }}>
+                    {tabIndex === 0 && (
+                        <>
+                            <UploadContent fetchPosts={fetchPosts} posts={posts} />
+                            <ImageList sx={{ width: '80%', height: 'auto', mt: 4 }} cols={3} rowHeight={200} gap={8}>
+                                {posts.map((post) => (
+                                    <ImageListItem key={post.id}>
+                                        <img
+                                            src={`/${post.image_path}`}
+                                            alt={`Post ${post.id}`}
+                                            loading="lazy"
+                                            style={{ height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                                        />
+                                    </ImageListItem>
+                                ))}
+                            </ImageList>
+                        </>
+                    )}
                     {tabIndex === 1 && <CourseTable />}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}
                 </Grid>
-
-                {/* <ImageList sx={{width: 500, height: 450 }} cols={3} rowHeight={164} >
-                    {files.map((item) => (
-                        <ImageListItem key={item.img}>
-                            <img 
-                        </ImageListItem>
-                    ))}
-                </ImageList> */}
             </Grid>
-            
+
         </>
     )
 

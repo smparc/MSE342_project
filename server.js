@@ -46,6 +46,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// API to upload a post
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
@@ -67,6 +68,19 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
             filePath: filePath,
             postId: results.insertId
         });
+});
+});
+
+// API to get all posts for a user
+app.get('/api/posts/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const sql = "SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC";
+  connection.query(sql, [userId], (error, results) => {
+    if (error) {
+      console.error('Database error:', error);
+      return res.status(500).send(error);
+    }
+    res.send(results);
     });
 });
 
