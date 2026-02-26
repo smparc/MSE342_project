@@ -1,0 +1,416 @@
+/* CourseSearch.css — UW Exchange Equivalency Search */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+.cs-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  font-family: 'DM Sans', sans-serif;
+  color: #1a1a2e;
+}
+
+/* Header */
+.cs-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.cs-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2rem;
+  color: #1a1a2e;
+  margin: 0 0 0.25rem;
+}
+.cs-subtitle { color: #555; margin: 0; font-size: 0.95rem; }
+
+.cs-shortlist-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.cs-shortlist-btn:hover { background: #2d2d52; }
+.cs-shortlist-count {
+  background: #f0b429;
+  color: #1a1a2e;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+/* Search */
+.cs-search-row { margin-bottom: 1rem; }
+.cs-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.cs-search-icon {
+  position: absolute;
+  left: 0.9rem;
+  width: 18px;
+  height: 18px;
+  color: #888;
+  pointer-events: none;
+}
+.cs-search-input {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 2.6rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: 'DM Sans', sans-serif;
+  background: #fafafa;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.cs-search-input:focus {
+  outline: none;
+  border-color: #1a1a2e;
+  box-shadow: 0 0 0 3px rgba(26,26,46,0.08);
+  background: #fff;
+}
+.cs-clear-btn {
+  position: absolute;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem;
+}
+
+/* Filters */
+.cs-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+.cs-select {
+  padding: 0.5rem 0.9rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.cs-select:focus { outline: none; border-color: #1a1a2e; }
+
+.cs-clear-filters {
+  background: none;
+  border: none;
+  color: #e55;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+.cs-clear-filters:hover { background: #fef2f2; }
+
+/* Results header */
+.cs-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.cs-count { color: #666; font-size: 0.85rem; }
+
+.cs-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Empty state */
+.cs-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #666;
+}
+.cs-empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+.cs-empty h3 { font-family: 'DM Serif Display', serif; color: #1a1a2e; margin: 0 0 0.5rem; }
+.cs-empty p { margin: 0 0 1rem; font-size: 0.9rem; }
+
+/* Grid */
+.cs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+/* Card */
+.cs-card {
+  background: #fff;
+  border: 1.5px solid #e8eaf0;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.cs-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(26,26,46,0.08);
+  border-color: #c8cade;
+}
+
+.cs-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+.cs-status-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--badge-color) 15%, transparent);
+  color: var(--badge-color);
+  border: 1px solid color-mix(in srgb, var(--badge-color) 30%, transparent);
+}
+
+.cs-save-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #bbb;
+  transition: color 0.15s, transform 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+.cs-save-btn:hover { transform: scale(1.2); color: #f0b429; }
+.cs-save-btn.saved { color: #f0b429; }
+
+.cs-card-body {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.cs-host-course, .cs-uw-course {
+  flex: 1;
+  min-width: 0;
+}
+.cs-code {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  background: #f1f3f9;
+  color: #1a1a2e;
+  margin-bottom: 0.25rem;
+}
+.cs-code.cs-uw { background: #fffbeb; color: #92400e; }
+.cs-name {
+  display: block;
+  font-size: 0.82rem;
+  color: #444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cs-arrow { color: #aaa; font-size: 1.1rem; flex-shrink: 0; }
+
+.cs-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+  border-top: 1px solid #f0f0f5;
+  padding-top: 0.6rem;
+}
+.cs-meta-item {
+  font-size: 0.75rem;
+  color: #777;
+}
+.cs-updated { margin-left: auto; color: #aaa; font-size: 0.72rem; }
+
+/* Pagination */
+.cs-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+.cs-pagination button {
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+.cs-pagination button:disabled {
+  background: #e2e8f0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+.cs-pagination span { color: #555; font-size: 0.9rem; }
+
+/* ── Modal ── */
+.cs-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(3px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.cs-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 560px;
+  width: 100%;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: csModalIn 0.2s ease;
+}
+@keyframes csModalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.cs-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #f0f0f5;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cs-modal-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.4rem;
+  margin: 0 0 1.5rem;
+}
+.cs-modal-grid {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+.cs-modal-section { flex: 1; }
+.cs-modal-section label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.cs-modal-code {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.2rem;
+  color: #1a1a2e;
+}
+.cs-modal-code.cs-uw { color: #92400e; }
+.cs-modal-uni { color: #333; font-weight: 500; margin: 0.2rem 0; }
+.cs-modal-meta { color: #888; font-size: 0.85rem; margin: 0; }
+.cs-modal-divider { font-size: 1.5rem; color: #ccc; }
+.cs-modal-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  border-top: 1px solid #f0f0f5;
+  padding-top: 0.8rem;
+  font-size: 0.82rem;
+  color: #666;
+  margin-bottom: 0.8rem;
+}
+.cs-modal-updated {
+  font-size: 0.82rem;
+  color: #888;
+  margin-bottom: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+}
+.cs-proof-link {
+  color: #1a1a2e;
+  font-weight: 600;
+  text-decoration: underline;
+  font-size: 0.82rem;
+}
+
+.cs-save-btn-lg {
+  width: 100%;
+  padding: 0.7rem;
+  border: 2px solid #1a1a2e;
+  border-radius: 9px;
+  background: transparent;
+  color: #1a1a2e;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cs-save-btn-lg:hover, .cs-save-btn-lg.saved {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+/* Saved panel */
+.cs-saved-panel { max-width: 480px; }
+.cs-saved-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #f0f0f5;
+}
+.cs-saved-row:last-child { border-bottom: none; }
+.cs-saved-row p { margin: 0.2rem 0 0; font-size: 0.8rem; color: #777; }
+
+@media (max-width: 600px) {
+  .cs-grid { grid-template-columns: 1fr; }
+  .cs-card-body { flex-direction: column; }
+  .cs-arrow { transform: rotate(90deg); }
+  .cs-modal-grid { flex-direction: column; }
+}

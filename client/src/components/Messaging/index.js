@@ -8,8 +8,8 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { formatMessageTimestamp } from './utils';
 
-// Current user id - matches userId used for conversation list (replace with auth when available)
-const CURRENT_USER_ID = 2;
+// Current user username - replace with auth when available
+const CURRENT_USERNAME = 'elly';
 
 const sortConversationsByLastActive = (list) => {
   return [...list].sort((a, b) => {
@@ -30,25 +30,24 @@ const Messaging = () => {
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
   const currentMessages = messages[selectedConversationId] || [];
 
-  React.useEffect(() => {
+    React.useEffect(() => {
     loadConversationList();
-  }, []);
+  }, [loadConversationList]);
 
   React.useEffect(() => {
     if (selectedConversationId) {
       loadConversationMessages(selectedConversationId);
     }
-  }, [selectedConversationId]);
+  }, [selectedConversationId, loadConversationMessages]);
 
   React.useEffect(() => {
     const interval = setInterval(loadConversationList, 30000);
     return () => clearInterval(interval);
-  }, []);
-
-  const loadConversationList = async () => {
+  }, [loadConversationList]);
+  const loadConversationList = React.useCallback(async () => {
     setListLoadError(false);
     try {
-      const response = await fetch(`/api/messages-list?userId=${CURRENT_USER_ID}`);
+      const response = await fetch(`/api/messages-list?username=${encodeURIComponent(CURRENT_USERNAME)}`);
       const data = await response.json();
       if (!response.ok || !Array.isArray(data)) {
         setConversations([]);
@@ -61,13 +60,16 @@ const Messaging = () => {
       setConversations([]);
       setListLoadError(true);
     }
-  };
+  }, []);
 
-  const loadConversationMessages = async (conversationId) => {
+  const loadConversationMessages = React.useCallback(async (conversationId) => {
+    if (conversationId == null || conversationId === '') {
+      return;
+    }
     setMessagesLoading(true);
     try {
       const response = await fetch(
-        `/api/conversations/${conversationId}/messages?userId=${CURRENT_USER_ID}`
+        `/api/conversations/${conversationId}/messages?username=${encodeURIComponent(CURRENT_USERNAME)}`
       );
       const data = await response.json();
       if (!response.ok || !Array.isArray(data)) {
@@ -77,8 +79,9 @@ const Messaging = () => {
       const mapped = data.map((msg) => ({
         id: msg.id,
         text: msg.content,
-        senderId: String(msg.senderId) === String(CURRENT_USER_ID) ? 'currentUser' : String(msg.senderId),
+        senderId: msg.senderId === CURRENT_USERNAME ? 'currentUser' : String(msg.senderId),
         timestamp: formatMessageTimestamp(msg.created_at),
+        createdAt: msg.created_at,
       }));
       setMessages((prev) => ({ ...prev, [conversationId]: mapped }));
       loadConversationList();
@@ -88,7 +91,7 @@ const Messaging = () => {
     } finally {
       setMessagesLoading(false);
     }
-  };
+  }, [loadConversationList]);
 
   const handleSelectConversation = (conversationId) => {
     setSelectedConversationId(conversationId);
@@ -103,7 +106,7 @@ const Messaging = () => {
 
     try {
       const response = await fetch(
-        `/api/conversations/${selectedConversationId}/messages?userId=${CURRENT_USER_ID}`,
+        `/api/conversations/${selectedConversationId}/messages?username=${encodeURIComponent(CURRENT_USERNAME)}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -120,8 +123,9 @@ const Messaging = () => {
       const newMessage = {
         id: data.id,
         text: data.content,
-        senderId: String(data.senderId) === String(CURRENT_USER_ID) ? 'currentUser' : String(data.senderId),
+        senderId: data.senderId === CURRENT_USERNAME ? 'currentUser' : String(data.senderId),
         timestamp: formatMessageTimestamp(data.created_at),
+        createdAt: data.created_at,
       };
 
       setMessages((prev) => ({
@@ -150,7 +154,7 @@ const Messaging = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          height: 'calc(100vh - 56px)',
+          height: '100vh',
           minHeight: 400,
           backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
           p: 3,
@@ -169,7 +173,7 @@ const Messaging = () => {
     <Box
       sx={{
         display: 'flex',
-        height: 'calc(100vh - 56px)', // Account for bottom nav bar
+        height: '100vh',
         minHeight: 400,
         backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
       }}

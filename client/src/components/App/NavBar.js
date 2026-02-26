@@ -1,51 +1,96 @@
 import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import BottomNavigation from '@mui/material/BottomNavigation';
-import BottomNavigationAction from '@mui/material/BottomNavigationAction';
+import ChatIcon from '@mui/icons-material/Chat';
+import SearchIcon from '@mui/icons-material/Search';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import PersonIcon from '@mui/icons-material/Person';
+
+const NAV_WIDTH_COLLAPSED = 72;
+const NAV_WIDTH_EXPANDED = 220;
 
 const navItems = [
-  { value: '/profile', label: 'Profile' },
-  { value: '/search', label: 'Search' },
-  { value: '/messages', label: 'Messages' },
+  { path: '/messages', label: 'Messages', icon: ChatIcon },
+  { path: '/search', label: 'Search', icon: SearchIcon },
+  { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon },
+  { path: '/profile', label: 'Profile', icon: PersonIcon },
 ];
 
 const NavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [expanded, setExpanded] = React.useState(false);
 
-  const currentValue = React.useMemo(() => {
-    const path = location.pathname;
-    if (path === '/' || path === '/profile') return '/profile';
-    if (path === '/search') return '/search';
-    if (path === '/messages') return '/messages';
-    return path;
-  }, [location.pathname]);
-
-  const handleChange = (event, newValue) => {
-    navigate(newValue);
-  };
+  const currentPath = location.pathname;
+  const isActive = (path) => currentPath === path || (path === '/profile' && currentPath === '/');
 
   return (
     <Box
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
       sx={{
         position: 'fixed',
-        bottom: 0,
         left: 0,
-        right: 0,
+        top: 0,
+        bottom: 0,
+        width: expanded ? NAV_WIDTH_EXPANDED : NAV_WIDTH_COLLAPSED,
         zIndex: 1100,
-        borderTop: 1,
+        borderRight: 1,
         borderColor: 'divider',
         backgroundColor: 'background.paper',
+        transition: 'width 0.2s ease-in-out',
+        overflow: 'hidden',
       }}
     >
-      <BottomNavigation value={currentValue} onChange={handleChange} showLabels>
-        {navItems.map((item) => (
-          <BottomNavigationAction key={item.value} value={item.value} label={item.label} />
-        ))}
-      </BottomNavigation>
+      <List disablePadding sx={{ pt: 2 }}>
+        {navItems.map((item) => {
+          const active = isActive(item.path);
+          const Icon = item.icon;
+          return (
+            <ListItemButton
+              key={item.path}
+              selected={active}
+              onClick={() => navigate(item.path)}
+              sx={{
+                py: 1.5,
+                px: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: expanded ? 'flex-start' : 'center',
+                '&.Mui-selected': {
+                  backgroundColor: 'action.selected',
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: expanded ? 56 : 0,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  display: 'flex',
+                }}
+              >
+                <Icon fontSize="medium" />
+              </ListItemIcon>
+              {expanded && (
+                <ListItemText
+                  primary={<Typography variant="body1">{item.label}</Typography>}
+                  primaryTypographyProps={{ noWrap: true }}
+                  sx={{ py: 0, my: 0 }}
+                />
+              )}
+            </ListItemButton>
+          );
+        })}
+      </List>
     </Box>
   );
 };
 
 export default NavBar;
+export { NAV_WIDTH_COLLAPSED };

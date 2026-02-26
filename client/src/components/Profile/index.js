@@ -82,9 +82,9 @@ const Profile = () => {
                     rowSpacing={1.3}
                     sx={{ mt: 2, mb: 4 }}>
                     {tabIndex === 0 && (
-                            <UploadContent 
+                        <UploadContent
                             fetchPosts={fetchPosts} posts={posts} cols={cols}
-                            />
+                        />
                     )}
                     {tabIndex === 1 && <CourseTable />}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}
