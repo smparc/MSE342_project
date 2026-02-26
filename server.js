@@ -228,7 +228,7 @@ app.post('/api/conversations/:conversationId/messages', (req, res) => {
         INSERT INTO messages (conversation_id, sender_username, content)
         VALUES (?, ?, ?)
     `;
-    connection.query(insertSql, [conversationId, userId, String(content).trim()], (err, result) => {
+    connection.query(insertSql, [conversationId, username, String(content).trim()], (err, result) => {
         if (err) {
             console.error('Error inserting message:', err);
             res.status(500).json({ error: 'Failed to send message' });
@@ -238,9 +238,9 @@ app.post('/api/conversations/:conversationId/messages', (req, res) => {
 
         const newId = result.insertId;
         const selectSql = `
-            SELECT m.id, m.sender_id AS senderId, u.name AS senderName, m.content, m.created_at
+            SELECT m.id, m.sender_username AS senderId, u.display_name AS senderName, m.content, m.created_at
             FROM messages m
-            JOIN users u ON u.id = m.sender_id
+            JOIN users u ON u.username = m.sender_username
             WHERE m.id = ?
         `;
         connection.query(selectSql, [newId], (selectErr, rows) => {

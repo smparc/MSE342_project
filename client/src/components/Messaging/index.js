@@ -30,20 +30,6 @@ const Messaging = () => {
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
   const currentMessages = messages[selectedConversationId] || [];
 
-    React.useEffect(() => {
-    loadConversationList();
-  }, [loadConversationList]);
-
-  React.useEffect(() => {
-    if (selectedConversationId) {
-      loadConversationMessages(selectedConversationId);
-    }
-  }, [selectedConversationId, loadConversationMessages]);
-
-  React.useEffect(() => {
-    const interval = setInterval(loadConversationList, 30000);
-    return () => clearInterval(interval);
-  }, [loadConversationList]);
   const loadConversationList = React.useCallback(async () => {
     setListLoadError(false);
     try {
@@ -91,6 +77,21 @@ const Messaging = () => {
     } finally {
       setMessagesLoading(false);
     }
+  }, [loadConversationList]);
+
+  React.useEffect(() => {
+    loadConversationList();
+  }, [loadConversationList]);
+
+  React.useEffect(() => {
+    if (selectedConversationId) {
+      loadConversationMessages(selectedConversationId);
+    }
+  }, [selectedConversationId, loadConversationMessages]);
+
+  React.useEffect(() => {
+    const interval = setInterval(loadConversationList, 30000);
+    return () => clearInterval(interval);
   }, [loadConversationList]);
 
   const handleSelectConversation = (conversationId) => {
