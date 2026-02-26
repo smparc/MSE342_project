@@ -84,8 +84,9 @@ const Profile = () => {
                     {tabIndex === 0 && (
                         // <>
                             <UploadContent 
-                            // fetchPosts={fetchPosts} posts={posts} 
+                            fetchPosts={fetchPosts} posts={posts} cols={cols}
                             />
+
                         //     <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
                         //         {posts.map((post) => (
                         //             <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px' }}>

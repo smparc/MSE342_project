@@ -1,11 +1,13 @@
 import * as React from 'react'
-import { Grid, Box, Typography, Button, styled } from '@mui/material'
+import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal } from '@mui/material'
 import camera from '../../images/camera-thin.svg'
 import uploadicon from '../../images/upload-simple-light-color.svg'
 
-const UploadContent = ({ fetchPosts, posts }) => {
+const UploadContent = ({ fetchPosts, posts, cols }) => {
 
     const [fileUrl, setFileUrl] = React.useState('')
+    const [selectedPost, setSelectedPost] = React.useState(null)
+
 
     const handleFileUpload = async (event) => {
         event.preventDefault()
@@ -61,12 +63,11 @@ const UploadContent = ({ fetchPosts, posts }) => {
 
     return (
         <>
-
-            <Grid item>
-                <Box component={'img'} src={camera} alt='camera' sx={{ width: '62px' }} />
-            </Grid>
             {(!posts || posts.length === 0) && (
                 <>
+                    <Grid item>
+                        <Box component={'img'} src={camera} alt='camera' sx={{ width: '62px' }} />
+                    </Grid>
                     <Grid item>
                         <Typography fontSize={'30px'} fontWeight={800} textAlign={'center'}>Share Photos</Typography>
                     </Grid>
@@ -92,6 +93,27 @@ const UploadContent = ({ fetchPosts, posts }) => {
                 </Button>
             </Grid>
 
+            {/* <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
+                {posts.map((post) => (
+                    <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px' }} onClick={(post) => setSelectedPost(post)}>
+                        <img
+                            src={`/${post.image_path}`}
+                            alt={`Post ${post.id}`}
+                            loading="lazy"
+                            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
+                        />
+                    </ImageListItem>
+                ))}
+            </ImageList> */}
+
+            <Modal open={selectedPost} onClose={() => setSelectedPost(null)}>
+                <img
+                            src={`/${selectedPost.image_path}`}
+                            alt={`Post ${selectedPost.id}`}
+                            loading="lazy"
+                            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
+                        />
+            </Modal>
 
         </>
     )

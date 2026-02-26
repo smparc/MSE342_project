@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Box } from '@mui/material'
+import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Box, Alert, Snackbar } from '@mui/material'
 import trashIcon from '../../images/trash-light.svg'
 import pencilIcon from '../../images/pencil-light.svg'
 
@@ -21,6 +21,7 @@ const CourseTable = () => {
 
     const [error, setError] = React.useState('')
     const [editID, setEditID] = React.useState(null)
+    const [outputAlert, setOutputAlert] = React.useState(false)
 
 
     function handleSubmit(event) {
@@ -61,6 +62,7 @@ const CourseTable = () => {
         setEditID(null)
         setError('')
         setDataFormStatus(false)
+        setOutputAlert(true)
 }
 
     function editRow(row) {
@@ -76,12 +78,21 @@ const CourseTable = () => {
     function deleteRow(id) {
         const updatedList = list.filter(row => row.id !== id)
         setList(updatedList)
+        setOutputAlert(true)
     }
 
 
     function handleClick() {
         setDataFormStatus(true)
     }
+
+    const handleFormClose = (event, reason) => {
+        if (reason === 'clickaway') {
+        return;
+        }
+
+        setOutputAlert(false);
+    };
 
     return (
         <>
@@ -171,8 +182,14 @@ const CourseTable = () => {
                         <Button type='submit' form='add-course-form'>{editID ? "Update Course" : "Add Course"}</Button>
                         </Grid>
 
-                        {error && <Typography color='red'>{error}</Typography>}
-                    </Grid></>}
+                        {error && <Alert severity='error'>{error}</Alert>}
+
+                    </Grid>
+                    </>}
+
+                    <Snackbar open={outputAlert} autoHideDuration={3500} onClose={handleFormClose} anchorOrigin={{vertical: 'top', horizontal: 'right'}}>
+                        <Alert severity='success'>Course changes saved</Alert>
+                    </Snackbar>
             </Paper>
         </>
     )

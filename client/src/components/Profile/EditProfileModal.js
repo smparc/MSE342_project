@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert } from '@mui/material';
 
 
 // skipping dialog content text for now
@@ -97,7 +97,7 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
                         </Grid>
                     </form>
                     <Grid item>
-                    {error && <Typography textAlign='center' color="red">All entries must have a value. Please try again.</Typography>}
+                    {error && <Alert severity='error'>All entries must have a value. Please try again.</Alert>}
                     </Grid>
                 </DialogContent>
                 <DialogActions>
