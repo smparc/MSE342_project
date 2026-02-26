@@ -23,13 +23,13 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
         setError(false)
 
         try {
-            const response = await fetch('/api/user/1', {
+            const response = await fetch(`/api/user/${username}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    full_name: tempName,
+                    display_name: tempName,
                     bio: tempBio
                 }),
             })

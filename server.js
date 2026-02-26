@@ -54,12 +54,12 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
         return res.status(400).send('No file uploaded.');
     }
 
-    // TODO: Replace hardcoded userId with actual authenticated user session data
-    const userId = req.body.userId || 1;
+    // TODO: Replace hardcoded username with actual authenticated user session data
+    const username = req.body.username || 'olga.vecht';
     const filePath = req.file.path;
 
-    const sql = "INSERT INTO posts (user_id, image_path) VALUES (?, ?)";
-    connection.query(sql, [userId, filePath], (error, results) => {
+    const sql = "INSERT INTO posts (username, image_path) VALUES (?, ?)";
+    connection.query(sql, [username, filePath], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -74,10 +74,10 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 });
 
 // API to get a user
-app.get('/api/user/:userId', (req, res) => {
-    const userId = req.params.userId;
-    const sql = "SELECT * FROM users WHERE id = ?";
-    connection.query(sql, [userId], (error, results) => {
+app.get('/api/user/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = "SELECT * FROM users WHERE username = ?";
+    connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -87,11 +87,11 @@ app.get('/api/user/:userId', (req, res) => {
 });
 
 // API to update a user
-app.put('/api/user/:userId', (req, res) => {
-    const userId = req.params.userId;
-    const { full_name, bio } = req.body;
-    const sql = "UPDATE users SET full_name = ?, bio = ? WHERE id = ?";
-    connection.query(sql, [full_name, bio, userId], (error, results) => {
+app.put('/api/user/:username', (req, res) => {
+    const username = req.params.username;
+    const { display_name, bio } = req.body;
+    const sql = "UPDATE users SET display_name = ?, bio = ? WHERE username = ?";
+    connection.query(sql, [display_name, bio, username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -101,10 +101,10 @@ app.put('/api/user/:userId', (req, res) => {
 });
 
 // API to get all posts for a user
-app.get('/api/posts/:userId', (req, res) => {
-    const userId = req.params.userId;
-    const sql = "SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC";
-    connection.query(sql, [userId], (error, results) => {
+app.get('/api/posts/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = "SELECT * FROM posts WHERE username = ? ORDER BY created_at DESC";
+    connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -117,7 +117,7 @@ app.get('/api/posts/:userId', (req, res) => {
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // 1) GET /api/messages-list - conversation list (left sidebar)
-// Query param: userId (required) eventually
+// Query param: username (required) eventually
 // Returns: [{ id, senderName, lastMessage, lastMessageAt, unread }]
 app.get('/api/messages-list', (req, res) => {
     const username = req.query.username;
@@ -175,11 +175,11 @@ app.get('/api/messages-list', (req, res) => {
 });
 
 // 2) GET /api/conversations/:conversationId/messages - messages in selected conversation
-// Query param: userId (optional, for future read receipts)
+// Query param: username (optional, for future read receipts)
 // Returns: [{ id, senderId, senderName, content, created_at }]
 app.get('/api/conversations/:conversationId/messages', (req, res) => {
     const { conversationId } = req.params;
-    const userId = req.query.userId;
+    const username = req.query.username;
 
     const connection = mysql.createConnection(config);
 
@@ -211,7 +211,7 @@ app.get('/api/conversations/:conversationId/messages', (req, res) => {
 
 // 3) POST /api/conversations/:conversationId/messages - send a new message
 // Body: { content }
-// Query: userId (required) - sender
+// Query: username (required) - sender
 // Returns: { id, senderId, senderName, content, created_at }
 app.post('/api/conversations/:conversationId/messages', (req, res) => {
     const { conversationId } = req.params;
@@ -228,7 +228,7 @@ app.post('/api/conversations/:conversationId/messages', (req, res) => {
         INSERT INTO messages (conversation_id, sender_username, content)
         VALUES (?, ?, ?)
     `;
-    connection.query(insertSql, [conversationId, userId, String(content).trim()], (err, result) => {
+    connection.query(insertSql, [conversationId, username, String(content).trim()], (err, result) => {
         if (err) {
             console.error('Error inserting message:', err);
             res.status(500).json({ error: 'Failed to send message' });
@@ -238,9 +238,9 @@ app.post('/api/conversations/:conversationId/messages', (req, res) => {
 
         const newId = result.insertId;
         const selectSql = `
-            SELECT m.id, m.sender_id AS senderId, u.name AS senderName, m.content, m.created_at
+            SELECT m.id, m.sender_username AS senderId, u.display_name AS senderName, m.content, m.created_at
             FROM messages m
-            JOIN users u ON u.id = m.sender_id
+            JOIN users u ON u.username = m.sender_username
             WHERE m.id = ?
         `;
         connection.query(selectSql, [newId], (selectErr, rows) => {

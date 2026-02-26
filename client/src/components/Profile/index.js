@@ -18,32 +18,32 @@ const Profile = () => {
     const [displayName, setDisplayName] = React.useState('')
     const [username, setUsername] = React.useState('')
 
-    const userId = 1 // TODO: Replace with actual user ID from context or auth
+    const currentUsername = 'olga.vecht' // TODO: Replace with actual username from context or auth
 
     const [tabIndex, setTabIndex] = React.useState(0)
     const [posts, setPosts] = React.useState([])
 
     const fetchUserData = React.useCallback(async () => {
         try {
-            const response = await fetch(`/api/user/${userId}`)
+            const response = await fetch(`/api/user/${currentUsername}`)
             const data = await response.json()
-            setDisplayName(data.full_name || '')
+            setDisplayName(data.display_name || '')
             setBio(data.bio || '')
             setUsername(data.username || '')
         } catch (error) {
             console.error('Error fetching user data:', error)
         }
-    }, [])
+    }, [currentUsername])
 
     const fetchPosts = React.useCallback(async () => {
         try {
-            const response = await fetch(`/api/posts/${userId}`)
+            const response = await fetch(`/api/posts/${currentUsername}`)
             const data = await response.json()
             setPosts(data)
         } catch (error) {
             console.error('Error fetching posts:', error)
         }
-    }, [])
+    }, [currentUsername])
 
     React.useEffect(() => {
         fetchUserData()
