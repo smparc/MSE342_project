@@ -1,14 +1,54 @@
 import * as React from 'react'
-// import Biography from './Biography'
-import Avatar from './AvatarDisplay'
 import ProfileHeader from './ProfileHeader'
-import { Grid, Divider } from '@mui/material'
+import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ImageListItem, useMediaQuery, useTheme } from '@mui/material'
+import SectionTab from './SectionTab'
+import UploadContent from './UploadContent'
+import CourseTable from './CourseTable'
+
 
 const Profile = () => {
 
-    const [bio, setBio] = React.useState('hi this is my bio \n feel free to reach out if you have any questions about exchange!')
-    const [displayName, setDisplayName] = React.useState('John Doe')
-    const username = "olga.vecht"
+    const theme = useTheme()
+    const isSmall = useMediaQuery(theme.breakpoints.down('sm'))
+    const isMedium = useMediaQuery(theme.breakpoints.down('md'))
+
+    const cols = isSmall ? 1 : isMedium ? 2 : 3
+
+    const [bio, setBio] = React.useState('')
+    const [displayName, setDisplayName] = React.useState('')
+    const [username, setUsername] = React.useState('')
+
+    const userId = 1 // TODO: Replace with actual user ID from context or auth
+
+    const [tabIndex, setTabIndex] = React.useState(0)
+    const [posts, setPosts] = React.useState([])
+
+    const fetchUserData = React.useCallback(async () => {
+        try {
+            const response = await fetch(`/api/user/${userId}`)
+            const data = await response.json()
+            setDisplayName(data.full_name || '')
+            setBio(data.bio || '')
+            setUsername(data.username || '')
+        } catch (error) {
+            console.error('Error fetching user data:', error)
+        }
+    }, [])
+
+    const fetchPosts = React.useCallback(async () => {
+        try {
+            const response = await fetch(`/api/posts/${userId}`)
+            const data = await response.json()
+            setPosts(data)
+        } catch (error) {
+            console.error('Error fetching posts:', error)
+        }
+    }, [])
+
+    React.useEffect(() => {
+        fetchUserData()
+        fetchPosts()
+    }, [fetchUserData, fetchPosts])
 
 
     return (
@@ -18,18 +58,51 @@ const Profile = () => {
                 direction={'column'}
                 alignItems={'center'}
                 // justifyContent={'center'}
-                sx={{minHeight: '100vh'}}
-                >
+                sx={{ minHeight: '95vh' }}
+            // rowGap={'20px'}
+            >
 
                 <Grid item>
-                        <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
+                    <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
+                </Grid>
+
+                <Grid item mt={'20px'} paddingTop={'20px'}>
+                    <SectionTab tabIndex={tabIndex} setTabIndex={setTabIndex} />
                 </Grid>
 
                 <Grid item width={'75%'}>
                     <Divider variant="middle" />
                 </Grid>
-                
+
+                <Grid container
+                    direction={'column'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                    flexGrow={1}
+                    rowSpacing={1.3}
+                    sx={{ mt: 2, mb: 4 }}>
+                    {tabIndex === 0 && (
+                        <>
+                            <UploadContent fetchPosts={fetchPosts} posts={posts} />
+                            <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
+                                {posts.map((post) => (
+                                    <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px' }}>
+                                        <img
+                                            src={`/${post.image_path}`}
+                                            alt={`Post ${post.id}`}
+                                            loading="lazy"
+                                            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
+                                        />
+                                    </ImageListItem>
+                                ))}
+                            </ImageList>
+                        </>
+                    )}
+                    {tabIndex === 1 && <CourseTable />}
+                    {tabIndex === 2 && <Typography>This will display ratings</Typography>}
+                </Grid>
             </Grid>
+
         </>
     )
 

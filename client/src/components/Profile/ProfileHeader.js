@@ -1,7 +1,7 @@
 // include profile picture, bio, edit profile button
 
 import * as React from 'react'
-import { Grid, Typography, Box, Button, Divider } from '@mui/material'
+import { Grid, Typography, Box, Button, Snackbar, Alert } from '@mui/material'
 import AvatarDisplay from './AvatarDisplay'
 import EditProfileModal from './EditProfileModal'
 
@@ -9,6 +9,21 @@ import EditProfileModal from './EditProfileModal'
 const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) => {
 
     const [modalStatus, setModalStatus] = React.useState(false)
+    const [profileChanged, setProfileChanged] = React.useState(false)
+
+
+    const [open, setOpen] = React.useState(false);
+
+
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpen(false);
+    setProfileChanged(false)
+  };
 
     return (
         <>
@@ -23,7 +38,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
             {/* later move container to index and add this profile header as an item */}
             {/* profile card */}
             <Grid container justifyContent={'center'}>
-            <Grid item xs={12} sm={10} md={8}
+            <Grid item xs={12} sm={10} md={8} lg={7}
             >
                 <Grid container
                     columnGap={'40px'}
@@ -31,9 +46,10 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                     direction={{ xs: 'column', sm: 'row' }}
                     alignItems={{ xs: 'center', sm: 'stretch' }}
                     // justifyContent={{xs: 'center', sm:'flex-start'}}
-                    paddingTop={'30px'}
+                    paddingTop={'60px'}
                     paddingX={'30px'}
-                    marginY={'30px'}>
+                    // paddingTop={'30px'}
+                    >
 
                     <Grid item
                     // sx={{border: '1px solid pink'}}
@@ -53,7 +69,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                     </Grid>
 
                     {/* AI used for help with wrapping */}
-                    <Grid item xs sx={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                    <Grid item xs width='100%' sx={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
                         <Grid container
                             flexDirection={'column'}
@@ -74,7 +90,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                                         <Typography fontWeight={400} fontSize={16}>{displayName}</Typography>
                                     </Grid>
                                     <Grid item>
-                                        <Typography fontWeight={400} fontSize={16} sx={{ whiteSpace: 'pre-line' }}>{bio}</Typography>
+                                        <Typography fontWeight={400} fontSize={16} sx={{ whiteSpace: 'pre-line' , wordBreak: 'break-word'}}>{bio}</Typography>
                                     </Grid>
 
                                 </Grid>
@@ -99,21 +115,24 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
                             Edit Profile
                         </Button>
                     </Grid>
-                    <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} />
+                    <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} profileChanged={profileChanged} setProfileChanged={setProfileChanged} />
 
-                    <Grid item xs={12}>
+                    {/* <Grid item xs={12}>
                         <Grid container justifyContent={'space-between'} alignItems={'center'}>
                             <Button borderRadius='30%' variant='outlined' sx={{ width: '25%', ":hover": { bgcolor: '#E7EAEE' }, color: 'black' }} onClick={() => { console.log('test') }}>Program</Button>
                             <Button borderRadius='30%' variant='outlined' sx={{ width: '25%', ":hover": { bgcolor: '#E7EAEE' }, color: 'black' }} onClick={() => { console.log('test') }}>Year</Button>
                             <Button borderRadius='30%' variant='outlined' sx={{ width: '25%', ":hover": { bgcolor: '#E7EAEE' }, color: 'black' }} onClick={() => { console.log('test') }}>School</Button>
                         </Grid>
-                    </Grid>
+                    </Grid> */}
                 </Grid>
                 {/* <Divider variant="middle" /> */}
             </Grid>
                 
-            {/* </Grid> */}
             </Grid>
+                            
+            <Snackbar open={profileChanged} autoHideDuration={3500} onClose={handleClose} anchorOrigin={{vertical: 'top', horizontal: 'right'}}>
+                <Alert severity='success'>Profile changes saved</Alert>
+            </Snackbar>
 
         </>
     )
