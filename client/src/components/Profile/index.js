@@ -45,7 +45,7 @@ const Profile = () => {
                     alignItems={'center'}
                     flexGrow={1}
                     rowSpacing={1.3}>
-                    {tabIndex === 0 && <UploadContent file={file} setFil={setFile}/>}
+                    {tabIndex === 0 && <UploadContent file={file} setFile={setFile}/>}
                     {tabIndex === 1 && <CourseTable />}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}
                 </Grid>

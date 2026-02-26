@@ -9,14 +9,42 @@ const UploadContent = ({file, setFile}) => {
 
     console.log(file)
 
-    const handleFileUpload = (event) => {
+    const handleFileUpload = async (event) => {
         event.preventDefault()
-        
+        const selectedFile = event.target.files[0]
+        if (!selectedFile) return
+
+        // Preview locally
         const fileReader = new FileReader()
         fileReader.onload = () => {
             setFileUrl(fileReader.result)
         }
-        fileReader.readAsDataURL(event.target.files[0])
+        fileReader.readAsDataURL(selectedFile)
+
+        // Upload to backend
+        const formData = new FormData()
+        formData.append('image', selectedFile)
+        // TODO: Replace hardcoded userId with actual user data from context or auth
+        formData.append('userId', 1) 
+
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            const data = await response.json()
+            if (data.success) {
+                console.log('Upload successful:', data.filePath)
+                // Optionally update parent state if needed
+                if (setFile) {
+                    setFile(prev => [...prev, data.filePath])
+                }
+            } else {
+                console.error('Upload failed')
+            }
+        } catch (error) {
+            console.error('Error uploading file:', error)
+        }
     }
     console.log(fileUrl)
 
