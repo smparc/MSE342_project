@@ -77,8 +77,10 @@ const Messaging = () => {
       const mapped = data.map((msg) => ({
         id: msg.id,
         text: msg.content,
-        senderId: String(msg.senderId) === String(CURRENT_USER_ID) ? 'currentUser' : String(msg.senderId),
+        senderId:
+          String(msg.senderId) === String(CURRENT_USER_ID) ? 'currentUser' : String(msg.senderId),
         timestamp: formatMessageTimestamp(msg.created_at),
+        createdAt: msg.created_at,
       }));
       setMessages((prev) => ({ ...prev, [conversationId]: mapped }));
       loadConversationList();
@@ -120,8 +122,10 @@ const Messaging = () => {
       const newMessage = {
         id: data.id,
         text: data.content,
-        senderId: String(data.senderId) === String(CURRENT_USER_ID) ? 'currentUser' : String(data.senderId),
+        senderId:
+          String(data.senderId) === String(CURRENT_USER_ID) ? 'currentUser' : String(data.senderId),
         timestamp: formatMessageTimestamp(data.created_at),
+        createdAt: data.created_at,
       };
 
       setMessages((prev) => ({
@@ -150,7 +154,7 @@ const Messaging = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          height: 'calc(100vh - 56px)',
+          height: '100vh',
           minHeight: 400,
           backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
           p: 3,
@@ -169,7 +173,7 @@ const Messaging = () => {
     <Box
       sx={{
         display: 'flex',
-        height: 'calc(100vh - 56px)', // Account for bottom nav bar
+        height: '100vh',
         minHeight: 400,
         backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
       }}
