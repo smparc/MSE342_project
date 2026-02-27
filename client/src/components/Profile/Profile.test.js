@@ -253,6 +253,54 @@ describe('Profile Photo Upload', () => {
     });
   });
 
+  describe('Photo Deletion', () => {
+    it('should remove a photo from the gallery when delete is clicked', async () => {
+      const mockPostToDelete = {
+        photo_id: 1,
+        image_path: 'uploads/test-photo.jpg'
+      };
+
+      global.fetch = jest.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockUser,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockPostToDelete],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [],
+        });
+
+      renderWithTheme(<Profile />);
+
+      // Wait for photo to appear
+      const uploadedImage = await screen.findByAltText('Post 1');
+      expect(uploadedImage).toBeInTheDocument();
+
+      // Click on the image to open the modal
+      fireEvent.click(uploadedImage);
+
+      // Find delete button in modal and click it
+      const deleteButton = await screen.findByTestId('DeleteIcon');
+      fireEvent.click(deleteButton);
+
+      // Verify photo is gone
+      await waitFor(() => {
+        expect(screen.queryByAltText('Post 1')).not.toBeInTheDocument();
+      });
+
+      // Verify success snackbar
+      expect(screen.getByText(/Photo deleted successfully/i)).toBeInTheDocument();
+    });
+  });
+
   describe('CourseTable Deletion', () => {
     it('should remove a course from the table when delete is clicked', async () => {
       const existingCourse = {
