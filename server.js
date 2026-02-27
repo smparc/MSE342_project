@@ -73,6 +73,8 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     });
 });
 
+// API to delete a post
+
 app.delete('/api/posts/:id', (req, res) => {
     const { id } = req.params;
 
