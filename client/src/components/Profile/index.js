@@ -86,7 +86,7 @@ const Profile = () => {
                             fetchPosts={fetchPosts} posts={posts} cols={cols}
                         />
                     )}
-                    {tabIndex === 1 && <CourseTable />}
+                    {tabIndex === 1 && <CourseTable username={username} />}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}
                 </Grid>
             </Grid>

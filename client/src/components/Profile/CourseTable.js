@@ -3,86 +3,133 @@ import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
 import trashIcon from '../../images/trash-light.svg'
 import pencilIcon from '../../images/pencil-light.svg'
 
-const CourseTable = () => {
+const CourseTable = ({ username }) => {
 
 
-    const [list, setList] = React.useState([
-        { id: 1, uwCourseCode: 'MSE 331', uwCourseName: 'Optimization & Operations Planning', hostCourseCode: 'XXX111', hostCourseName: 'Not Optimization and Operations' },
-        { id: 2, uwCourseCode: 'MSE 341', uwCourseName: 'Optimization & Operations Planning', hostCourseCode: 'XXX111', hostCourseName: 'Not Optimization and Operations' },
-        { id: 3, uwCourseCode: 'MSE 431', uwCourseName: 'Optimization & Operations Planning', hostCourseCode: 'XXX111', hostCourseName: 'Not Optimization and Operations' },
-        { id: 4, uwCourseCode: 'MSE 531', uwCourseName: 'Optimization & Operations Planning', hostCourseCode: 'XXX111', hostCourseName: 'Not Optimization and Operations' }
-    ])
+    const [list, setList] = React.useState([])
     const [dataFormStatus, setDataFormStatus] = React.useState(false)
 
     const [newUWCode, setNewUWCode] = React.useState('')
     const [newUWName, setNewUWName] = React.useState('')
     const [newHostCode, setNewHostCode] = React.useState('')
     const [newHostName, setNewHostName] = React.useState('')
+    const [newHostUni, setNewHostUni] = React.useState('')
+    const [newCountry, setNewCountry] = React.useState('')
+    const [newContinent, setNewContinent] = React.useState('')
+    const [newTerm, setNewTerm] = React.useState('')
+    const [newProofUrl, setNewProofUrl] = React.useState('')
 
     const [error, setError] = React.useState('')
     const [editID, setEditID] = React.useState(null)
     const [outputAlert, setOutputAlert] = React.useState(false)
 
+    const fetchCourses = React.useCallback(async () => {
+        if (!username) return
+        try {
+            const response = await fetch(`/api/courses/user/${username}`)
+            const data = await response.json()
+            setList(data)
+        } catch (error) {
+            console.error('Error fetching courses:', error)
+        }
+    }, [username])
 
-    function handleSubmit(event) {
+    React.useEffect(() => {
+        fetchCourses()
+    }, [fetchCourses])
+
+
+    async function handleSubmit(event) {
         event.preventDefault()
-        if (!newUWCode.trim() || !newUWName.trim() || !newHostCode.trim() || !newHostName.trim()) {
-            setError("All entries must have a value. Please try again.")
-            // setNewUWCode('')
-            // setNewUWName('')
-            // setNewHostCode('')
-            // setNewHostName('')
+        if (!newUWCode.trim() || !newUWName.trim() || !newHostCode.trim() || !newHostName.trim() || !newHostUni.trim()) {
+            setError("Required entries must have a value. Please try again.")
             return
         }
         
-
-        if (editID) {
-            const updatedList = list.map(row => 
-                row.id === editID ?
-                {...row, uwCourseCode: newUWCode.toUpperCase().trim(), uwCourseName: newUWName.trim(), hostCourseCode: newHostCode.toUpperCase().trim(), hostCourseName: newHostName.trim()}
-                : row
-            )
-            setList(updatedList)
+        const courseData = {
+            username: username,
+            uw_course_code: newUWCode.toUpperCase().trim(),
+            uw_course_name: newUWName.trim(),
+            host_course_code: newHostCode.toUpperCase().trim(),
+            host_course_name: newHostName.trim(),
+            host_university: newHostUni.trim(),
+            country: newCountry.trim(),
+            continent: newContinent.trim(),
+            term_taken: newTerm.trim(),
+            proof_url: newProofUrl.trim()
         }
 
-        else {
-        if (list.some(row => row.uwCourseCode.trim().toUpperCase() === newUWCode.trim().toUpperCase())) {
-            setError("Duplicate course entries are not allowed. Please try again.")
-            return
-        }
+        try {
+            const endpoint = editID ? `/api/courses/${editID}` : '/api/courses'
+            const method = editID ? 'PUT' : 'POST'
+            const response = await fetch(endpoint, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(courseData)
+            })
 
-        const newRow = {id: Date.now(), uwCourseCode: newUWCode.toUpperCase().trim(), uwCourseName: newUWName.trim(), hostCourseCode: newHostCode.toUpperCase().trim(), hostCourseName: newHostName.trim() }
-        
-        setList([...list, newRow])
+            if (!response.ok) {
+                const data = await response.json()
+                setError(data.error || "Submission failed. Please try again.")
+                return
+            }
+
+            fetchCourses()
+            resetForm()
+            setEditID(null)
+            setError('')
+            setDataFormStatus(false)
+            setOutputAlert(true)
+        } catch (err) {
+            setError("Network error. Please try again.")
+        }
+    }
+
+    function resetForm() {
         setNewUWCode('')
         setNewUWName('')
         setNewHostCode('')
         setNewHostName('')
+        setNewHostUni('')
+        setNewCountry('')
+        setNewContinent('')
+        setNewTerm('')
+        setNewProofUrl('')
     }
-        setEditID(null)
-        setError('')
-        setDataFormStatus(false)
-        setOutputAlert(true)
-}
 
     function editRow(row) {
-        setEditID(row.id)
-        setNewUWCode(row.uwCourseCode)
-        setNewUWName(row.uwCourseName)
-        setNewHostCode(row.hostCourseCode)
-        setNewHostName(row.hostCourseName)
+        setEditID(row.course_id)
+        setNewUWCode(row.uw_course_code)
+        setNewUWName(row.uw_course_name)
+        setNewHostCode(row.host_course_code)
+        setNewHostName(row.host_course_name)
+        setNewHostUni(row.host_university)
+        setNewCountry(row.country || '')
+        setNewContinent(row.continent || '')
+        setNewTerm(row.term_taken || '')
+        setNewProofUrl(row.proof_url || '')
         setDataFormStatus(true)
     }
 
 
-    function deleteRow(id) {
-        const updatedList = list.filter(row => row.id !== id)
-        setList(updatedList)
-        setOutputAlert(true)
+    async function deleteRow(id) {
+        try {
+            const response = await fetch(`/api/courses/${id}`, {
+                method: 'DELETE'
+            })
+            if (response.ok) {
+                fetchCourses()
+                setOutputAlert(true)
+            }
+        } catch (error) {
+            console.error('Error deleting course:', error)
+        }
     }
 
 
     function handleClick() {
+        resetForm()
+        setEditID(null)
         setDataFormStatus(true)
     }
 
@@ -101,25 +148,38 @@ const CourseTable = () => {
                     <Table aria-label="simple table">
                         <TableHead>
                             <TableRow>
-                                <TableCell align={'left'}><strong>UW Course Code</strong></TableCell>
-                                <TableCell align={'center'}><strong>UW Course Name</strong></TableCell>
-                                <TableCell align={'left'}><strong>Host School Course Code</strong></TableCell>
-                                <TableCell align={'center'}><strong>Host School Course Name</strong></TableCell>
+                                <TableCell align={'left'}><strong>UW Code</strong></TableCell>
+                                <TableCell align={'left'}><strong>UW Course Name</strong></TableCell>
+                                <TableCell align={'left'}><strong>Host University</strong></TableCell>
+                                <TableCell align={'left'}><strong>Host Code</strong></TableCell>
+                                <TableCell align={'left'}><strong>Host Course Name</strong></TableCell>
+                                <TableCell align={'center'}><strong>Status</strong></TableCell>
+                                <TableCell align={'center'}><strong>Actions</strong></TableCell>
                             </TableRow>
 
                         </TableHead>
                         <TableBody>
                             {list.map(row => (
-                                <TableRow key={row.id}>
-                                    <TableCell>{row.uwCourseCode}</TableCell>
+                                <TableRow key={row.course_id}>
+                                    <TableCell>{row.uw_course_code}</TableCell>
 
-                                    <TableCell align={'left'}>{row.uwCourseName}</TableCell>
-                                    <TableCell align={'center'}>{row.hostCourseCode}</TableCell>
-                                    <TableCell align={'left'}>{row.hostCourseName}</TableCell>
+                                    <TableCell align={'left'}>{row.uw_course_name}</TableCell>
+                                    <TableCell align={'left'}>{row.host_university}</TableCell>
+                                    <TableCell align={'left'}>{row.host_course_code}</TableCell>
+                                    <TableCell align={'left'}>{row.host_course_name}</TableCell>
+                                    <TableCell align={'center'}>
+                                        <Typography variant="caption" sx={{ 
+                                            bgcolor: row.status === 'Approved' ? '#e6fffa' : row.status === 'Flagged' ? '#fff5f5' : '#fffaf0',
+                                            color: row.status === 'Approved' ? '#2c7a7b' : row.status === 'Flagged' ? '#c53030' : '#b7791f',
+                                            px: 1, py: 0.5, borderRadius: 1, fontWeight: 'bold'
+                                        }}>
+                                            {row.status}
+                                        </Typography>
+                                    </TableCell>
                                     <TableCell align={'center'} sx={{p: 0 }}>
-                                        <Button sx={{minWidth: 'auto', marginLeft: '20px'}} variant="text" onClick={() => editRow(row)}>
+                                        <Button sx={{minWidth: 'auto'}} variant="text" onClick={() => editRow(row)}>
                                             <Box component={'img'} src={pencilIcon} alt='pencilIcon'/></Button>
-                                        <Button sx={{minWidth: 'auto'}} variant="text" onClick={() => deleteRow(row.id)}>
+                                        <Button sx={{minWidth: 'auto'}} variant="text" onClick={() => deleteRow(row.course_id)}>
                                             <Box component={'img'} src={trashIcon} alt='trashIcon' /></Button>
                                         </TableCell>
                                 </TableRow>
@@ -138,48 +198,82 @@ const CourseTable = () => {
                 {dataFormStatus &&
                     <>
                     <Grid container alignItems={'center'} justifyContent={'center'} direction={'column'} spacing={2} mt={'10px'}>
-                        <Grid item>
+                        <Grid item width="100%">
                             
                         <form onSubmit={handleSubmit} id='add-course-form'>
-                            <Grid container spacing={2} justifyContent={'space-between'}>
-                            <Grid item xs={2}>
-                            <TextField required fullWidth
-                                value={newUWCode}
-                                onChange={(event) => setNewUWCode(event.target.value)}
-                                size="small"
-                                id='uw-course-code'
-                                label="UW Course Code" />
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField required fullWidth
+                                        value={newUWCode}
+                                        onChange={(event) => setNewUWCode(event.target.value)}
+                                        size="small"
+                                        label="UW Course Code" />
                                 </Grid>
-                                <Grid item xs={4}>
-                            <TextField required fullWidth
-                                value={newUWName}
-                                onChange={(event) => setNewUWName(event.target.value)}
-                                size="small"
-                                id='uw-course-name'
-                                label="UW Course Name" />
+                                <Grid item xs={12} sm={6}>
+                                    <TextField required fullWidth
+                                        value={newUWName}
+                                        onChange={(event) => setNewUWName(event.target.value)}
+                                        size="small"
+                                        label="UW Course Name" />
                                 </Grid>
-                                <Grid item xs={2}>
-                            <TextField required fullWidth
-                                value={newHostCode}
-                                onChange={(event) => setNewHostCode(event.target.value)}
-                                size="small"
-                                id='host-course-code'
-                                label="Host Course Code" />
+                                <Grid item xs={12} sm={6}>
+                                    <TextField required fullWidth
+                                        value={newHostUni}
+                                        onChange={(event) => setNewHostUni(event.target.value)}
+                                        size="small"
+                                        label="Host University" />
                                 </Grid>
-                                <Grid item xs={4}>
-                            <TextField required fullWidth
-                                value={newHostName}
-                                onChange={(event) => setNewHostName(event.target.value)}
-                                size="small"
-                                id='host-course-name'
-                                label="Host Course Name" />
+                                <Grid item xs={12} sm={3}>
+                                    <TextField required fullWidth
+                                        value={newHostCode}
+                                        onChange={(event) => setNewHostCode(event.target.value)}
+                                        size="small"
+                                        label="Host Course Code" />
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                    <TextField required fullWidth
+                                        value={newHostName}
+                                        onChange={(event) => setNewHostName(event.target.value)}
+                                        size="small"
+                                        label="Host Course Name" />
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                    <TextField fullWidth
+                                        value={newCountry}
+                                        onChange={(event) => setNewCountry(event.target.value)}
+                                        size="small"
+                                        label="Country" />
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                    <TextField fullWidth
+                                        value={newContinent}
+                                        onChange={(event) => setNewContinent(event.target.value)}
+                                        size="small"
+                                        label="Continent" />
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                    <TextField fullWidth
+                                        value={newTerm}
+                                        onChange={(event) => setNewTerm(event.target.value)}
+                                        size="small"
+                                        label="Term Taken" />
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                    <TextField fullWidth
+                                        value={newProofUrl}
+                                        onChange={(event) => setNewProofUrl(event.target.value)}
+                                        size="small"
+                                        label="Proof URL/Path" />
                                 </Grid>
                         </Grid>
                         </form>
                         
                         </Grid>
                         <Grid item>
-                        <Button type='submit' form='add-course-form'>{editID ? "Update Course" : "Add Course"}</Button>
+                        <Button type='submit' form='add-course-form' variant="contained" sx={{ bgcolor: '#3143E3' }}>
+                            {editID ? "Update Course" : "Add Course"}
+                        </Button>
+                        <Button onClick={() => setDataFormStatus(false)} sx={{ ml: 1 }}>Cancel</Button>
                         </Grid>
 
                         {error && <Alert severity='error'>{error}</Alert>}

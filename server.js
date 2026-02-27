@@ -261,4 +261,103 @@ app.post('/api/conversations/:conversationId/messages', (req, res) => {
     });
 });
 
-app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
+// --- Course Equivalency APIs ---
+
+// GET /api/courses/user/:username - Get all courses for a specific user
+app.get('/api/courses/user/:username', (req, res) => {
+    const { username } = req.params;
+    const sql = "SELECT * FROM course_equivalencies WHERE username = ? ORDER BY last_updated DESC";
+    connection.query(sql, [username], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.send(results);
+    });
+});
+
+// POST /api/courses - Create a new course equivalency
+app.post('/api/courses', (req, res) => {
+    const {
+        username,
+        uw_course_code,
+        uw_course_name,
+        host_course_code,
+        host_course_name,
+        host_university,
+        country,
+        continent,
+        term_taken,
+        proof_url
+    } = req.body;
+
+    const sql = `
+        INSERT INTO course_equivalencies 
+        (username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const params = [username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url];
+
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                return res.status(409).json({ error: 'This course equivalency has already been submitted.' });
+            }
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.status(201).json({
+            message: 'Course equivalency submitted successfully',
+            course_id: results.insertId,
+            status: 'Pending Review'
+        });
+    });
+});
+
+// PUT /api/courses/:id - Update an existing course equivalency
+app.put('/api/courses/:id', (req, res) => {
+    const { id } = req.params;
+    const {
+        uw_course_code,
+        uw_course_name,
+        host_course_code,
+        host_course_name,
+        host_university,
+        country,
+        continent,
+        term_taken,
+        proof_url
+    } = req.body;
+
+    const sql = `
+        UPDATE course_equivalencies 
+        SET uw_course_code = ?, uw_course_name = ?, host_course_code = ?, host_course_name = ?, host_university = ?, country = ?, continent = ?, term_taken = ?, proof_url = ?
+        WHERE course_id = ?
+    `;
+    const params = [uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url, id];
+
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.send({ success: true, message: 'Course updated successfully' });
+    });
+});
+
+// DELETE /api/courses/:id - Delete a course equivalency
+app.delete('/api/courses/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = "DELETE FROM course_equivalencies WHERE course_id = ?";
+    connection.query(sql, [id], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.send({ success: true, message: 'Course deleted successfully' });
+    });
+});
+
+// --- End Course Equivalency APIs ---
+    app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
+    
