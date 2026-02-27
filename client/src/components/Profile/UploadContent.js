@@ -1,8 +1,6 @@
 import * as React from 'react'
 import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal, IconButton, Snackbar, Alert } from '@mui/material'
-import { ChevronLeft, ChevronRight } from '@mui/icons-material'
-import camera from '../../images/camera-thin.svg'
-import uploadicon from '../../images/upload-simple-light-color.svg'
+import { ChevronLeft, ChevronRight, PhotoCamera, FileUpload } from '@mui/icons-material'
 
 const UploadContent = ({ fetchPosts, posts, cols }) => {
 
@@ -73,7 +71,6 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
             console.error('Error uploading file:', error)
         }
     }
-    console.log(fileUrl)
 
 
     const VisuallyHidddenInput = styled('input')({
@@ -93,7 +90,7 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
             {(!posts || posts.length === 0) && (
                 <>
                     <Grid item>
-                        <Box component={'img'} src={camera} alt='camera' sx={{ width: '62px' }} />
+                        <PhotoCamera sx={{ fontSize: '62px', color: '#6e6e6e' }} />
                     </Grid>
                     <Grid item>
                         <Typography fontSize={'30px'} fontWeight={800} textAlign={'center'}>Share Photos</Typography>
@@ -108,9 +105,8 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
                 <Button component="label"
                     role={undefined}
                     variant="outlined"
-                    startIcon={<Box component={'img'} src={uploadicon} alt='upload-icon' />}
+                    startIcon={<FileUpload />}
                     sx={{ marginTop: '20px', p: '10px', px: '20px', textTransform: 'none', borderRadius: 3, border: '1px solid #3143E3', color: '#3143E3', fontWeight: '400', fontSize: '18px', ":hover": { bgcolor: '#3143E3', color: 'white' } }}
-                // sx={{color: 'black', bgcolor: '#F0F2F5', ":hover": { bgcolor: '#E7EAEE' }, borderRadius: '12px', textTransform: 'none', fontSize: '17px'}}
                 >
                     {(!posts || posts.length === 0) ? 'Share your first photo' : 'Upload more photos'}
                     <VisuallyHidddenInput type='file'

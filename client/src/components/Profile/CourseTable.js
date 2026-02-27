@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Box, Alert, Snackbar } from '@mui/material'
-import trashIcon from '../../images/trash-light.svg'
-import pencilIcon from '../../images/pencil-light.svg'
+import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Box, Alert, Snackbar, IconButton } from '@mui/material'
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 
 const CourseTable = ({ username }) => {
 
@@ -176,12 +175,14 @@ const CourseTable = ({ username }) => {
                                             {row.status}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell align={'center'} sx={{p: 0 }}>
-                                        <Button sx={{minWidth: 'auto'}} variant="text" onClick={() => editRow(row)}>
-                                            <Box component={'img'} src={pencilIcon} alt='pencilIcon'/></Button>
-                                        <Button sx={{minWidth: 'auto'}} variant="text" onClick={() => deleteRow(row.course_id)}>
-                                            <Box component={'img'} src={trashIcon} alt='trashIcon' /></Button>
-                                        </TableCell>
+                                    <TableCell align={'center'} sx={{ p: 0 }}>
+                                        <IconButton size="small" onClick={() => editRow(row)} color="primary">
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton size="small" onClick={() => deleteRow(row.course_id)} color="error">
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
