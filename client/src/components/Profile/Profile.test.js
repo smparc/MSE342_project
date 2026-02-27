@@ -360,4 +360,44 @@ describe('Profile Photo Upload', () => {
       expect(screen.getByText(/Course changes saved/i)).toBeInTheDocument();
     });
   });
+
+  describe('Editing Tags', () => {
+    const updatedTags = {
+      faculty: 'Engineering',
+      program: 'Software Engineering',
+      grad_year: '2026',
+      exchange_term: 'Fall 2025'
+    };
+
+    it('should successfully update tags and display them in the profile header', async () => {
+      global.fetch
+        .mockResolvedValueOnce({ ok: true, json: async () => mockUser })
+        .mockResolvedValueOnce({ ok: true, json: async () => [] })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }),
+        });
+
+      renderWithTheme(<Profile />);
+
+      const editTagsButton = await screen.findByRole('button', { name: /Add Tags/i });
+      fireEvent.click(editTagsButton);
+
+      fireEvent.change(screen.getByLabelText(/Faculty/i), { target: { value: updatedTags.faculty } });
+      fireEvent.change(screen.getByLabelText(/Program/i), { target: { value: updatedTags.program } });
+      fireEvent.change(screen.getByLabelText(/Graduation Year/i), { target: { value: updatedTags.grad_year } });
+      fireEvent.change(screen.getByLabelText(/Exchange Term/i), { target: { value: updatedTags.exchange_term } });
+
+      fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(updatedTags.faculty)).toBeInTheDocument();
+        expect(screen.getByText(updatedTags.program)).toBeInTheDocument();
+        expect(screen.getByText(`Class of ${updatedTags.grad_year}`)).toBeInTheDocument();
+        expect(screen.getByText(`${updatedTags.exchange_term} Exchange`)).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/Profile changes saved/i)).toBeInTheDocument();
+    });
+  });
 });
