@@ -175,7 +175,7 @@ Created Sprint 1 Branch -->
 | Team Member | Responsibility Area |
 | :--- | :--- |
 | **Zeina** | Profile Management (Courses, Bios, Photos, Tags) |
-| **Matthew** | Course Equivalency (Search, Upload, Filtering) |
+| **Matthew** | Course Equivalency (Search, Upload, Filtering) & Master Database|
 | **Elly** | Messaging Systems (Direct Messaging, Chat History) |
 <!-- | **Cindy** | Search Functionality, User Info Display, Destination Reviews | -->
 
