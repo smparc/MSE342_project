@@ -1,0 +1,22 @@
+{
+  "projects": [
+    {
+      "displayName": "backend",
+      "testEnvironment": "node",
+      "testMatch": ["<rootDir>/tests/server.test.js"],
+      "transform": {}
+    },
+    {
+      "displayName": "frontend",
+      "testEnvironment": "jsdom",
+      "testMatch": ["<rootDir>/client/src/tests/**/*.test.{js,jsx}"],
+      "transform": {
+        "^.+\\.(js|jsx)$": "babel-jest"
+      },
+      "moduleNameMapper": {
+        "\\.(css|less|scss)$": "<rootDir>/client/src/tests/__mocks__/styleMock.js"
+      },
+      "setupFilesAfterFramework": ["<rootDir>/client/src/tests/setupTests.js"]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert } from '@mui/material';
+import { Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert } from '@mui/material';
 
 const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, displayName, bio, setProfileChanged }) => {
 
@@ -63,13 +63,13 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
                 <DialogTitle textAlign={'center'} fontWeight={600} fontSize={'25px'}>Edit tags</DialogTitle>
                 <DialogContent>
                     <form onSubmit={handleSubmit} id='edit-tags-modal'>
-                        <Grid container 
+                        <Grid container
                             justifyContent={'center'}
                             alignItems={'center'}
                             direction={'column'}
-                            py= '20px'
+                            py='20px'
                             px={'30px'}
-                            >
+                        >
 
                             <Grid item width='100%'>
                                 <TextField fullWidth
@@ -111,7 +111,7 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
                         </Grid>
                     </form>
                     <Grid item>
-                    {error && <Alert severity='error'>All entries must have a value. Please try again.</Alert>}
+                        {error && <Alert severity='error'>All entries must have a value. Please try again.</Alert>}
                     </Grid>
                 </DialogContent>
                 <DialogActions>

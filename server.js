@@ -54,12 +54,12 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
         return res.status(400).send('No file uploaded.');
     }
 
-    // TODO: Replace hardcoded username with actual authenticated user session data
-    const username = req.body.username || 'john.doe';
+    // TODO: Replace hardcoded userId with actual authenticated user session data
+    const userId = req.body.userId || 1;
     const filePath = req.file.path;
 
-    const sql = "INSERT INTO posts (username, image_path) VALUES (?, ?)";
-    connection.query(sql, [username, filePath], (error, results) => {
+    const sql = "INSERT INTO posts (user_id, image_path) VALUES (?, ?)";
+    connection.query(sql, [userId, filePath], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -68,7 +68,49 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
             success: true,
             message: 'File uploaded and saved to database',
             filePath: filePath,
-            photoId: results.insertId
+            postId: results.insertId
+        });
+    });
+});
+
+// API to delete a post
+
+app.delete('/api/posts/:id', (req, res) => {
+    const { id } = req.params;
+
+    // Get image path from db
+    const selectSql = "SELECT image_path FROM posts WHERE photo_id = ?";
+    connection.query(selectSql, [id], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send({ success: false, message: 'Post not found' });
+        }
+
+        const imagePath = results[0].image_path;
+
+        // Delete row from db
+        const deleteSql = "DELETE FROM posts WHERE photo_id = ?";
+        connection.query(deleteSql, [id], (deleteError, deleteResults) => {
+            if (deleteError) {
+                console.error('Database error:', deleteError);
+                return res.status(500).send(deleteError);
+            }
+
+            // Delete file on disk
+            if (fs.existsSync(imagePath)) {
+                fs.unlink(imagePath, (unlinkError) => {
+                    if (unlinkError) {
+                        console.error('Error deleting file:', unlinkError);
+                        // Still success because the db row is gone
+                    }
+                });
+            }
+
+            res.send({ success: true, message: 'Post deleted successfully' });
         });
     });
 });
@@ -117,7 +159,7 @@ app.get('/api/posts/:username', (req, res) => {
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // 1) GET /api/messages-list - conversation list (left sidebar)
-// Query param: username (required) eventually
+// Query param: userId (required) eventually
 // Returns: [{ id, senderName, lastMessage, lastMessageAt, unread }]
 app.get('/api/messages-list', (req, res) => {
     const username = req.query.username;
@@ -175,11 +217,11 @@ app.get('/api/messages-list', (req, res) => {
 });
 
 // 2) GET /api/conversations/:conversationId/messages - messages in selected conversation
-// Query param: username (optional, for future read receipts)
+// Query param: userId (optional, for future read receipts)
 // Returns: [{ id, senderId, senderName, content, created_at }]
 app.get('/api/conversations/:conversationId/messages', (req, res) => {
     const { conversationId } = req.params;
-    const username = req.query.username;
+    const userId = req.query.userId;
 
     const connection = mysql.createConnection(config);
 
@@ -211,7 +253,7 @@ app.get('/api/conversations/:conversationId/messages', (req, res) => {
 
 // 3) POST /api/conversations/:conversationId/messages - send a new message
 // Body: { content }
-// Query: username (required) - sender
+// Query: userId (required) - sender
 // Returns: { id, senderId, senderName, content, created_at }
 app.post('/api/conversations/:conversationId/messages', (req, res) => {
     const { conversationId } = req.params;
