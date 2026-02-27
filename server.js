@@ -358,6 +358,99 @@ app.delete('/api/courses/:id', (req, res) => {
     });
 });
 
+app.post('/api/users/:username/saved-courses', (req, res) => {
+    const { username } = req.params;
+    const { course_id } = req.body;
+    
+    // Logic: check if exists, if so delete (unsave), if not insert (save)
+    const checkSql = "SELECT * FROM saved_courses WHERE username = ? AND course_id = ?";
+    connection.query(checkSql, [username, course_id], (err, results) => {
+        if (results.length > 0) {
+            connection.query("DELETE FROM saved_courses WHERE username = ? AND course_id = ?", [username, course_id]);
+            res.json({ saved: false });
+        } else {
+            connection.query("INSERT INTO saved_courses (username, course_id) VALUES (?, ?)", [username, course_id]);
+            res.json({ saved: true });
+        }
+    });
+});
+
+app.get('/api/users/:username/saved-courses', (req, res) => {
+    const { username } = req.params;
+    const sql = `
+        SELECT c.* FROM course_equivalencies c
+        JOIN saved_courses s ON c.course_id = s.course_id
+        WHERE s.username = ?`;
+    connection.query(sql, [username], (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+app.get('/api/courses/meta/filters', (req, res) => {
+    // We fetch the unique values currently in your DB to fill the dropdowns
+    const sqlCountries = "SELECT DISTINCT country FROM course_equivalencies WHERE country IS NOT NULL";
+    const sqlContinents = "SELECT DISTINCT continent FROM course_equivalencies WHERE continent IS NOT NULL";
+    const sqlTerms = "SELECT DISTINCT term_taken FROM course_equivalencies WHERE term_taken IS NOT NULL";
+
+    connection.query(`${sqlCountries}; ${sqlContinents}; ${sqlTerms}`, (error, results) => {
+        if (error) {
+            console.error('Filter Fetch Error:', error);
+            // Fallback so the frontend doesn't crash
+            return res.json({ countries: [], continents: [], terms: [] });
+        }
+        
+        // results will be an array of 3 arrays because of the semicolons
+        res.json({
+            countries: results[0].map(r => r.country),
+            continents: results[1].map(r => r.continent),
+            terms: results[2].map(r => r.term_taken)
+        });
+    });
+});
+
+app.get('/api/courses', (req, res) => {
+    const { q, country, continent, faculty, term, page = 1, limit = 15 } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Basic dynamic search logic
+    let sql = "SELECT * FROM course_equivalencies WHERE 1=1";
+    const params = [];
+
+    if (q) {
+        sql += " AND (host_university LIKE ? OR host_course_name LIKE ? OR host_course_code LIKE ?)";
+        const search = `%${q}%`;
+        params.push(search, search, search);
+    }
+    if (country) { sql += " AND country = ?"; params.push(country); }
+    if (continent) { sql += " AND continent = ?"; params.push(continent); }
+    if (term) { sql += " AND term_taken = ?"; params.push(term); }
+
+    // First get total count for pagination
+    connection.query(sql.replace("*", "COUNT(*) as total"), params, (err, countResult) => {
+        if (err) return res.status(500).send(err);
+
+        // Then get actual data with LIMIT
+        sql += " LIMIT ? OFFSET ?";
+        params.push(parseInt(limit), parseInt(offset));
+
+        connection.query(sql, params, (err, results) => {
+            if (err) return res.status(500).send(err);
+            
+            res.json({
+                courses: results,
+                pagination: {
+                    total: countResult[0].total,
+                    page: parseInt(page),
+                    totalPages: Math.ceil(countResult[0].total / limit)
+                }
+            });
+        });
+    });
+});
+
+
+
 // --- End Course Equivalency APIs ---
     app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
     
