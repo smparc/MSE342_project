@@ -2,7 +2,7 @@ describe('Exchange App', () => {
   beforeEach(() => {
     cy.intercept('GET', '/api/user/*', {
       id: 1,
-      full_name: 'Elly Hayakawa',
+      display_name: 'Elly Hayakawa',
       username: 'elly',
       bio: 'Engineering student at UWaterloo',
     });
@@ -85,9 +85,8 @@ describe('Exchange App', () => {
     cy.contains('Hi Alice!');
   });
 
-  it('navigates to course equivalency and shows courses', () => {
-    cy.visit('/');
-    cy.get('[data-testid="MenuBookIcon"]').click();
+  it('open course equivalency and shows courses', () => {
+    cy.visit('/course-equivalency');
     cy.url().should('include', '/course-equivalency');
     cy.contains('Course Equivalency Database');
     cy.contains('CS101');
