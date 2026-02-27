@@ -1,4 +1,4 @@
-[![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=22132634)
+<!-- [![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=22132634)
 # MSE 342 - Project template (based on the repository of MSE 245 - Project Deliverable 2)
 
 
@@ -133,4 +133,58 @@ git push origin your-branch-name
 
 In your GitHub repo, create new pull request and merge `your-branch-name` branch with the `main` branch.
 
-Created Sprint 1 Branch
+Created Sprint 1 Branch -->
+
+# WATExchange: International Exchange Social Platform
+
+## 🌎 Project Description
+**WATExchange is a centralized web platform for University of Waterloo students interested in exchange to connect. It streamlines the application process by bridging the gap between prospective exchange students and alumni exchange students. It acts as a centralized platform for finding course equivalencies, sharing personal experiences, messaging with other prospective/alumni exchange students, and learning more information about the application process.
+
+
+---
+
+## ✨ Completed Features & User Stories
+
+### 🎓 Course Equivalency & Academic Planning
+* **Searchable Database:** Browse a searchable database of course equivalencies to see which foreign credits will be approved for your degree.
+* **Credit Verification:** Alumni can upload successfully matched courses to the database to help future students verify their credits.
+* **Advanced Filtering:** Filter past equivalencies by faculty, exchange term, school, country, and continent.
+
+### 👤 Profile & Personalization
+* **Dynamic Bios:** Create and edit personal bios.
+* **Academic Tags:** Add tags for study abroad universities, locations, and exchange terms to connect with similar students.
+* **Experience Sharing:** Alumni can post travel photos
+* **Course Management:** Alumni can share, edit, and delete the specific courses they took directly on their profile.
+
+### 🔍 Networking & Messaging
+* **User Search:** Search for users by name, school, country, or UW faculty to find relevant information.
+* **Information Transparency:** View another user's program, year, destination country, and school tags.
+* **Direct Messaging:** Contact exchange alumni directly from their profile and access a full chat history for follow-up questions.
+
+---
+
+## 🛠 Technical Stack
+* **Frontend:** React
+* **Backend:** Node.js
+* **Database:** MySQL
+
+---
+
+## 👥 Development Team (Sprint 1)
+
+| Team Member | Responsibility Area |
+| :--- | :--- |
+| **Zeina** | Profile Management (Courses, Bios, Photos, Tags, Personas) |
+| **Matthew** | Course Equivalency (Search, Upload, Filtering, Deadlines) |
+| **Elly** | Messaging Systems (Direct Messaging, Chat History) |
+<!-- | **Cindy** | Search Functionality, User Info Display, Destination Reviews | -->
+
+---
+
+
+AI declaration:
+Zeina - Used for occasional debugging (syntax errors, package/networking errors, etc.)
+* Used for fixing styling on some MUI components (ex. i learned from AI that a particular component comes with default styling)
+* Used to determine that I need to use Multer for posting photos
+* Used for ideation/asissting of features
+* Used to format and have clean README
