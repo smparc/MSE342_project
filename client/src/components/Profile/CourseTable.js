@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Box, Alert, Snackbar, IconButton } from '@mui/material'
+import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Alert, Snackbar, IconButton } from '@mui/material'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 
 const CourseTable = ({ username }) => {
@@ -44,7 +44,7 @@ const CourseTable = ({ username }) => {
             setError("Required entries must have a value. Please try again.")
             return
         }
-        
+
         const courseData = {
             username: username,
             uw_course_code: newUWCode.toUpperCase().trim(),
@@ -134,7 +134,7 @@ const CourseTable = ({ username }) => {
 
     const handleFormClose = (event, reason) => {
         if (reason === 'clickaway') {
-        return;
+            return;
         }
 
         setOutputAlert(false);
@@ -163,11 +163,11 @@ const CourseTable = ({ username }) => {
                                     <TableCell>{row.uw_course_code}</TableCell>
 
                                     <TableCell align={'left'}>{row.uw_course_name}</TableCell>
-                                    <TableCell align={'left'}>{row.host_university}</TableCell>
+                                    <TableCell align={'center'}>{row.host_university}</TableCell>
                                     <TableCell align={'left'}>{row.host_course_code}</TableCell>
                                     <TableCell align={'left'}>{row.host_course_name}</TableCell>
                                     <TableCell align={'center'}>
-                                        <Typography variant="caption" sx={{ 
+                                        <Typography variant="caption" sx={{
                                             bgcolor: row.status === 'Approved' ? '#e6fffa' : row.status === 'Flagged' ? '#fff5f5' : '#fffaf0',
                                             color: row.status === 'Approved' ? '#2c7a7b' : row.status === 'Flagged' ? '#c53030' : '#b7791f',
                                             px: 1, py: 0.5, borderRadius: 1, fontWeight: 'bold'
@@ -198,93 +198,93 @@ const CourseTable = ({ username }) => {
 
                 {dataFormStatus &&
                     <>
-                    <Grid container alignItems={'center'} justifyContent={'center'} direction={'column'} spacing={2} mt={'10px'}>
-                        <Grid item width="100%">
-                            
-                        <form onSubmit={handleSubmit} id='add-course-form'>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField required fullWidth
-                                        value={newUWCode}
-                                        onChange={(event) => setNewUWCode(event.target.value)}
-                                        size="small"
-                                        label="UW Course Code" />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField required fullWidth
-                                        value={newUWName}
-                                        onChange={(event) => setNewUWName(event.target.value)}
-                                        size="small"
-                                        label="UW Course Name" />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField required fullWidth
-                                        value={newHostUni}
-                                        onChange={(event) => setNewHostUni(event.target.value)}
-                                        size="small"
-                                        label="Host University" />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField required fullWidth
-                                        value={newHostCode}
-                                        onChange={(event) => setNewHostCode(event.target.value)}
-                                        size="small"
-                                        label="Host Course Code" />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField required fullWidth
-                                        value={newHostName}
-                                        onChange={(event) => setNewHostName(event.target.value)}
-                                        size="small"
-                                        label="Host Course Name" />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField fullWidth
-                                        value={newCountry}
-                                        onChange={(event) => setNewCountry(event.target.value)}
-                                        size="small"
-                                        label="Country" />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField fullWidth
-                                        value={newContinent}
-                                        onChange={(event) => setNewContinent(event.target.value)}
-                                        size="small"
-                                        label="Continent" />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField fullWidth
-                                        value={newTerm}
-                                        onChange={(event) => setNewTerm(event.target.value)}
-                                        size="small"
-                                        label="Term Taken" />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField fullWidth
-                                        value={newProofUrl}
-                                        onChange={(event) => setNewProofUrl(event.target.value)}
-                                        size="small"
-                                        label="Proof URL/Path" />
-                                </Grid>
-                        </Grid>
-                        </form>
-                        
-                        </Grid>
-                        <Grid item>
-                        <Button type='submit' form='add-course-form' variant="contained" sx={{ bgcolor: '#3143E3' }}>
-                            {editID ? "Update Course" : "Add Course"}
-                        </Button>
-                        <Button onClick={() => setDataFormStatus(false)} sx={{ ml: 1 }}>Cancel</Button>
-                        </Grid>
+                        <Grid container alignItems={'center'} justifyContent={'center'} direction={'column'} spacing={2} mt={'10px'}>
+                            <Grid item width="100%">
 
-                        {error && <Alert severity='error'>{error}</Alert>}
+                                <form onSubmit={handleSubmit} id='add-course-form'>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField required fullWidth
+                                                value={newUWCode}
+                                                onChange={(event) => setNewUWCode(event.target.value)}
+                                                size="small"
+                                                label="UW Course Code" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField required fullWidth
+                                                value={newUWName}
+                                                onChange={(event) => setNewUWName(event.target.value)}
+                                                size="small"
+                                                label="UW Course Name" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField required fullWidth
+                                                value={newHostUni}
+                                                onChange={(event) => setNewHostUni(event.target.value)}
+                                                size="small"
+                                                label="Host University" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField required fullWidth
+                                                value={newHostCode}
+                                                onChange={(event) => setNewHostCode(event.target.value)}
+                                                size="small"
+                                                label="Host Course Code" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField required fullWidth
+                                                value={newHostName}
+                                                onChange={(event) => setNewHostName(event.target.value)}
+                                                size="small"
+                                                label="Host Course Name" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField fullWidth
+                                                value={newCountry}
+                                                onChange={(event) => setNewCountry(event.target.value)}
+                                                size="small"
+                                                label="Country" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField fullWidth
+                                                value={newContinent}
+                                                onChange={(event) => setNewContinent(event.target.value)}
+                                                size="small"
+                                                label="Continent" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField fullWidth
+                                                value={newTerm}
+                                                onChange={(event) => setNewTerm(event.target.value)}
+                                                size="small"
+                                                label="Term Taken" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3}>
+                                            <TextField fullWidth
+                                                value={newProofUrl}
+                                                onChange={(event) => setNewProofUrl(event.target.value)}
+                                                size="small"
+                                                label="Proof URL/Path" />
+                                        </Grid>
+                                    </Grid>
+                                </form>
 
-                    </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Button type='submit' form='add-course-form' variant="contained" sx={{ bgcolor: '#3143E3' }}>
+                                    {editID ? "Update Course" : "Add Course"}
+                                </Button>
+                                <Button onClick={() => setDataFormStatus(false)} sx={{ ml: 1 }}>Cancel</Button>
+                            </Grid>
+
+                            {error && <Alert severity='error'>{error}</Alert>}
+
+                        </Grid>
                     </>}
 
-                    <Snackbar open={outputAlert} autoHideDuration={3500} onClose={handleFormClose} anchorOrigin={{vertical: 'top', horizontal: 'right'}}>
-                        <Alert severity='success'>Course changes saved</Alert>
-                    </Snackbar>
+                <Snackbar open={outputAlert} autoHideDuration={3500} onClose={handleFormClose} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                    <Alert severity='success'>Course changes saved</Alert>
+                </Snackbar>
             </Paper>
         </>
     )

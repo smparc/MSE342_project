@@ -186,28 +186,28 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
                             <ChevronLeft />
                         </IconButton>
                     )}
-                    
+
                     {selectedPost && (
                         <Box sx={{ position: 'relative' }}>
                             <img
                                 src={`/${selectedPost.image_path}`}
                                 alt={`Post ${selectedPost.photo_id}`}
                                 loading="lazy"
-                                style={{ 
-                                    width: 'auto', 
-                                    height: 'auto', 
-                                    display: 'block', 
-                                    maxWidth: 'calc(95vw - 150px)', 
-                                    maxHeight: '85vh', 
-                                    objectFit: 'contain' 
+                                style={{
+                                    width: 'auto',
+                                    height: 'auto',
+                                    display: 'block',
+                                    maxWidth: 'calc(95vw - 150px)',
+                                    maxHeight: '85vh',
+                                    objectFit: 'contain'
                                 }}
                             />
-                            <IconButton 
+                            <IconButton
                                 onClick={() => handleDelete(selectedPost.photo_id)}
-                                sx={{ 
-                                    position: 'absolute', 
-                                    top: 8, 
-                                    right: 8, 
+                                sx={{
+                                    position: 'absolute',
+                                    top: 8,
+                                    right: 8,
                                     bgcolor: 'rgba(255, 255, 255, 0.7)',
                                     color: 'error.main',
                                     '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
