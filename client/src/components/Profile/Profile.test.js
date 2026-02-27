@@ -31,7 +31,6 @@ describe('Profile Photo Upload', () => {
     };
     global.FileReader = jest.fn(() => mockFileReader);
 
-    // Simulate FileReader.onload trigger
     mockFileReader.readAsDataURL.mockImplementation(function () {
       if (this.onload) this.onload();
     });
@@ -41,6 +40,7 @@ describe('Profile Photo Upload', () => {
     jest.restoreAllMocks();
   });
 
+  // Performance acceptance criteria
   it('should display the uploaded photo within 2 seconds after upload', async () => {
     // 1. Mock initial data fetch (user and empty posts)
     global.fetch
@@ -77,8 +77,8 @@ describe('Profile Photo Upload', () => {
     // Simulate file selection
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    // Verify the photo appears within 2 seconds
-    // waitFor has a default timeout of 1000ms, we increase it to 2000ms as per requirement
+    // Verify the photo appears within 2 seconds (performace)
+    // waitFor has a default timeout of 1000ms, we increase it to 2000ms
     await waitFor(() => {
       const uploadedImage = screen.getByAltText('Post 1');
       expect(uploadedImage).toBeInTheDocument();
@@ -161,6 +161,7 @@ describe('Profile Photo Upload', () => {
     });
   });
 
+
   describe('CourseTable', () => {
     beforeEach(async () => {
       // Mock initial user fetch and initial empty courses fetch
@@ -171,7 +172,7 @@ describe('Profile Photo Upload', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => [], // Initial posts
+          json: async () => [],
         });
 
       renderWithTheme(<Profile />);
@@ -182,7 +183,7 @@ describe('Profile Photo Upload', () => {
       // Mock the initial courses fetch that happens when CourseTable mounts
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => [], // No initial courses
+        json: async () => [],
       });
 
       // Switch to CourseTable tab (books icon)
@@ -195,7 +196,7 @@ describe('Profile Photo Upload', () => {
     });
 
     it('should display an error alert when required fields have only whitespace', async () => {
-      // Fill required fields with whitespace
+      // Fill required fields with whitespace (similar to profile display test)
       fireEvent.change(screen.getByLabelText(/UW Course Code/i), { target: { value: '   ' } });
       fireEvent.change(screen.getByLabelText(/UW Course Name/i), { target: { value: '   ' } });
       fireEvent.change(screen.getByLabelText(/Host University/i), { target: { value: '   ' } });
@@ -211,6 +212,7 @@ describe('Profile Photo Upload', () => {
       });
     });
 
+    // Happy test (success)
     it('should add a new row to the table when valid data is submitted', async () => {
       const newCourse = {
         course_id: 101,
@@ -235,7 +237,7 @@ describe('Profile Photo Upload', () => {
         json: async () => ({ success: true }),
       });
 
-      // Mock subsequent GET for updated list
+      // Mock GET for updated list
       global.fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => [newCourse],
@@ -280,23 +282,18 @@ describe('Profile Photo Upload', () => {
 
       renderWithTheme(<Profile />);
 
-      // Wait for photo to appear
       const uploadedImage = await screen.findByAltText('Post 1');
       expect(uploadedImage).toBeInTheDocument();
 
-      // Click on the image to open the modal
       fireEvent.click(uploadedImage);
 
-      // Find delete button in modal and click it
       const deleteButton = await screen.findByTestId('DeleteIcon');
       fireEvent.click(deleteButton);
 
-      // Verify photo is gone
       await waitFor(() => {
         expect(screen.queryByAltText('Post 1')).not.toBeInTheDocument();
       });
 
-      // Verify success snackbar
       expect(screen.getByText(/Photo deleted successfully/i)).toBeInTheDocument();
     });
   });
