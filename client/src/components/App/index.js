@@ -4,8 +4,12 @@ import Box from '@mui/material/Box';
 import NavBar, { NAV_WIDTH_COLLAPSED } from './NavBar';
 import Profile from '../Profile';
 import Search from './Search';
-import CourseEquivalency from './CourseEquivalency';
+import CourseSearch from '../CourseSearch';
+import CourseSubmit from '../CourseSubmit';
 import Messaging from '../Messaging';
+
+// Replace with auth when available (used for course search shortlist & submit)
+const CURRENT_USER = 'elly';
 
 const MainLayout = ({ children }) => (
   <Box
@@ -28,7 +32,8 @@ const App = () => {
           <Route path="/" element={<Navigate to="/profile" replace />} />
           <Route path="/messages" element={<Messaging />} />
           <Route path="/search" element={<Search />} />
-          <Route path="/course-equivalency" element={<CourseEquivalency />} />
+          <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={CURRENT_USER} />} />
+          <Route path="/course-equivalency" element={<CourseSearch currentUser={CURRENT_USER} />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </MainLayout>

@@ -1,9 +1,7 @@
 import * as React from 'react'
 // import ProfileHeader from './ProfileHeader'
 import { Box, Tabs, Tab } from '@mui/material'
-import grid from '../../images/grid-four-light.svg'
-import books from '../../images/book-bookmark-light.svg'
-import star from '../../images/star-light.svg'
+import { GridView, MenuBook, Star } from '@mui/icons-material'
 
 const SectionTab = ({ tabIndex, setTabIndex }) => {
 
@@ -23,9 +21,9 @@ const SectionTab = ({ tabIndex, setTabIndex }) => {
                 TabIndicatorProps={{ sx: { background: 'black' } }}
                 sx={{ '& .Mui-selected': { filter: 'invert(50%) brightness(20%)' } }}
             >
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<Box component='img' src={grid} alt='grid'  />} aria-label="grid" />
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<Box component='img' src={books} alt='books' />} aria-label="books" />
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<Box component='img' src={star} alt='star'  />} aria-label="star" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<GridView />} aria-label="grid" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<MenuBook />} aria-label="books" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<Star />} aria-label="star" />
             </Tabs>
 
         </>

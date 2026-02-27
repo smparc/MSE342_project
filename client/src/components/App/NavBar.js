@@ -27,7 +27,10 @@ const NavBar = () => {
   const [expanded, setExpanded] = React.useState(false);
 
   const currentPath = location.pathname;
-  const isActive = (path) => currentPath === path || (path === '/profile' && currentPath === '/');
+  const isActive = (path) =>
+    currentPath === path ||
+    (path === '/profile' && currentPath === '/') ||
+    (path === '/course-equivalency' && currentPath.startsWith('/course-equivalency'));
 
   return (
     <Box
