@@ -11,9 +11,9 @@ const renderWithTheme = (ui) => {
 
 describe('Profile Photo Upload', () => {
   const mockUser = {
-    display_name: 'Olga Vecht',
+    display_name: 'John Doe',
     bio: 'Hello World',
-    username: 'olga.vecht'
+    username: 'john.doe'
   };
 
   const mockPost = {
@@ -177,7 +177,7 @@ describe('Profile Photo Upload', () => {
       renderWithTheme(<Profile />);
 
       // Wait for Profile to load user data (settle initial effects)
-      await screen.findByText('olga.vecht');
+      await screen.findByText('john.doe');
 
       // Mock the initial courses fetch that happens when CourseTable mounts
       global.fetch.mockResolvedValueOnce({

@@ -17,8 +17,12 @@ const Profile = () => {
     const [bio, setBio] = React.useState('')
     const [displayName, setDisplayName] = React.useState('')
     const [username, setUsername] = React.useState('')
+    const [faculty, setFaculty] = React.useState('')
+    const [program, setProgram] = React.useState('')
+    const [gradYear, setGradYear] = React.useState('')
+    const [exchangeTerm, setExchangeTerm] = React.useState('')
 
-    const currentUsername = 'olga.vecht' // TODO: Replace with actual username from context or auth
+    const currentUsername = 'john.doe' // TODO: Replace with actual username from context or auth
 
     const [tabIndex, setTabIndex] = React.useState(0)
     const [posts, setPosts] = React.useState([])
@@ -30,6 +34,10 @@ const Profile = () => {
             setDisplayName(data.display_name || '')
             setBio(data.bio || '')
             setUsername(data.username || '')
+            setFaculty(data.faculty || '')
+            setProgram(data.program || '')
+            setGradYear(data.grad_year || '')
+            setExchangeTerm(data.exchange_term || '')
         } catch (error) {
             console.error('Error fetching user data:', error)
         }
@@ -63,7 +71,21 @@ const Profile = () => {
             >
 
                 <Grid item>
-                    <ProfileHeader username={username} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} />
+                    <ProfileHeader
+                        username={username}
+                        displayName={displayName}
+                        setDisplayName={setDisplayName}
+                        bio={bio}
+                        setBio={setBio}
+                        faculty={faculty}
+                        setFaculty={setFaculty}
+                        program={program}
+                        setProgram={setProgram}
+                        gradYear={gradYear}
+                        setGradYear={setGradYear}
+                        exchangeTerm={exchangeTerm}
+                        setExchangeTerm={setExchangeTerm}
+                    />
                 </Grid>
 
                 <Grid item mt={'20px'} paddingTop={'20px'}>

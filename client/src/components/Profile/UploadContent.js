@@ -49,7 +49,7 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
         const formData = new FormData()
         formData.append('image', selectedFile)
         // TODO: Replace hardcoded username with actual user data from context or auth
-        formData.append('username', 'olga.vecht')
+        formData.append('username', 'john.doe')
 
         try {
             const response = await fetch('/api/upload', {

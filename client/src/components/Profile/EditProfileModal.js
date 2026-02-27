@@ -4,7 +4,7 @@ import { Box, Grid, Button, TextField, Dialog, DialogActions, DialogContent, Dia
 
 // skipping dialog content text for now
 
-const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio, setBio, username, profileChanged, setProfileChanged }) => {
+const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio, setBio, username, faculty, program, gradYear, exchangeTerm, profileChanged, setProfileChanged }) => {
 
 
     const [tempName, setTempName] = React.useState(displayName)
@@ -30,7 +30,11 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
                 },
                 body: JSON.stringify({
                     display_name: tempName,
-                    bio: tempBio
+                    bio: tempBio,
+                    faculty: faculty,
+                    program: program,
+                    grad_year: gradYear === '' ? null : gradYear,
+                    exchange_term: exchangeTerm
                 }),
             })
             const data = await response.json()
