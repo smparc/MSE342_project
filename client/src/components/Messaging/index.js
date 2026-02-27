@@ -42,7 +42,7 @@ const Messaging = () => {
       }
       setConversations(sortConversationsByLastActive(data));
     } catch (error) {
-      console.error('Error loading conversation list:', error);
+      //console.error('Error loading conversation list:', error);
       setConversations([]);
       setListLoadError(true);
     }
