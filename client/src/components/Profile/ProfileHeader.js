@@ -38,7 +38,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio }) =
             {/* later move container to index and add this profile header as an item */}
             {/* profile card */}
             <Grid container justifyContent={'center'}>
-            <Grid item xs={12} sm={10} md={8} lg={7}
+            <Grid item xs={12} sm={10} md={8} lg={7} minWidth={'680px'} maxWidth={'800px'}
             >
                 <Grid container
                     columnGap={'40px'}

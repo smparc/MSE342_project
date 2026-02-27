@@ -18,32 +18,32 @@ const Profile = () => {
     const [displayName, setDisplayName] = React.useState('')
     const [username, setUsername] = React.useState('')
 
-    const userId = 1 // TODO: Replace with actual user ID from context or auth
+    const currentUsername = 'olga.vecht' // TODO: Replace with actual username from context or auth
 
     const [tabIndex, setTabIndex] = React.useState(0)
     const [posts, setPosts] = React.useState([])
 
     const fetchUserData = React.useCallback(async () => {
         try {
-            const response = await fetch(`/api/user/${userId}`)
+            const response = await fetch(`/api/user/${currentUsername}`)
             const data = await response.json()
-            setDisplayName(data.full_name || '')
+            setDisplayName(data.display_name || '')
             setBio(data.bio || '')
             setUsername(data.username || '')
         } catch (error) {
             console.error('Error fetching user data:', error)
         }
-    }, [])
+    }, [currentUsername])
 
     const fetchPosts = React.useCallback(async () => {
         try {
-            const response = await fetch(`/api/posts/${userId}`)
+            const response = await fetch(`/api/posts/${currentUsername}`)
             const data = await response.json()
             setPosts(data)
         } catch (error) {
             console.error('Error fetching posts:', error)
         }
-    }, [])
+    }, [currentUsername])
 
     React.useEffect(() => {
         fetchUserData()
@@ -82,23 +82,11 @@ const Profile = () => {
                     rowSpacing={1.3}
                     sx={{ mt: 2, mb: 4 }}>
                     {tabIndex === 0 && (
-                        <>
-                            <UploadContent fetchPosts={fetchPosts} posts={posts} />
-                            {/* <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
-                                {posts.map((post) => (
-                                    <ImageListItem key={post.id} sx={{ overflow: 'hidden', borderRadius: '12px' }}>
-                                        <img
-                                            src={`/${post.image_path}`}
-                                            alt={`Post ${post.id}`}
-                                            loading="lazy"
-                                            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
-                                        />
-                                    </ImageListItem>
-                                ))}
-                            </ImageList> */}
-                        </>
+                        <UploadContent
+                            fetchPosts={fetchPosts} posts={posts} cols={cols}
+                        />
                     )}
-                    {tabIndex === 1 && <CourseTable />}
+                    {tabIndex === 1 && <CourseTable username={username} />}
                     {tabIndex === 2 && <Typography>This will display ratings</Typography>}
                 </Grid>
             </Grid>

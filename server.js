@@ -54,12 +54,12 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
         return res.status(400).send('No file uploaded.');
     }
 
-    // TODO: Replace hardcoded userId with actual authenticated user session data
-    const userId = req.body.userId || 1;
+    // TODO: Replace hardcoded username with actual authenticated user session data
+    const username = req.body.username || 'olga.vecht';
     const filePath = req.file.path;
 
-    const sql = "INSERT INTO posts (user_id, image_path) VALUES (?, ?)";
-    connection.query(sql, [userId, filePath], (error, results) => {
+    const sql = "INSERT INTO posts (username, image_path) VALUES (?, ?)";
+    connection.query(sql, [username, filePath], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -68,16 +68,16 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
             success: true,
             message: 'File uploaded and saved to database',
             filePath: filePath,
-            postId: results.insertId
+            photoId: results.insertId
         });
     });
 });
 
 // API to get a user
-app.get('/api/user/:userId', (req, res) => {
-    const userId = req.params.userId;
-    const sql = "SELECT * FROM users WHERE id = ?";
-    connection.query(sql, [userId], (error, results) => {
+app.get('/api/user/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = "SELECT * FROM users WHERE username = ?";
+    connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -87,11 +87,11 @@ app.get('/api/user/:userId', (req, res) => {
 });
 
 // API to update a user
-app.put('/api/user/:userId', (req, res) => {
-    const userId = req.params.userId;
-    const { full_name, bio } = req.body;
-    const sql = "UPDATE users SET full_name = ?, bio = ? WHERE id = ?";
-    connection.query(sql, [full_name, bio, userId], (error, results) => {
+app.put('/api/user/:username', (req, res) => {
+    const username = req.params.username;
+    const { display_name, bio } = req.body;
+    const sql = "UPDATE users SET display_name = ?, bio = ? WHERE username = ?";
+    connection.query(sql, [display_name, bio, username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -101,10 +101,10 @@ app.put('/api/user/:userId', (req, res) => {
 });
 
 // API to get all posts for a user
-app.get('/api/posts/:userId', (req, res) => {
-    const userId = req.params.userId;
-    const sql = "SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC";
-    connection.query(sql, [userId], (error, results) => {
+app.get('/api/posts/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = "SELECT * FROM posts WHERE username = ? ORDER BY uploaded_at DESC";
+    connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -117,7 +117,7 @@ app.get('/api/posts/:userId', (req, res) => {
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // 1) GET /api/messages-list - conversation list (left sidebar)
-// Query param: userId (required) eventually
+// Query param: username (required) eventually
 // Returns: [{ id, senderName, lastMessage, lastMessageAt, unread }]
 app.get('/api/messages-list', (req, res) => {
     const username = req.query.username;
@@ -175,11 +175,11 @@ app.get('/api/messages-list', (req, res) => {
 });
 
 // 2) GET /api/conversations/:conversationId/messages - messages in selected conversation
-// Query param: userId (optional, for future read receipts)
+// Query param: username (optional, for future read receipts)
 // Returns: [{ id, senderId, senderName, content, created_at }]
 app.get('/api/conversations/:conversationId/messages', (req, res) => {
     const { conversationId } = req.params;
-    const userId = req.query.userId;
+    const username = req.query.username;
 
     const connection = mysql.createConnection(config);
 
@@ -211,7 +211,7 @@ app.get('/api/conversations/:conversationId/messages', (req, res) => {
 
 // 3) POST /api/conversations/:conversationId/messages - send a new message
 // Body: { content }
-// Query: userId (required) - sender
+// Query: username (required) - sender
 // Returns: { id, senderId, senderName, content, created_at }
 app.post('/api/conversations/:conversationId/messages', (req, res) => {
     const { conversationId } = req.params;
@@ -261,4 +261,103 @@ app.post('/api/conversations/:conversationId/messages', (req, res) => {
     });
 });
 
-app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
+// --- Course Equivalency APIs ---
+
+// GET /api/courses/user/:username - Get all courses for a specific user
+app.get('/api/courses/user/:username', (req, res) => {
+    const { username } = req.params;
+    const sql = "SELECT * FROM course_equivalencies WHERE username = ? ORDER BY last_updated DESC";
+    connection.query(sql, [username], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.send(results);
+    });
+});
+
+// POST /api/courses - Create a new course equivalency
+app.post('/api/courses', (req, res) => {
+    const {
+        username,
+        uw_course_code,
+        uw_course_name,
+        host_course_code,
+        host_course_name,
+        host_university,
+        country,
+        continent,
+        term_taken,
+        proof_url
+    } = req.body;
+
+    const sql = `
+        INSERT INTO course_equivalencies 
+        (username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const params = [username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url];
+
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                return res.status(409).json({ error: 'This course equivalency has already been submitted.' });
+            }
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.status(201).json({
+            message: 'Course equivalency submitted successfully',
+            course_id: results.insertId,
+            status: 'Pending Review'
+        });
+    });
+});
+
+// PUT /api/courses/:id - Update an existing course equivalency
+app.put('/api/courses/:id', (req, res) => {
+    const { id } = req.params;
+    const {
+        uw_course_code,
+        uw_course_name,
+        host_course_code,
+        host_course_name,
+        host_university,
+        country,
+        continent,
+        term_taken,
+        proof_url
+    } = req.body;
+
+    const sql = `
+        UPDATE course_equivalencies 
+        SET uw_course_code = ?, uw_course_name = ?, host_course_code = ?, host_course_name = ?, host_university = ?, country = ?, continent = ?, term_taken = ?, proof_url = ?
+        WHERE course_id = ?
+    `;
+    const params = [uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url, id];
+
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.send({ success: true, message: 'Course updated successfully' });
+    });
+});
+
+// DELETE /api/courses/:id - Delete a course equivalency
+app.delete('/api/courses/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = "DELETE FROM course_equivalencies WHERE course_id = ?";
+    connection.query(sql, [id], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.send({ success: true, message: 'Course deleted successfully' });
+    });
+});
+
+// --- End Course Equivalency APIs ---
+    app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
+    
