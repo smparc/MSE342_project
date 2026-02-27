@@ -400,4 +400,15 @@ app.delete('/api/courses/:id', (req, res) => {
     });
 });
 
+// Add this to server.js
+app.get('/api/courses', (req, res) => {
+    const sql = "SELECT * FROM course_equivalencies";
+    connection.query(sql, (error, results) => {
+        if (error) return res.status(500).send(error);
+        res.send(results);
+    });
+});
+
+
+
 app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
