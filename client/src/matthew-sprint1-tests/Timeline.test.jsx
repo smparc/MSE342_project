@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Timeline from '../../components/Timeline';
+import Timeline from '../components/Timeline';
 
 global.fetch = jest.fn();
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import CourseSubmit from '../../components/CourseSubmit';
+import CourseSubmit from '../components/CourseSubmit';
 
 global.fetch = jest.fn();
 
