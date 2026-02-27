@@ -240,7 +240,7 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
             </Snackbar>
 
             <Snackbar open={openDeleteSnackbar} autoHideDuration={3500} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
-                <Alert severity="info">
+                <Alert severity="success">
                     Photo deleted successfully
                 </Alert>
             </Snackbar>
