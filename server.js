@@ -54,12 +54,12 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
         return res.status(400).send('No file uploaded.');
     }
 
-    // TODO: Replace hardcoded userId with actual authenticated user session data
-    const userId = req.body.userId || 1;
+    // TODO: Replace hardcoded username with actual authenticated user session data
+    const username = req.body.username || 'john.doe';
     const filePath = req.file.path;
 
-    const sql = "INSERT INTO posts (user_id, image_path) VALUES (?, ?)";
-    connection.query(sql, [userId, filePath], (error, results) => {
+    const sql = "INSERT INTO posts (username, image_path) VALUES (?, ?)";
+    connection.query(sql, [username, filePath], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -68,12 +68,10 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
             success: true,
             message: 'File uploaded and saved to database',
             filePath: filePath,
-            postId: results.insertId
+            photoId: results.insertId
         });
     });
 });
-
-// API to delete a post
 
 app.delete('/api/posts/:id', (req, res) => {
     const { id } = req.params;
@@ -403,7 +401,7 @@ app.delete('/api/courses/:id', (req, res) => {
 app.post('/api/users/:username/saved-courses', (req, res) => {
     const { username } = req.params;
     const { course_id } = req.body;
-    
+
     // Logic: check if exists, if so delete (unsave), if not insert (save)
     const checkSql = "SELECT * FROM saved_courses WHERE username = ? AND course_id = ?";
     connection.query(checkSql, [username, course_id], (err, results) => {
@@ -441,7 +439,7 @@ app.get('/api/courses/meta/filters', (req, res) => {
             // Fallback so the frontend doesn't crash
             return res.json({ countries: [], continents: [], terms: [] });
         }
-        
+
         // results will be an array of 3 arrays because of the semicolons
         res.json({
             countries: results[0].map(r => r.country),
@@ -478,7 +476,7 @@ app.get('/api/courses', (req, res) => {
 
         connection.query(sql, params, (err, results) => {
             if (err) return res.status(500).send(err);
-            
+
             res.json({
                 courses: results,
                 pagination: {
@@ -494,5 +492,5 @@ app.get('/api/courses', (req, res) => {
 
 
 // --- End Course Equivalency APIs ---
-    app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
-    
+app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
+
