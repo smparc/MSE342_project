@@ -1,18 +1,44 @@
 import * as React from 'react';
-import Review from './Review';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import NavBar, { NAV_WIDTH_COLLAPSED } from './NavBar';
+import Profile from '../Profile';
+import Search from './Search';
+import CourseSearch from '../CourseSearch';
+import CourseSubmit from '../CourseSubmit';
+import Messaging from '../Messaging';
 
+// Replace with auth when available (used for course search shortlist & submit)
+const CURRENT_USER = 'elly';
+
+const MainLayout = ({ children }) => (
+  <Box
+    sx={{
+      minHeight: '100vh',
+      backgroundColor: 'background.default',
+      pl: `${NAV_WIDTH_COLLAPSED}px`,
+    }}
+  >
+    {children}
+  </Box>
+);
 
 const App = () => {
-
-
   return (
-    <div>
-        <h1>MSci 245 - D1 template </h1>
-      {/* Render <Review /> child component */}
-
-
-    </div>
+    <BrowserRouter>
+      <NavBar />
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/profile" replace />} />
+          <Route path="/messages" element={<Messaging />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={CURRENT_USER} />} />
+          <Route path="/course-equivalency" element={<CourseSearch currentUser={CURRENT_USER} />} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </MainLayout>
+    </BrowserRouter>
   );
-}
+};
 
 export default App;
