@@ -174,8 +174,8 @@ Created Sprint 1 Branch -->
 
 | Team Member | Responsibility Area |
 | :--- | :--- |
-| **Zeina** | Profile Management (Courses, Bios, Photos, Tags, Personas) |
-| **Matthew** | Course Equivalency (Search, Upload, Filtering, Deadlines) |
+| **Zeina** | Profile Management (Courses, Bios, Photos, Tags) |
+| **Matthew** | Course Equivalency (Search, Upload, Filtering) |
 | **Elly** | Messaging Systems (Direct Messaging, Chat History) |
 <!-- | **Cindy** | Search Functionality, User Info Display, Destination Reviews | -->
 
@@ -187,4 +187,4 @@ Zeina - Used for occasional debugging (syntax errors, package/networking errors,
 * Used for fixing styling on some MUI components (ex. i learned from AI that a particular component comes with default styling)
 * Used to determine that I need to use Multer for posting photos
 * Used for ideation/asissting of features
-* Used to format and have clean README
+* Used to write visually appealing README
