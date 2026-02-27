@@ -11,9 +11,9 @@ const renderWithTheme = (ui) => {
 
 describe('Profile Photo Upload', () => {
   const mockUser = {
-    display_name: 'Olga Vecht',
+    display_name: 'John Doe',
     bio: 'Hello World',
-    username: 'olga.vecht'
+    username: 'john.doe'
   };
 
   const mockPost = {
@@ -177,7 +177,7 @@ describe('Profile Photo Upload', () => {
       renderWithTheme(<Profile />);
 
       // Wait for Profile to load user data (settle initial effects)
-      await screen.findByText('olga.vecht');
+      await screen.findByText('john.doe');
 
       // Mock the initial courses fetch that happens when CourseTable mounts
       global.fetch.mockResolvedValueOnce({
@@ -253,6 +253,54 @@ describe('Profile Photo Upload', () => {
     });
   });
 
+  describe('Photo Deletion', () => {
+    it('should remove a photo from the gallery when delete is clicked', async () => {
+      const mockPostToDelete = {
+        photo_id: 1,
+        image_path: 'uploads/test-photo.jpg'
+      };
+
+      global.fetch = jest.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockUser,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockPostToDelete],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [],
+        });
+
+      renderWithTheme(<Profile />);
+
+      // Wait for photo to appear
+      const uploadedImage = await screen.findByAltText('Post 1');
+      expect(uploadedImage).toBeInTheDocument();
+
+      // Click on the image to open the modal
+      fireEvent.click(uploadedImage);
+
+      // Find delete button in modal and click it
+      const deleteButton = await screen.findByTestId('DeleteIcon');
+      fireEvent.click(deleteButton);
+
+      // Verify photo is gone
+      await waitFor(() => {
+        expect(screen.queryByAltText('Post 1')).not.toBeInTheDocument();
+      });
+
+      // Verify success snackbar
+      expect(screen.getByText(/Photo deleted successfully/i)).toBeInTheDocument();
+    });
+  });
+
   describe('CourseTable Deletion', () => {
     it('should remove a course from the table when delete is clicked', async () => {
       const existingCourse = {
@@ -310,6 +358,46 @@ describe('Profile Photo Upload', () => {
 
       // Verify success snackbar
       expect(screen.getByText(/Course changes saved/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Editing Tags', () => {
+    const updatedTags = {
+      faculty: 'Engineering',
+      program: 'Software Engineering',
+      grad_year: '2026',
+      exchange_term: 'Fall 2025'
+    };
+
+    it('should successfully update tags and display them in the profile header', async () => {
+      global.fetch
+        .mockResolvedValueOnce({ ok: true, json: async () => mockUser })
+        .mockResolvedValueOnce({ ok: true, json: async () => [] })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }),
+        });
+
+      renderWithTheme(<Profile />);
+
+      const editTagsButton = await screen.findByRole('button', { name: /Add Tags/i });
+      fireEvent.click(editTagsButton);
+
+      fireEvent.change(screen.getByLabelText(/Faculty/i), { target: { value: updatedTags.faculty } });
+      fireEvent.change(screen.getByLabelText(/Program/i), { target: { value: updatedTags.program } });
+      fireEvent.change(screen.getByLabelText(/Graduation Year/i), { target: { value: updatedTags.grad_year } });
+      fireEvent.change(screen.getByLabelText(/Exchange Term/i), { target: { value: updatedTags.exchange_term } });
+
+      fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(updatedTags.faculty)).toBeInTheDocument();
+        expect(screen.getByText(updatedTags.program)).toBeInTheDocument();
+        expect(screen.getByText(`Class of ${updatedTags.grad_year}`)).toBeInTheDocument();
+        expect(screen.getByText(`${updatedTags.exchange_term} Exchange`)).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/Profile changes saved/i)).toBeInTheDocument();
     });
   });
 });

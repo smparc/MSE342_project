@@ -1,18 +1,20 @@
 import * as React from 'react'
 import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal, IconButton, Snackbar, Alert } from '@mui/material'
-import { ChevronLeft, ChevronRight, PhotoCamera, FileUpload } from '@mui/icons-material'
+import { ChevronLeft, ChevronRight, PhotoCamera, FileUpload, Delete } from '@mui/icons-material'
 
 const UploadContent = ({ fetchPosts, posts, cols }) => {
 
     const [fileUrl, setFileUrl] = React.useState('')
     const [selectedPost, setSelectedPost] = React.useState(null)
     const [openSnackbar, setOpenSnackbar] = React.useState(false)
+    const [openDeleteSnackbar, setOpenDeleteSnackbar] = React.useState(false)
 
     const handleCloseSnackbar = (event, reason) => {
         if (reason === 'clickaway') {
             return
         }
         setOpenSnackbar(false)
+        setOpenDeleteSnackbar(false)
     }
 
     const handleNext = (e) => {
@@ -33,6 +35,28 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
         setSelectedPost(posts[prevIndex]);
     };
 
+    const handleDelete = async (postId) => {
+        try {
+            const response = await fetch(`/api/posts/${postId}`, {
+                method: 'DELETE',
+            })
+            const data = await response.json()
+            if (data.success) {
+                console.log('Delete successful')
+                setOpenDeleteSnackbar(true)
+                setSelectedPost(null)
+                // Trigger re-fetch of posts
+                if (fetchPosts) {
+                    fetchPosts()
+                }
+            } else {
+                console.error('Delete failed')
+            }
+        } catch (error) {
+            console.error('Error deleting file:', error)
+        }
+    }
+
     const handleFileUpload = async (event) => {
         event.preventDefault()
         const selectedFile = event.target.files[0]
@@ -49,7 +73,7 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
         const formData = new FormData()
         formData.append('image', selectedFile)
         // TODO: Replace hardcoded username with actual user data from context or auth
-        formData.append('username', 'olga.vecht')
+        formData.append('username', 'john.doe')
 
         try {
             const response = await fetch('/api/upload', {
@@ -164,19 +188,34 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
                     )}
                     
                     {selectedPost && (
-                        <img
-                            src={`/${selectedPost.image_path}`}
-                            alt={`Post ${selectedPost.photo_id}`}
-                            loading="lazy"
-                            style={{ 
-                                width: 'auto', 
-                                height: 'auto', 
-                                display: 'block', 
-                                maxWidth: 'calc(95vw - 150px)', 
-                                maxHeight: '85vh', 
-                                objectFit: 'contain' 
-                            }}
-                        />
+                        <Box sx={{ position: 'relative' }}>
+                            <img
+                                src={`/${selectedPost.image_path}`}
+                                alt={`Post ${selectedPost.photo_id}`}
+                                loading="lazy"
+                                style={{ 
+                                    width: 'auto', 
+                                    height: 'auto', 
+                                    display: 'block', 
+                                    maxWidth: 'calc(95vw - 150px)', 
+                                    maxHeight: '85vh', 
+                                    objectFit: 'contain' 
+                                }}
+                            />
+                            <IconButton 
+                                onClick={() => handleDelete(selectedPost.photo_id)}
+                                sx={{ 
+                                    position: 'absolute', 
+                                    top: 8, 
+                                    right: 8, 
+                                    bgcolor: 'rgba(255, 255, 255, 0.7)',
+                                    color: 'error.main',
+                                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
+                                }}
+                            >
+                                <Delete />
+                            </IconButton>
+                        </Box>
                     )}
 
                     {posts && posts.length > 1 && (
@@ -197,6 +236,12 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
             <Snackbar open={openSnackbar} autoHideDuration={3500} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
                 <Alert severity="success">
                     Photo uploaded successfully
+                </Alert>
+            </Snackbar>
+
+            <Snackbar open={openDeleteSnackbar} autoHideDuration={3500} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                <Alert severity="info">
+                    Photo deleted successfully
                 </Alert>
             </Snackbar>
 

@@ -55,7 +55,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     }
 
     // TODO: Replace hardcoded username with actual authenticated user session data
-    const username = req.body.username || 'olga.vecht';
+    const username = req.body.username || 'john.doe';
     const filePath = req.file.path;
 
     const sql = "INSERT INTO posts (username, image_path) VALUES (?, ?)";
@@ -89,9 +89,9 @@ app.get('/api/user/:username', (req, res) => {
 // API to update a user
 app.put('/api/user/:username', (req, res) => {
     const username = req.params.username;
-    const { display_name, bio } = req.body;
-    const sql = "UPDATE users SET display_name = ?, bio = ? WHERE username = ?";
-    connection.query(sql, [display_name, bio, username], (error, results) => {
+    const { display_name, bio, faculty, program, grad_year, exchange_term } = req.body;
+    const sql = "UPDATE users SET display_name = ?, bio = ?, faculty = ?, program = ?, grad_year = ?, exchange_term = ? WHERE username = ?";
+    connection.query(sql, [display_name, bio, faculty, program, grad_year, exchange_term, username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
