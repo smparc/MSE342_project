@@ -2,8 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-
+import Button from '@mui/material/Button';
 
 const Search = () => {
   const [query, setQuery] = React.useState('');
@@ -18,6 +17,34 @@ const Search = () => {
   });
 
   const handleSearch = async (searchTerm) => {
+    setLoading(true);
+    setSearched(true);
+  
+    try {
+      // Get user profile by username (MUST BE EXACT USERNAME)
+      const userRes = await fetch(`/api/user/${encodeURIComponent(searchTerm)}`);
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        setUser(userData || null);
+      } else {
+        setUser(null);
+      }
+
+      // Get all posts by the username
+      const postsRes = await fetch(`/api/posts/${encodeURIComponent(searchTerm)}`);
+      if (postsRes.ok) {
+        const postsData = await postsRes.json();
+        setPosts(postsData || []);
+      } else {
+        setPosts([]);
+      }
+    } catch (err) {
+      console.error('Search failed:', err);
+      setUser(null);
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,21 +59,27 @@ const Search = () => {
       <Typography variant="h6" sx={{ mb: 2 }}>
         Search
       </Typography>
-      <TextField
-        fullWidth
-        placeholder="Search by username..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        variant="outlined"
-        size="small"
-        sx={{ mb: 2 }}
-      />
+      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search by username..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          variant="outlined"
+          size="small"
+          sx={{ mb: 2 }}
+        />
 
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <CircularProgress size={28} />
-        </Box>
-      )}
+        <Button
+          variant="contained"
+          onClick={handleSearch}
+          disabled={loading || !query.trim()}
+          sx={{ whiteSpace: 'nowrap' }}
+        >
+          Search
+        </Button>
+
+      </Box>
 
     </Box>
   );
