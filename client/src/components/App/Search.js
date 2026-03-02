@@ -3,6 +3,10 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 
 const Search = () => {
   const [query, setQuery] = React.useState('');
@@ -11,12 +15,10 @@ const Search = () => {
   const [loading, setLoading] = React.useState(false);
   const [searched, setSearched] = React.useState(false);
 
+  const handleSearch = async () => {
+    const searchTerm = query.trim();
+    if (!searchTerm) return;
 
-
-  React.useEffect(() => {
-  });
-
-  const handleSearch = async (searchTerm) => {
     setLoading(true);
     setSearched(true);
   
@@ -27,7 +29,8 @@ const Search = () => {
         const userData = await userRes.json();
         setUser(userData || null);
       } else {
-        setUser(null);
+        // test to make sure ui still works
+        setUser('bob');
       }
 
       // Get all posts by the username
@@ -56,13 +59,14 @@ const Search = () => {
         margin: '0 auto',
       }}
     >
+      {/* SEARCH FIELD */}
       <Typography variant="h6" sx={{ mb: 2 }}>
         Search
       </Typography>
       <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
         <TextField
           fullWidth
-          placeholder="Search by username..."
+          placeholder="Search by EXACT username"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           variant="outlined"
@@ -78,8 +82,37 @@ const Search = () => {
         >
           Search
         </Button>
-
       </Box>
+
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <CircularProgress size={28} />
+        </Box>
+      )}
+
+      {!loading && searched && !user && posts.length === 0 && (
+        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
+          No users or posts found for "{query}".
+        </Typography>
+      )}
+
+      {/* USER RESULT
+      */}
+      {!loading && user && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+            User
+          </Typography>
+          <List disablePadding>
+            <ListItem sx={{ bgcolor: 'grey.50', borderRadius: 1 }}>
+              <ListItemText
+                primary={user.display_name}
+              />
+            </ListItem>
+          </List>
+        </Box>
+      )}
+
 
     </Box>
   );
