@@ -30,7 +30,7 @@ const Search = () => {
         setUser(userData || null);
       } else {
         // test to make sure ui still works
-        setUser('bob');
+        setUser(null);
       }
 
       // Get all posts by the username
