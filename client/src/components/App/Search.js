@@ -2,8 +2,23 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
+
+
 const Search = () => {
   const [query, setQuery] = React.useState('');
+  const [user, setUser] = React.useState(null);
+  const [posts, setPosts] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [searched, setSearched] = React.useState(false);
+
+
+
+  React.useEffect(() => {
+  });
+
+  const handleSearch = async (searchTerm) => {
+  };
 
   return (
     <Box
@@ -19,16 +34,20 @@ const Search = () => {
       </Typography>
       <TextField
         fullWidth
-        placeholder="Search..."
+        placeholder="Search by username..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         variant="outlined"
         size="small"
         sx={{ mb: 2 }}
       />
-      <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
-        Search results will appear here. Connect to your backend to load users, posts, etc.
-      </Typography>
+
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <CircularProgress size={28} />
+        </Box>
+      )}
+
     </Box>
   );
 };
