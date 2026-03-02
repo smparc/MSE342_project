@@ -11,6 +11,7 @@ import ListItemText from '@mui/material/ListItemText';
 const Search = () => {
   const [query, setQuery] = React.useState('');
   const [user, setUser] = React.useState(null);
+  // Implement next sprint
   const [posts, setPosts] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [searched, setSearched] = React.useState(false);
@@ -97,6 +98,7 @@ const Search = () => {
       )}
 
       {/* USER RESULT
+          Next sprint: display profile picture, year, destination, and other attributes
       */}
       {!loading && user && (
         <Box sx={{ mt: 2 }}>
@@ -113,7 +115,9 @@ const Search = () => {
         </Box>
       )}
 
-
+      {/* POST RESULT
+          Implement next sprint
+      */}
     </Box>
   );
 };

@@ -177,7 +177,7 @@ Created Sprint 1 Branch -->
 | **Zeina** | Profile Management (Courses, Bios, Photos, Tags) |
 | **Matthew** | Course Equivalency (Search, Upload, Filtering) & Master Database|
 | **Elly** | Messaging Systems (Direct Messaging, Chat History) |
-<!-- | **Cindy** | Search Functionality, User Info Display, Destination Reviews | -->
+| **Cindy** | User search Functionality |
 
 ---
 
@@ -188,3 +188,9 @@ Zeina - Used for occasional debugging (syntax errors, package/networking errors,
 * Used to determine that I need to use Multer for posting photos
 * Used for ideation/asissting of features
 * Used to write visually appealing README
+
+Cindy - Used for debugging and design aid
+* Used to determine React states needed for proper implementation of Search function
+* Used for making UI (e.g. flex box size) of some new components (e.g. loading screen) look more cohesive with existing components 
+* Used to make mock data for jest tests 
+* Used to help debug the syntax for the API url expression used in the stringMatching test 
