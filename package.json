@@ -10,6 +10,7 @@
     "cypress:run": "cypress run"
   },
   "dependencies": {
+    "@base-ui/react": "^1.2.0",
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",
     "dotenv": "^16.0.3",

@@ -4,6 +4,7 @@ import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ImageLis
 import SectionTab from './SectionTab'
 import UploadContent from './UploadContent'
 import CourseTable from './CourseTable'
+import UploadReviews from './UploadReviews'
 
 
 const Profile = () => {
@@ -109,7 +110,7 @@ const Profile = () => {
                         />
                     )}
                     {tabIndex === 1 && <CourseTable username={username} />}
-                    {tabIndex === 2 && <Typography>This will display ratings</Typography>}
+                    {tabIndex === 2 && <UploadReviews />}
                 </Grid>
             </Grid>
 
