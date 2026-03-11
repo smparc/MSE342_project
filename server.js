@@ -54,12 +54,12 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
         return res.status(400).send('No file uploaded.');
     }
 
-    // TODO: Replace hardcoded username with actual authenticated user session data
-    const username = req.body.username || 'john.doe';
+    // TODO: Replace hardcoded userId with actual authenticated user session data
+    const userId = req.body.userId || 1;
     const filePath = req.file.path;
 
-    const sql = "INSERT INTO posts (username, image_path) VALUES (?, ?)";
-    connection.query(sql, [username, filePath], (error, results) => {
+    const sql = "INSERT INTO posts (user_id, image_path) VALUES (?, ?)";
+    connection.query(sql, [userId, filePath], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -68,7 +68,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
             success: true,
             message: 'File uploaded and saved to database',
             filePath: filePath,
-            photoId: results.insertId
+            postId: results.insertId
         });
     });
 });
@@ -403,15 +403,15 @@ app.delete('/api/courses/:id', (req, res) => {
 app.post('/api/users/:username/saved-courses', (req, res) => {
     const { username } = req.params;
     const { course_id } = req.body;
-
+    
     // Logic: check if exists, if so delete (unsave), if not insert (save)
-    const checkSql = "SELECT * FROM saved_courses WHERE username = ? AND course_id = ?";
+    const checkSql = "SELECT * FROM user_saved_courses WHERE username = ? AND course_id = ?";
     connection.query(checkSql, [username, course_id], (err, results) => {
         if (results.length > 0) {
-            connection.query("DELETE FROM saved_courses WHERE username = ? AND course_id = ?", [username, course_id]);
+            connection.query("DELETE FROM user_saved_courses WHERE username = ? AND course_id = ?", [username, course_id]);
             res.json({ saved: false });
         } else {
-            connection.query("INSERT INTO saved_courses (username, course_id) VALUES (?, ?)", [username, course_id]);
+            connection.query("INSERT INTO user_saved_courses (username, course_id) VALUES (?, ?)", [username, course_id]);
             res.json({ saved: true });
         }
     });
@@ -421,7 +421,7 @@ app.get('/api/users/:username/saved-courses', (req, res) => {
     const { username } = req.params;
     const sql = `
         SELECT c.* FROM course_equivalencies c
-        JOIN saved_courses s ON c.course_id = s.course_id
+        JOIN user_saved_courses s ON c.course_id = s.course_id
         WHERE s.username = ?`;
     connection.query(sql, [username], (err, results) => {
         if (err) return res.status(500).send(err);
@@ -441,7 +441,7 @@ app.get('/api/courses/meta/filters', (req, res) => {
             // Fallback so the frontend doesn't crash
             return res.json({ countries: [], continents: [], terms: [] });
         }
-
+        
         // results will be an array of 3 arrays because of the semicolons
         res.json({
             countries: results[0].map(r => r.country),
@@ -478,7 +478,7 @@ app.get('/api/courses', (req, res) => {
 
         connection.query(sql, params, (err, results) => {
             if (err) return res.status(500).send(err);
-
+            
             res.json({
                 courses: results,
                 pagination: {
@@ -494,5 +494,261 @@ app.get('/api/courses', (req, res) => {
 
 
 // --- End Course Equivalency APIs ---
-app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
 
+// --- Sprint 2 APIs for matthew---
+
+// GET /api/users/:username/milestones/export - export milestones as .ics calendar file
+// Must stay BEFORE /:username/milestones to avoid :username catching 'export'
+app.get('/api/users/:username/milestones/export', (req, res) => {
+    const { username } = req.params;
+    connection.query(
+        "SELECT * FROM timeline_milestones WHERE username = ? ORDER BY deadline_utc",
+        [username],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Failed to export calendar' });
+
+            const fmt = d => new Date(d).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+            const events = rows.map(m => [
+                'BEGIN:VEVENT',
+                `DTSTART:${fmt(m.deadline_utc)}`,
+                `DTEND:${fmt(m.deadline_utc)}`,
+                `SUMMARY:${m.title}`,
+                `DESCRIPTION:${m.milestone_type} deadline${m.form_link ? ' - ' + m.form_link : ''}`,
+                `STATUS:${m.is_completed ? 'COMPLETED' : 'NEEDS-ACTION'}`,
+                'END:VEVENT',
+            ].join('\r\n'));
+
+            const ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//UW Exchange//Timeline//EN',
+                'CALSCALE:GREGORIAN',
+                ...events,
+                'END:VCALENDAR',
+            ].join('\r\n');
+
+            res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+            res.setHeader('Content-Disposition', 'attachment; filename="exchange-deadlines.ics"');
+            res.send(ics);
+        }
+    );
+});
+
+// GET /api/users/:username/milestones - supports phase and destination filters (Stories 1 & 2)
+app.get('/api/users/:username/milestones', (req, res) => {
+    const { username } = req.params;
+    const { type, phase, destination } = req.query;
+
+    let sql = `
+        SELECT m.*,
+               p.title AS prerequisite_title,
+               p.is_completed AS prerequisite_completed
+        FROM timeline_milestones m
+        LEFT JOIN timeline_milestones p ON m.prerequisite_id = p.milestone_id
+        WHERE m.username = ?
+    `;
+    const params = [username];
+
+    if (type)        { sql += " AND m.milestone_type = ?";      params.push(type); }
+    if (phase)       { sql += " AND m.phase = ?";               params.push(phase); }
+    if (destination) { sql += " AND m.destination_country = ?"; params.push(destination); }
+
+    sql += " ORDER BY m.phase, m.deadline_utc ASC";
+
+    connection.query(sql, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Failed to fetch milestones' });
+
+        const now = Date.now();
+        const enriched = rows.map(m => {
+            const deadlineMs = new Date(m.deadline_utc).getTime();
+            const hoursUntil = (deadlineMs - now) / (1000 * 60 * 60);
+            const daysUntil  = Math.ceil((deadlineMs - now) / (1000 * 60 * 60 * 24));
+            return {
+                ...m,
+                days_remaining:     daysUntil > 0 ? daysUntil : 0,
+                buffer_days:        m.is_completed ? daysUntil : null,
+                is_approaching_48h: hoursUntil > 0 && hoursUntil <= 48,
+                is_approaching_7d:  hoursUntil > 0 && hoursUntil <= 168,
+                is_overdue:         hoursUntil < 0 && !m.is_completed,
+            };
+        });
+
+        res.json(enriched);
+    });
+});
+
+// POST /api/users/:username/milestones - create a new milestone
+app.post('/api/users/:username/milestones', (req, res) => {
+    const { username } = req.params;
+    const {
+        title,
+        deadline_utc,
+        milestone_type,
+        prerequisite_id = null,
+        form_link = null,
+        phase = 'Research',
+        destination_country = null
+    } = req.body;
+
+    if (!title || !deadline_utc || !milestone_type) {
+        return res.status(400).json({ error: 'title, deadline_utc, and milestone_type are required' });
+    }
+
+    connection.query(
+        "INSERT INTO timeline_milestones (username, title, deadline_utc, milestone_type, prerequisite_id, form_link, phase, destination_country) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [username, title, deadline_utc, milestone_type, prerequisite_id, form_link, phase, destination_country],
+        (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Failed to create milestone' });
+            }
+            res.status(201).json({ milestone_id: result.insertId });
+        }
+    );
+});
+
+// PATCH /api/milestones/:id - update a milestone (mark complete, edit fields)
+app.patch('/api/milestones/:id', (req, res) => {
+    const { id } = req.params;
+    const { is_completed, title, deadline_utc, form_link, phase, destination_country } = req.body;
+    const fields = [];
+    const values = [];
+
+    if (is_completed        !== undefined) { fields.push('is_completed = ?');        values.push(is_completed); }
+    if (title               !== undefined) { fields.push('title = ?');               values.push(title); }
+    if (deadline_utc        !== undefined) { fields.push('deadline_utc = ?');        values.push(deadline_utc); }
+    if (form_link           !== undefined) { fields.push('form_link = ?');           values.push(form_link); }
+    if (phase               !== undefined) { fields.push('phase = ?');               values.push(phase); }
+    if (destination_country !== undefined) { fields.push('destination_country = ?'); values.push(destination_country); }
+
+    if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+
+    values.push(id);
+    connection.query(`UPDATE timeline_milestones SET ${fields.join(', ')} WHERE milestone_id = ?`, values, (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Failed to update milestone' });
+        }
+        res.json({ message: 'Milestone updated' });
+    });
+});
+
+// DELETE /api/milestones/:id - delete a milestone
+app.delete('/api/milestones/:id', (req, res) => {
+    connection.query("DELETE FROM timeline_milestones WHERE milestone_id = ?", [req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: 'Failed to delete milestone' });
+        res.json({ message: 'Milestone deleted' });
+    });
+});
+
+// GET /api/contacts - get all study abroad contacts (Story 3)
+app.get('/api/contacts', (req, res) => {
+    const sql = "SELECT * FROM study_abroad_contacts ORDER BY faculty, name";
+    connection.query(sql, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Failed to fetch contacts' });
+        }
+        res.json(results);
+    });
+});
+
+// GET /api/advisors - get all academic advisors (Story 4)
+app.get('/api/advisors', (req, res) => {
+    const sql = "SELECT * FROM academic_advisors ORDER BY faculty, name";
+    connection.query(sql, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Failed to fetch advisors' });
+        }
+        res.json(results);
+    });
+});
+
+// DELETE /api/users/:username - delete account with password confirmation (Story 6)
+app.delete('/api/users/:username', (req, res) => {
+    const { username } = req.params;
+    const { password } = req.body;
+
+    // Verify password before deleting
+    const verifySql = "SELECT password_hash FROM users WHERE username = ?";
+    connection.query(verifySql, [username], (err, results) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        if (!results.length) return res.status(404).json({ error: 'User not found' });
+
+        const stored = results[0].password_hash;
+        // TODO: Replace plain comparison with bcrypt.compare() when password hashing is added
+        if (stored && stored !== password) {
+            return res.status(401).json({ error: 'Password incorrect' });
+        }
+
+        connection.query("DELETE FROM users WHERE username = ?", [username], (delErr) => {
+            if (delErr) return res.status(500).json({ error: 'Failed to delete account' });
+            res.json({ message: 'Account deleted successfully' });
+        });
+    });
+});
+
+// PUT /api/users/:username/type - update user type selection (Story 7)
+app.put('/api/users/:username/type', (req, res) => {
+    const { username } = req.params;
+    const { user_type } = req.body;
+
+    const valid = ['current_exchange', 'prospective', 'alumni', 'browsing'];
+    if (!valid.includes(user_type)) {
+        return res.status(400).json({ error: 'Invalid user type' });
+    }
+
+    const sql = "UPDATE users SET user_type = ? WHERE username = ?";
+    connection.query(sql, [user_type, username], (err) => {
+        if (err) return res.status(500).json({ error: 'Failed to update user type' });
+        res.json({ success: true, user_type });
+    });
+});
+
+// POST /api/auth/signout - sign out (Story 8)
+// Stateless for now — client handles session clearing
+// Future: invalidate server-side session token here
+app.post('/api/auth/signout', (req, res) => {
+    res.json({ success: true, message: 'Signed out successfully' });
+});
+
+// GET /api/users/:username/tags - get profile tags for a user (Story 9)
+app.get('/api/users/:username/tags', (req, res) => {
+    const { username } = req.params;
+    const sql = "SELECT * FROM profile_tags WHERE username = ? ORDER BY tag_type";
+    connection.query(sql, [username], (err, results) => {
+        if (err) return res.status(500).json({ error: 'Failed to fetch tags' });
+        res.json(results);
+    });
+});
+
+// POST /api/users/:username/tags - upsert tags from profile fields (Story 9)
+app.post('/api/users/:username/tags', (req, res) => {
+    const { username } = req.params;
+    const { program, grad_year, destination_country, destination_school, exchange_term } = req.body;
+
+    const tags = [];
+    if (program)             tags.push([username, 'program', program]);
+    if (grad_year)           tags.push([username, 'year', String(grad_year)]);
+    if (destination_country) tags.push([username, 'country', destination_country]);
+    if (destination_school)  tags.push([username, 'school', destination_school]);
+    if (exchange_term)       tags.push([username, 'term', exchange_term]);
+
+    if (!tags.length) return res.json({ success: true });
+
+    // Delete old tags and reinsert fresh
+    connection.query("DELETE FROM profile_tags WHERE username = ?", [username], (err) => {
+        if (err) return res.status(500).json({ error: 'Failed to update tags' });
+
+        connection.query("INSERT INTO profile_tags (username, tag_type, tag_value) VALUES ?", [tags], (insErr) => {
+            if (insErr) return res.status(500).json({ error: 'Failed to insert tags' });
+            res.json({ success: true });
+        });
+    });
+});
+
+// --- End Sprint 2 APIs ---
+
+    app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version

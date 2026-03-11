@@ -423,3 +423,145 @@
   .tl-header { flex-direction: column; }
   .tl-header-actions { width: 100%; }
 }
+
+/* ============================================================
+   Sprint 2 additions
+   ============================================================ */
+
+/* ── Phase grouping (Story 1) ── */
+.tl-phases {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.tl-phase-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tl-phase-heading {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem;
+  color: #1a1a2e;
+  margin: 0 0 0.75rem 0;
+  padding: 0.4rem 1rem;
+  background: #f4f4f9;
+  border-left: 4px solid #1a1a2e;
+  border-radius: 0 6px 6px 0;
+  letter-spacing: 0.01em;
+}
+
+/* Phase heading colour coding */
+.tl-phase-group:nth-child(1) .tl-phase-heading { border-left-color: #6366f1; }
+.tl-phase-group:nth-child(2) .tl-phase-heading { border-left-color: #f59e0b; }
+.tl-phase-group:nth-child(3) .tl-phase-heading { border-left-color: #10b981; }
+
+/* ── Days remaining badge (Story 2) ── */
+.tl-days-remaining {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 20px;
+  padding: 1px 8px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+/* Urgent: fewer than 7 days */
+.ms-urgent .tl-days-remaining,
+.ms-soon   .tl-days-remaining {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+/* Overdue */
+.ms-overdue .tl-days-remaining {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* ── Destination highlight (Story 3) ── */
+.tl-milestone.destination-match {
+  border-left: 3px solid #6366f1;
+  background: #f5f3ff;
+}
+
+.tl-milestone.destination-match .tl-ms-title {
+  color: #4338ca;
+}
+
+/* ── Sprint 2 filter row ── */
+.tl-filter-row--sprint2 {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #fafafa;
+  border: 1px solid #e8e8f0;
+  border-radius: 10px;
+}
+
+.tl-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.tl-filter-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tl-select {
+  padding: 7px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  font-size: 0.88rem;
+  font-family: 'DM Sans', sans-serif;
+  background: #fff;
+  color: #1a1a2e;
+  outline: none;
+  cursor: pointer;
+}
+
+.tl-select:focus {
+  border-color: #6366f1;
+}
+
+.tl-input--sm {
+  padding: 7px 10px;
+  font-size: 0.88rem;
+  width: 160px;
+}
+
+.tl-clear-filters {
+  align-self: flex-end;
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  color: #666;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.tl-clear-filters:hover {
+  border-color: #1a1a2e;
+  color: #1a1a2e;
+}
