@@ -7,7 +7,7 @@ import EditProfileModal from './EditProfileModal'
 import EditTagsModal from './EditTagsModal'
 
 
-const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm }) => {
+const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, firebase }) => {
 
     const [modalStatus, setModalStatus] = React.useState(false)
     const [tagsModalStatus, setTagsModalStatus] = React.useState(false)
@@ -145,7 +145,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                 </Grid>
                             </Grid>
                         </Grid>
-                        <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} faculty={faculty} program={program} gradYear={gradYear} exchangeTerm={exchangeTerm} profileChanged={profileChanged} setProfileChanged={setProfileChanged} />
+                        <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} faculty={faculty} program={program} gradYear={gradYear} exchangeTerm={exchangeTerm} profileChanged={profileChanged} setProfileChanged={setProfileChanged} firebase={firebase} />
                         <EditTagsModal
                             open={tagsModalStatus}
                             handleClose={() => setTagsModalStatus(false)}
@@ -161,6 +161,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                             displayName={displayName}
                             bio={bio}
                             setProfileChanged={setProfileChanged}
+                            firebase={firebase}
                         />
 
                         {/* <Grid item xs={12}>

@@ -5,6 +5,24 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import admin from 'firebase-admin';
+import { readFileSync } from 'fs';
+
+// Initialize Firebase Admin SDK
+// Note: You need to download serviceAccountKey.json from Firebase Console
+// Go to: Project Settings > Service Accounts > Generate new private key
+const serviceAccountPath = './serviceAccountKey.json';
+try {
+    const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+    });
+    console.log('Firebase Admin SDK initialized successfully');
+} catch (error) {
+    console.warn('Warning: Firebase Admin SDK not initialized.', error.message);
+    console.warn('Server will run but authentication will not work.');
+    console.warn('Download serviceAccountKey.json from Firebase Console and place it in the project root.');
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,8 +66,32 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// API to upload a post
-app.post('/api/upload', upload.single('image'), (req, res) => {
+// Middleware to verify Firebase ID Token
+const checkAuth = (req, res, next) => {
+    const idToken = req.headers.authorization;
+    if (!idToken) {
+        return res.status(403).json({ error: 'Unauthorized: No token provided' });
+    }
+    
+    // Check if Firebase Admin is initialized
+    if (!admin.apps.length) {
+        console.warn('Firebase Admin not initialized, skipping auth check');
+        return next();
+    }
+    
+    admin.auth().verifyIdToken(idToken)
+        .then(decodedToken => {
+            req.user = decodedToken;
+            next();
+        })
+        .catch(error => {
+            console.error('Token verification failed:', error.message);
+            res.status(403).json({ error: 'Unauthorized: Invalid token' });
+        });
+};
+
+// API to upload a post (protected)
+app.post('/api/upload', checkAuth, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
@@ -73,9 +115,8 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     });
 });
 
-// API to delete a post
-
-app.delete('/api/posts/:id', (req, res) => {
+// API to delete a post (protected)
+app.delete('/api/posts/:id', checkAuth, (req, res) => {
     const { id } = req.params;
 
     // Get image path from db
@@ -115,6 +156,58 @@ app.delete('/api/posts/:id', (req, res) => {
     });
 });
 
+// API to create a new user (for sign up)
+app.post('/api/users', checkAuth, (req, res) => {
+    const { username, email, display_name } = req.body;
+
+    if (!username || !username.trim()) {
+        return res.status(400).json({ error: 'Username is required' });
+    }
+
+    // Check if username already exists
+    const checkSql = "SELECT username FROM users WHERE username = ?";
+    connection.query(checkSql, [username.trim()], (checkError, checkResults) => {
+        if (checkError) {
+            console.error('Database error:', checkError);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (checkResults.length > 0) {
+            return res.status(409).json({ error: 'Username already exists' });
+        }
+
+        // Create new user with email for lookup
+        const insertSql = "INSERT INTO users (username, display_name, email) VALUES (?, ?, ?)";
+        connection.query(insertSql, [username.trim(), display_name || username.trim(), email], (error, results) => {
+            if (error) {
+                console.error('Database error:', error);
+                return res.status(500).json({ error: 'Failed to create user' });
+            }
+            res.status(201).json({ 
+                success: true, 
+                message: 'User created successfully',
+                username: username.trim()
+            });
+        });
+    });
+});
+
+// API to get user by email (for auth lookup)
+app.get('/api/users/by-email/:email', (req, res) => {
+    const email = req.params.email;
+    const sql = "SELECT username, display_name FROM users WHERE email = ?";
+    connection.query(sql, [email], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json(results[0]);
+    });
+});
+
 // API to get a user
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username;
@@ -128,8 +221,8 @@ app.get('/api/user/:username', (req, res) => {
     });
 });
 
-// API to update a user
-app.put('/api/user/:username', (req, res) => {
+// API to update a user (protected)
+app.put('/api/user/:username', checkAuth, (req, res) => {
     const username = req.params.username;
     const { display_name, bio, faculty, program, grad_year, exchange_term } = req.body;
     const sql = "UPDATE users SET display_name = ?, bio = ?, faculty = ?, program = ?, grad_year = ?, exchange_term = ? WHERE username = ?";
@@ -251,11 +344,11 @@ app.get('/api/conversations/:conversationId/messages', (req, res) => {
     });
 });
 
-// 3) POST /api/conversations/:conversationId/messages - send a new message
+// 3) POST /api/conversations/:conversationId/messages - send a new message (protected)
 // Body: { content }
 // Query: userId (required) - sender
 // Returns: { id, senderId, senderName, content, created_at }
-app.post('/api/conversations/:conversationId/messages', (req, res) => {
+app.post('/api/conversations/:conversationId/messages', checkAuth, (req, res) => {
     const { conversationId } = req.params;
     const username = req.query.username;
     const { content } = req.body;
@@ -318,8 +411,8 @@ app.get('/api/courses/user/:username', (req, res) => {
     });
 });
 
-// POST /api/courses - Create a new course equivalency
-app.post('/api/courses', (req, res) => {
+// POST /api/courses - Create a new course equivalency (protected)
+app.post('/api/courses', checkAuth, (req, res) => {
     const {
         username,
         uw_course_code,
@@ -356,8 +449,8 @@ app.post('/api/courses', (req, res) => {
     });
 });
 
-// PUT /api/courses/:id - Update an existing course equivalency
-app.put('/api/courses/:id', (req, res) => {
+// PUT /api/courses/:id - Update an existing course equivalency (protected)
+app.put('/api/courses/:id', checkAuth, (req, res) => {
     const { id } = req.params;
     const {
         uw_course_code,
@@ -387,8 +480,8 @@ app.put('/api/courses/:id', (req, res) => {
     });
 });
 
-// DELETE /api/courses/:id - Delete a course equivalency
-app.delete('/api/courses/:id', (req, res) => {
+// DELETE /api/courses/:id - Delete a course equivalency (protected)
+app.delete('/api/courses/:id', checkAuth, (req, res) => {
     const { id } = req.params;
     const sql = "DELETE FROM course_equivalencies WHERE course_id = ?";
     connection.query(sql, [id], (error, results) => {
@@ -400,7 +493,8 @@ app.delete('/api/courses/:id', (req, res) => {
     });
 });
 
-app.post('/api/users/:username/saved-courses', (req, res) => {
+// Toggle saved course (protected)
+app.post('/api/users/:username/saved-courses', checkAuth, (req, res) => {
     const { username } = req.params;
     const { course_id } = req.body;
 
@@ -492,6 +586,27 @@ app.get('/api/courses', (req, res) => {
 });
 
 
+
+// GET /api/courses/:id - Get a single course by ID
+app.get('/api/courses/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = `
+        SELECT c.*, u.display_name 
+        FROM course_equivalencies c 
+        LEFT JOIN users u ON c.username = u.username 
+        WHERE c.course_id = ?
+    `;
+    connection.query(sql, [id], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Course not found' });
+        }
+        res.json(results[0]);
+    });
+});
 
 // --- End Course Equivalency APIs ---
 app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version

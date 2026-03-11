@@ -4,13 +4,15 @@ import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ImageLis
 import SectionTab from './SectionTab'
 import UploadContent from './UploadContent'
 import CourseTable from './CourseTable'
+import { FirebaseContext, authFetch } from '../Firebase'
 
 
-const Profile = () => {
+const Profile = ({ currentUser, authUser }) => {
 
     const theme = useTheme()
     const isSmall = useMediaQuery(theme.breakpoints.down('sm'))
     const isMedium = useMediaQuery(theme.breakpoints.down('md'))
+    const firebase = React.useContext(FirebaseContext)
 
     const cols = isSmall ? 1 : isMedium ? 2 : 3
 
@@ -22,7 +24,8 @@ const Profile = () => {
     const [gradYear, setGradYear] = React.useState('')
     const [exchangeTerm, setExchangeTerm] = React.useState('')
 
-    const currentUsername = 'john.doe' // TODO: Replace with actual username from context or auth
+    // Use authenticated user's identifier, fallback to prop or default
+    const currentUsername = currentUser || authUser?.email?.split('@')[0] || 'john.doe'
 
     const [tabIndex, setTabIndex] = React.useState(0)
     const [posts, setPosts] = React.useState([])
@@ -85,6 +88,7 @@ const Profile = () => {
                         setGradYear={setGradYear}
                         exchangeTerm={exchangeTerm}
                         setExchangeTerm={setExchangeTerm}
+                        firebase={firebase}
                     />
                 </Grid>
 
@@ -106,6 +110,7 @@ const Profile = () => {
                     {tabIndex === 0 && (
                         <UploadContent
                             fetchPosts={fetchPosts} posts={posts} cols={cols}
+                            currentUsername={currentUsername} firebase={firebase}
                         />
                     )}
                     {tabIndex === 1 && <CourseTable username={username} />}

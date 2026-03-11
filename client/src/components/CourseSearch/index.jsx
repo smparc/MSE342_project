@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CourseSearch.css';
+import { FirebaseContext, authFetch } from '../Firebase';
 
 const API = process.env.REACT_APP_API_URL || '';
 
@@ -14,8 +15,10 @@ const STATUS_COLORS = {
   Flagged: '#ef4444',
 };
 
-export default function CourseSearch({ currentUser }) {
+export default function CourseSearch({ currentUser, authUser }) {
   const navigate = useNavigate();
+  const firebase = useContext(FirebaseContext);
+  const effectiveUser = currentUser || authUser?.email?.split('@')[0] || '';
   // Search & filter state
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({ country: '', continent: '', faculty: '', term: '' });
@@ -49,15 +52,15 @@ export default function CourseSearch({ currentUser }) {
 
   // Load user's saved courses
   useEffect(() => {
-    if (!currentUser) return;
-    fetch(`${API}/api/users/${currentUser}/saved-courses`)
+    if (!effectiveUser) return;
+    fetch(`${API}/api/users/${effectiveUser}/saved-courses`)
       .then((r) => r.json())
       .then((data) => {
         setSavedCourses(data);
         setSavedIds(new Set(data.map((c) => c.course_id)));
       })
       .catch(() => {});
-  }, [currentUser]);
+  }, [effectiveUser]);
 
   const fetchCourses = useCallback(
     async (pageNum = 1) => {
@@ -104,12 +107,11 @@ export default function CourseSearch({ currentUser }) {
   };
 
   const toggleSave = async (courseId) => {
-    if (!currentUser) return alert('Please log in to save courses.');
-    const res = await fetch(`${API}/api/users/${currentUser}/saved-courses`, {
+    if (!effectiveUser) return alert('Please log in to save courses.');
+    const res = await authFetch(`${API}/api/users/${effectiveUser}/saved-courses`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ course_id: courseId }),
-    });
+    }, firebase);
     const data = await res.json();
     setSavedIds((prev) => {
       const next = new Set(prev);

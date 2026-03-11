@@ -1,20 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SignIn from '../SignIn';
-import LandingPage from '../Landing';
-import HomePage from '../Home';
 
 import NavBar, { NAV_WIDTH_COLLAPSED } from '../App/NavBar';
 import Profile from '../Profile';
-import Search from '../Search';
+import Search from '../App/Search';
 import CourseSearch from '../CourseSearch';
 import CourseSubmit from '../CourseSubmit';
 import Messaging from '../Messaging';
 import Box from '@mui/material/Box';
-
-// Replace with auth when available (used for course search shortlist & submit)
-const CURRENT_USER = 'elly';
-
+import CircularProgress from '@mui/material/CircularProgress';
 
 const MainLayout = ({ children }) => (
     <Box
@@ -28,30 +23,84 @@ const MainLayout = ({ children }) => (
     </Box>
 );
 
-const PrivateRoute = ({ authenticated }) => {
+const PrivateRoute = ({ authenticated, authUser }) => {
+    const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch username from database based on email
+    useEffect(() => {
+        const fetchUsername = async () => {
+            if (!authUser?.email) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/users/by-email/${encodeURIComponent(authUser.email)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setCurrentUser(data.username);
+                } else {
+                    // Fallback to email prefix if user not found in DB
+                    setCurrentUser(authUser.email.split('@')[0]);
+                }
+            } catch (error) {
+                console.error('Error fetching user:', error);
+                setCurrentUser(authUser.email.split('@')[0]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (authenticated) {
+            fetchUsername();
+        } else {
+            setLoading(false);
+        }
+    }, [authenticated, authUser]);
+
+    if (!authenticated) {
+        // Unauthenticated: show SignIn page for all routes
+        return (
+            <Routes>
+                <Route path="*" element={<SignIn />} />
+            </Routes>
+        );
+    }
+
+    // Show loading while fetching username
+    if (loading) {
+        return (
+            <Box
+                sx={{
+                    minHeight: '100vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    // Authenticated users: redirect "/" to profile page
     return (
-        <Routes>
-            <Route
-                path="/"
-                element={authenticated ? <HomePage /> : <LandingPage />}
-            />
-            <Route
-                path="/SignIn"
-                element={authenticated ? <Navigate replace to="/" /> : <SignIn />}
-            />
-            {/* Add other routes here */}
+        <>
             <NavBar />
             <MainLayout>
                 <Routes>
-                    <Route path="/" element={<Navigate to="/profile" replace />} />
-                    <Route path="/messages" element={<Messaging />} />
+                    <Route path="/" element={<Navigate replace to="/profile" />} />
+                    <Route path="/SignIn" element={<Navigate replace to="/profile" />} />
+                    <Route path="/messages" element={<Messaging currentUser={currentUser} authUser={authUser} />} />
                     <Route path="/search" element={<Search />} />
-                    <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={CURRENT_USER} />} />
-                    <Route path="/course-equivalency" element={<CourseSearch currentUser={CURRENT_USER} />} />
-                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={currentUser} authUser={authUser} />} />
+                    <Route path="/course-equivalency" element={<CourseSearch currentUser={currentUser} authUser={authUser} />} />
+                    <Route path="/profile" element={<Profile currentUser={currentUser} authUser={authUser} />} />
                 </Routes>
             </MainLayout>
-        </Routes>
+        </>
     );
 };
+
 export default PrivateRoute;

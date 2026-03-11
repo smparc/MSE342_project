@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import './CourseSubmit.css';
+import { FirebaseContext, authFetch } from '../Firebase';
 
 const API = process.env.REACT_APP_API_URL || '';
 
@@ -18,8 +19,10 @@ const INITIAL_FORM = {
   proof_url: '',
 };
 
-export default function CourseSubmit({ currentUser }) {
-  const [form, setForm] = useState({ ...INITIAL_FORM, username: currentUser || '' });
+export default function CourseSubmit({ currentUser, authUser }) {
+  const firebase = useContext(FirebaseContext);
+  const effectiveUser = currentUser || authUser?.email?.split('@')[0] || '';
+  const [form, setForm] = useState({ ...INITIAL_FORM, username: effectiveUser });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);   // AC#6 upload: visible confirmation
@@ -80,11 +83,10 @@ export default function CourseSubmit({ currentUser }) {
       const endpoint = editId ? `/api/courses/${editId}` : '/api/courses';
       const method = editId ? 'PUT' : 'POST';
 
-      const res = await fetch(`${API}${endpoint}`, {
+      const res = await authFetch(`${API}${endpoint}`, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
-      });
+      }, firebase);
 
       const data = await res.json();
 
@@ -113,7 +115,7 @@ export default function CourseSubmit({ currentUser }) {
       });
 
       // Reset form
-      setForm({ ...INITIAL_FORM, username: currentUser || '' });
+      setForm({ ...INITIAL_FORM, username: effectiveUser });
       setProofFile(null);
       setEditId(null);
     } catch {
