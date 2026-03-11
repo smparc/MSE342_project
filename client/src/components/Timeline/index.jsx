@@ -13,11 +13,18 @@ const fmtDualTime = (utcStr) => {
 
 const MILESTONE_TYPES = ['UW Internal', 'Host University'];
 
-export default function Timeline({ currentUser }) {
+// Sprint 2 — phase order for grouping (Story 1)
+const PHASES = ['Research', 'Nomination', 'Host Application'];
+
+export default function Timeline({ currentUser, destination: destProp }) {
   const [milestones, setMilestones] = useState([]);
   const [filter, setFilter] = useState('');      // '' | 'UW Internal' | 'Host University'
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
+
+  // Sprint 2 — phase and destination filter state (Stories 1, 2, 3)
+  const [phaseFilter, setPhaseFilter] = useState('');
+  const [destFilter, setDestFilter] = useState(destProp || '');
 
   // Add milestone form
   const [showAdd, setShowAdd] = useState(false);
@@ -32,6 +39,9 @@ export default function Timeline({ currentUser }) {
     setLoading(true);
     try {
       const params = new URLSearchParams({ type: filter });
+      // Sprint 2 — pass phase and destination filters to API (Stories 1 & 2)
+      if (phaseFilter)  params.set('phase', phaseFilter);
+      if (destFilter)   params.set('destination', destFilter);
       const res = await fetch(`${API}/api/users/${currentUser}/milestones?${params}`);
       const data = await res.json();
       setMilestones(Array.isArray(data) ? data : []);
@@ -40,7 +50,7 @@ export default function Timeline({ currentUser }) {
     } finally {
       setLoading(false);
     }
-  }, [currentUser, filter]);
+  }, [currentUser, filter, phaseFilter, destFilter]);
 
   useEffect(() => { fetchMilestones(); }, [fetchMilestones]);
 
@@ -120,6 +130,19 @@ export default function Timeline({ currentUser }) {
     return { text: m.milestone_type, cls: m.milestone_type === 'UW Internal' ? 'sl-uw' : 'sl-host' };
   };
 
+  // Sprint 2 — group milestones by phase for display (Story 1)
+  const groupedByPhase = PHASES.reduce((acc, phase) => {
+    const items = milestones.filter((m) => m.phase === phase);
+    if (items.length) acc[phase] = items;
+    return acc;
+  }, {});
+
+  // Sprint 2 — milestones with no phase go into a fallback group
+  const ungrouped = milestones.filter((m) => !m.phase || !PHASES.includes(m.phase));
+
+  // Sprint 2 — check if a milestone matches the active destination filter (Story 3 / AC#3)
+  const isDestMatch = (m) => destFilter && m.destination_country === destFilter;
+
   return (
     <div className="tl-wrap">
       {/* ── Header ── */}
@@ -167,6 +190,47 @@ export default function Timeline({ currentUser }) {
         ))}
       </div>
 
+      {/* Sprint 2 — Phase and destination filters (Stories 1, 2, 3) */}
+      <div className="tl-filter-row tl-filter-row--sprint2">
+        <div className="tl-filter-field">
+          <label htmlFor="tl-phase-select">Phase</label>
+          <select
+            id="tl-phase-select"
+            className="tl-select"
+            value={phaseFilter}
+            onChange={(e) => setPhaseFilter(e.target.value)}
+            aria-label="Phase"
+          >
+            <option value="">All Phases</option>
+            {PHASES.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="tl-filter-field">
+          <label htmlFor="tl-dest-input">Destination</label>
+          <input
+            id="tl-dest-input"
+            className="tl-input tl-input--sm"
+            type="text"
+            placeholder="e.g. Australia"
+            value={destFilter}
+            onChange={(e) => setDestFilter(e.target.value)}
+            aria-label="Destination"
+          />
+        </div>
+
+        {(phaseFilter || destFilter) && (
+          <button
+            className="tl-clear-filters"
+            onClick={() => { setPhaseFilter(''); setDestFilter(''); }}
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
       {/* ── Legend ── */}
       <div className="tl-legend">
         <span className="tl-legend-item"><span className="dot dot-urgent" />Due in 48h</span>
@@ -188,103 +252,25 @@ export default function Timeline({ currentUser }) {
           </button>
         </div>
       ) : (
-        <div className="tl-list">
-          {milestones.map((m, i) => {
-            const status = getStatusLabel(m);
-            const isExpanded = expandedId === m.milestone_id;
-            const isLocked =
-              m.prerequisite_id &&
-              !m.prerequisite_completed &&
-              !m.is_completed;
-
-            return (
-              <div
-                key={m.milestone_id}
-                className={`tl-milestone ${getMilestoneClass(m)} ${isLocked ? 'locked' : ''}`}
-              >
-                {/* Connector line */}
-                {i < milestones.length - 1 && (
-                  <div className={`tl-connector ${m.is_completed ? 'done' : ''}`} />
-                )}
-
-                <div className="tl-ms-left">
-                  {/* Checkbox (AC#3) */}
-                  <button
-                    className={`tl-checkbox ${m.is_completed ? 'checked' : ''} ${isLocked ? 'disabled' : ''}`}
-                    onClick={() => !isLocked && toggleComplete(m)}
-                    title={isLocked ? `Complete "${m.prerequisite_title}" first` : 'Mark complete'}
-                  >
-                    {m.is_completed ? '✓' : isLocked ? '🔒' : ''}
-                  </button>
-                </div>
-
-                <div className="tl-ms-body" onClick={() => setExpandedId(isExpanded ? null : m.milestone_id)}>
-                  <div className="tl-ms-top">
-                    <div className="tl-ms-title-row">
-                      <span className="tl-ms-title">{m.title}</span>
-                      <span className={`tl-status-label ${status.cls}`}>{status.text}</span>
-                    </div>
-
-                    <div className="tl-ms-meta">
-                      {/* EST deadline (AC#6) */}
-                      <span className="tl-ms-date">📅 {fmtDualTime(m.deadline_utc)} EST</span>
-                      {m.milestone_type && (
-                        <span className={`tl-type-badge ${m.milestone_type === 'UW Internal' ? 'uw' : 'host'}`}>
-                          {m.milestone_type}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Prerequisite dependency (AC#7) */}
-                    {m.prerequisite_id && (
-                      <div className="tl-prereq">
-                        {isLocked ? '🔒' : '✓'} Requires: <em>{m.prerequisite_title}</em>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Expanded detail */}
-                  {isExpanded && (
-                    <div className="tl-ms-detail">
-                      {m.form_link && (
-                        <a href={m.form_link} target="_blank" rel="noreferrer" className="tl-form-link">
-                          → Open Required Form / Portal
-                        </a>
-                      )}
-
-                      {/* Buffer status (AC#10) */}
-                      {m.is_completed && m.buffer_days !== null && (
-                        <div className="tl-buffer">
-                          {m.buffer_days > 0
-                            ? `🎯 Buffer Status: ${m.buffer_days} days ahead of deadline`
-                            : m.buffer_days === 0
-                            ? '⏱ Completed exactly on deadline'
-                            : `⚠ Completed ${Math.abs(m.buffer_days)} days after deadline`}
-                        </div>
-                      )}
-
-                      <div className="tl-ms-actions">
-                        {!isLocked && (
-                          <button
-                            className="tl-action-btn tl-toggle-btn"
-                            onClick={(e) => { e.stopPropagation(); toggleComplete(m); }}
-                          >
-                            {m.is_completed ? 'Mark Incomplete' : 'Mark Complete'}
-                          </button>
-                        )}
-                        <button
-                          className="tl-action-btn tl-delete-btn"
-                          onClick={(e) => { e.stopPropagation(); deleteMilestone(m.milestone_id); }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+        <div className="tl-phases">
+          {/* Sprint 2 — render milestones grouped by phase (Story 1) */}
+          {Object.entries(groupedByPhase).map(([phase, items]) => (
+            <div key={phase} className="tl-phase-group">
+              <h2 className="tl-phase-heading">{phase}</h2>
+              <div className="tl-list">
+                {items.map((m, i) => renderMilestone(m, i, items.length))}
               </div>
-            );
-          })}
+            </div>
+          ))}
+
+          {/* Fallback for milestones with no phase */}
+          {ungrouped.length > 0 && (
+            <div className="tl-phase-group">
+              <div className="tl-list">
+                {ungrouped.map((m, i) => renderMilestone(m, i, ungrouped.length))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -328,6 +314,18 @@ export default function Timeline({ currentUser }) {
               </select>
             </div>
 
+            {/* Sprint 2 — phase selection when adding a milestone (Story 1) */}
+            <div className="tl-form-field">
+              <label>Phase</label>
+              <select
+                className="tl-input"
+                value={addForm.phase || 'Research'}
+                onChange={(e) => setAddForm((p) => ({ ...p, phase: e.target.value }))}
+              >
+                {PHASES.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+
             <div className="tl-form-field">
               <label>Link to Form / Portal (optional)</label>
               <input
@@ -365,4 +363,111 @@ export default function Timeline({ currentUser }) {
       )}
     </div>
   );
+
+  // Sprint 2 — extracted milestone renderer so it can be reused in each phase group
+  function renderMilestone(m, i, groupLength) {
+    const status = getStatusLabel(m);
+    const isExpanded = expandedId === m.milestone_id;
+    const isLocked =
+      m.prerequisite_id &&
+      !m.prerequisite_completed &&
+      !m.is_completed;
+
+    // Sprint 2 — highlight if milestone matches destination filter (Story 3 / AC#3)
+    const destHighlight = isDestMatch(m) ? 'destination-match' : '';
+
+    return (
+      <div
+        key={m.milestone_id}
+        className={`tl-milestone ${getMilestoneClass(m)} ${isLocked ? 'locked' : ''} ${destHighlight}`}
+      >
+        {/* Connector line */}
+        {i < groupLength - 1 && (
+          <div className={`tl-connector ${m.is_completed ? 'done' : ''}`} />
+        )}
+
+        <div className="tl-ms-left">
+          {/* Checkbox (AC#3) */}
+          <button
+            className={`tl-checkbox ${m.is_completed ? 'checked' : ''} ${isLocked ? 'disabled' : ''}`}
+            onClick={() => !isLocked && toggleComplete(m)}
+            title={isLocked ? `Complete "${m.prerequisite_title}" first` : 'Mark complete'}
+          >
+            {m.is_completed ? '✓' : isLocked ? '🔒' : ''}
+          </button>
+        </div>
+
+        <div className="tl-ms-body" onClick={() => setExpandedId(isExpanded ? null : m.milestone_id)}>
+          <div className="tl-ms-top">
+            <div className="tl-ms-title-row">
+              <span className="tl-ms-title">{m.title}</span>
+              <span className={`tl-status-label ${status.cls}`}>{status.text}</span>
+            </div>
+
+            <div className="tl-ms-meta">
+              {/* EST deadline (AC#6) */}
+              <span className="tl-ms-date">📅 {fmtDualTime(m.deadline_utc)} EST</span>
+              {m.milestone_type && (
+                <span className={`tl-type-badge ${m.milestone_type === 'UW Internal' ? 'uw' : 'host'}`}>
+                  {m.milestone_type}
+                </span>
+              )}
+              {/* Sprint 2 — days remaining counter (Story 2 / AC#2) */}
+              {!m.is_completed && m.days_remaining !== undefined && (
+                <span className="tl-days-remaining">
+                  {m.days_remaining} days remaining
+                </span>
+              )}
+            </div>
+
+            {/* Prerequisite dependency (AC#7) */}
+            {m.prerequisite_id && (
+              <div className="tl-prereq">
+                {isLocked ? '🔒' : '✓'} Requires: <em>{m.prerequisite_title}</em>
+              </div>
+            )}
+          </div>
+
+          {/* Expanded detail */}
+          {isExpanded && (
+            <div className="tl-ms-detail">
+              {m.form_link && (
+                <a href={m.form_link} target="_blank" rel="noreferrer" className="tl-form-link">
+                  → Open Required Form / Portal
+                </a>
+              )}
+
+              {/* Buffer status (AC#10) */}
+              {m.is_completed && m.buffer_days !== null && (
+                <div className="tl-buffer">
+                  {m.buffer_days > 0
+                    ? `🎯 Buffer Status: ${m.buffer_days} days ahead of deadline`
+                    : m.buffer_days === 0
+                    ? '⏱ Completed exactly on deadline'
+                    : `⚠ Completed ${Math.abs(m.buffer_days)} days after deadline`}
+                </div>
+              )}
+
+              <div className="tl-ms-actions">
+                {!isLocked && (
+                  <button
+                    className="tl-action-btn tl-toggle-btn"
+                    onClick={(e) => { e.stopPropagation(); toggleComplete(m); }}
+                  >
+                    {m.is_completed ? 'Mark Incomplete' : 'Mark Complete'}
+                  </button>
+                )}
+                <button
+                  className="tl-action-btn tl-delete-btn"
+                  onClick={(e) => { e.stopPropagation(); deleteMilestone(m.milestone_id); }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 }
