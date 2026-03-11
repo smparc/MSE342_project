@@ -163,9 +163,11 @@ describe('Story 6 — Delete Account', () => {
     await userEvent.type(screen.getByPlaceholderText(/enter your password/i), 'correctpassword');
     await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
+    // Farewell shows immediately; navigate fires inside setTimeout(2500).
+    // Extend waitFor timeout past the component's 2500ms delay.
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
-    });
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    }, { timeout: 4000 });
   });
 
   test('AC#5 — farewell message is shown before redirect', async () => {

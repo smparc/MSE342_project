@@ -79,7 +79,8 @@ describe('Story 3 — Study Abroad Contacts List', () => {
   test('AC#7 — faculty-specific contacts show their faculty label', async () => {
     render(<ContactsList />);
     await waitFor(() => {
-      expect(screen.getByText(/Engineering/i)).toBeInTheDocument();
+      // Use selector to target only the faculty badge, not the role/department text
+      expect(screen.getByText('Engineering', { selector: '.cl-faculty-badge' })).toBeInTheDocument();
     });
   });
 

@@ -80,9 +80,10 @@ describe('Story 4 — Academic Advisors List', () => {
   test('AC#7 — displays faculty for each advisor', async () => {
     render(<AdvisorsList />);
     await waitFor(() => {
-      expect(screen.getByText('Engineering')).toBeInTheDocument();
-      expect(screen.getByText('Math')).toBeInTheDocument();
-      expect(screen.getByText('Arts')).toBeInTheDocument();
+      // Use selector to target only the card faculty label, not the filter dropdown option
+      expect(screen.getByText('Engineering', { selector: '.al-faculty' })).toBeInTheDocument();
+      expect(screen.getByText('Math', { selector: '.al-faculty' })).toBeInTheDocument();
+      expect(screen.getByText('Arts', { selector: '.al-faculty' })).toBeInTheDocument();
     });
   });
 
