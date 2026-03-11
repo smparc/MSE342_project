@@ -158,7 +158,7 @@ app.delete('/api/posts/:id', checkAuth, (req, res) => {
 
 // API to create a new user (for sign up)
 app.post('/api/users', checkAuth, (req, res) => {
-    const { username, email, display_name } = req.body;
+    const { username, email, display_name, faculty, program, grad_year, exchange_term } = req.body;
 
     if (!username || !username.trim()) {
         return res.status(400).json({ error: 'Username is required' });
@@ -176,9 +176,22 @@ app.post('/api/users', checkAuth, (req, res) => {
             return res.status(409).json({ error: 'Username already exists' });
         }
 
-        // Create new user with email for lookup
-        const insertSql = "INSERT INTO users (username, display_name, email) VALUES (?, ?, ?)";
-        connection.query(insertSql, [username.trim(), display_name || username.trim(), email], (error, results) => {
+        // Create new user with email and profile info
+        const insertSql = `
+            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+        const params = [
+            username.trim(), 
+            display_name || username.trim(), 
+            email,
+            faculty || null,
+            program || null,
+            grad_year || null,
+            exchange_term || null
+        ];
+        
+        connection.query(insertSql, params, (error, results) => {
             if (error) {
                 console.error('Database error:', error);
                 return res.status(500).json({ error: 'Failed to create user' });

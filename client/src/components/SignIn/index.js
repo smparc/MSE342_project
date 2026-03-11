@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
+import Grid from '@mui/material/Grid';
 import { withFirebase } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +14,10 @@ const SignIn = ({ firebase }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
+    const [faculty, setFaculty] = useState('');
+    const [program, setProgram] = useState('');
+    const [gradYear, setGradYear] = useState('');
+    const [exchangeTerm, setExchangeTerm] = useState('');
     const [error, setError] = useState(null);
     const [isSignUp, setIsSignUp] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -37,7 +42,7 @@ const SignIn = ({ firebase }) => {
                 const user = userCredential.user;
                 const token = await user.getIdToken();
 
-                // Create user in database
+                // Create user in database with profile info
                 const response = await fetch('/api/users', {
                     method: 'POST',
                     headers: {
@@ -48,6 +53,10 @@ const SignIn = ({ firebase }) => {
                         username: username.trim(),
                         email: email,
                         display_name: username.trim(),
+                        faculty: faculty.trim() || null,
+                        program: program.trim() || null,
+                        grad_year: gradYear ? parseInt(gradYear) : null,
+                        exchange_term: exchangeTerm.trim() || null,
                     }),
                 });
 
@@ -69,6 +78,15 @@ const SignIn = ({ firebase }) => {
         }
     };
 
+    const resetForm = () => {
+        setIsSignUp(!isSignUp);
+        setError(null);
+        setFaculty('');
+        setProgram('');
+        setGradYear('');
+        setExchangeTerm('');
+    };
+
     return (
         <Box
             sx={{
@@ -77,6 +95,7 @@ const SignIn = ({ firebase }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                py: 4,
             }}
         >
             <Container maxWidth="sm">
@@ -99,7 +118,7 @@ const SignIn = ({ firebase }) => {
                     <Typography 
                         variant="body1" 
                         color="text.secondary" 
-                        sx={{ mb: 4 }}
+                        sx={{ mb: 3 }}
                         textAlign="center"
                     >
                         Connect with fellow exchange students and share your experiences
@@ -149,6 +168,74 @@ const SignIn = ({ firebase }) => {
                             onChange={(e) => setPassword(e.target.value)}
                         />
 
+                        {isSignUp && (
+                            <>
+                                <Typography 
+                                    variant="subtitle2" 
+                                    color="text.secondary" 
+                                    sx={{ mt: 3, mb: 1 }}
+                                >
+                                    Profile Information (Optional)
+                                </Typography>
+                                
+                                <Grid container spacing={2}>
+                                    <Grid item xs={6}>
+                                        <TextField
+                                            variant="outlined"
+                                            fullWidth
+                                            id="faculty"
+                                            label="Faculty"
+                                            name="faculty"
+                                            placeholder="e.g. Engineering"
+                                            value={faculty}
+                                            onChange={(e) => setFaculty(e.target.value)}
+                                            size="small"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <TextField
+                                            variant="outlined"
+                                            fullWidth
+                                            id="program"
+                                            label="Program"
+                                            name="program"
+                                            placeholder="e.g. MSCI"
+                                            value={program}
+                                            onChange={(e) => setProgram(e.target.value)}
+                                            size="small"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <TextField
+                                            variant="outlined"
+                                            fullWidth
+                                            id="gradYear"
+                                            label="Graduation Year"
+                                            name="gradYear"
+                                            type="number"
+                                            placeholder="e.g. 2026"
+                                            value={gradYear}
+                                            onChange={(e) => setGradYear(e.target.value)}
+                                            size="small"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <TextField
+                                            variant="outlined"
+                                            fullWidth
+                                            id="exchangeTerm"
+                                            label="Exchange Term"
+                                            name="exchangeTerm"
+                                            placeholder="e.g. Fall 2025"
+                                            value={exchangeTerm}
+                                            onChange={(e) => setExchangeTerm(e.target.value)}
+                                            size="small"
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </>
+                        )}
+
                         {error && (
                             <Typography
                                 align="center"
@@ -181,10 +268,7 @@ const SignIn = ({ firebase }) => {
                                 component="button"
                                 type="button"
                                 variant="body2"
-                                onClick={() => {
-                                    setIsSignUp(!isSignUp);
-                                    setError(null);
-                                }}
+                                onClick={resetForm}
                                 sx={{ cursor: 'pointer' }}
                             >
                                 {isSignUp 
