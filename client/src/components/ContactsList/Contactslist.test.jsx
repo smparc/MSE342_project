@@ -72,7 +72,8 @@ describe('Story 3 — Study Abroad Contacts List', () => {
   test('AC#6 — displays department for each contact', async () => {
     render(<ContactsList />);
     await waitFor(() => {
-      expect(screen.getByText(/Waterloo International/i)).toBeInTheDocument();
+      // Two contacts share this department — verify at least one is present
+      expect(screen.getAllByText(/Waterloo International/i).length).toBeGreaterThan(0);
     });
   });
 

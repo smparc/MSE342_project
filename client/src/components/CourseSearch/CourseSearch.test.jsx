@@ -131,20 +131,20 @@ describe('Sprint 2 — Sort Course Equivalencies (Story 5)', () => {
 
   test('AC#1 — Sort by dropdown is visible', async () => {
     renderComponent();
-    await waitFor(() => screen.getByText('University of Melbourne'));
+    await waitFor(() => screen.getByText(/University of Melbourne/));
     expect(screen.getByLabelText(/sort by/i)).toBeInTheDocument();
   });
 
   test('AC#2 — default sort is Most Recently Updated', async () => {
     renderComponent();
-    await waitFor(() => screen.getByText('University of Melbourne'));
+    await waitFor(() => screen.getByText(/University of Melbourne/));
     const sortSelect = screen.getByLabelText(/sort by/i);
     expect(sortSelect.value).toBe('last_updated');
   });
 
   test('AC#3 — sort options include Most Recently Updated, Average Rating, University Name', async () => {
     renderComponent();
-    await waitFor(() => screen.getByText('University of Melbourne'));
+    await waitFor(() => screen.getByText(/University of Melbourne/));
     expect(screen.getByRole('option', { name: /recently updated/i })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /average rating/i })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /university name/i })).toBeInTheDocument();
@@ -152,7 +152,7 @@ describe('Sprint 2 — Sort Course Equivalencies (Story 5)', () => {
 
   test('AC#4 — selecting Average Rating sends sort=avg_rating in the API call', async () => {
     renderComponent();
-    await waitFor(() => screen.getByText('University of Melbourne'));
+    await waitFor(() => screen.getByText(/University of Melbourne/));
 
     const sortSelect = screen.getByLabelText(/sort by/i);
     fireEvent.change(sortSelect, { target: { value: 'avg_rating' } });
@@ -166,7 +166,7 @@ describe('Sprint 2 — Sort Course Equivalencies (Story 5)', () => {
 
   test('AC#5 — selecting University Name sends sort=university in the API call', async () => {
     renderComponent();
-    await waitFor(() => screen.getByText('University of Melbourne'));
+    await waitFor(() => screen.getByText(/University of Melbourne/));
 
     const sortSelect = screen.getByLabelText(/sort by/i);
     fireEvent.change(sortSelect, { target: { value: 'university' } });
@@ -180,7 +180,7 @@ describe('Sprint 2 — Sort Course Equivalencies (Story 5)', () => {
 
   test('AC#6 — sort persists when a country filter is also applied', async () => {
     renderComponent();
-    await waitFor(() => screen.getByText('University of Melbourne'));
+    await waitFor(() => screen.getByText(/University of Melbourne/));
 
     // Set sort to avg_rating first
     const sortSelect = screen.getByLabelText(/sort by/i);
@@ -200,7 +200,7 @@ describe('Sprint 2 — Sort Course Equivalencies (Story 5)', () => {
 
   test('AC#7 — default sort=last_updated is included in the initial API call', async () => {
     renderComponent();
-    await waitFor(() => screen.getByText('University of Melbourne'));
+    await waitFor(() => screen.getByText(/University of Melbourne/));
 
     const courseCalls = global.fetch.mock.calls.filter(c => c[0]?.includes('/api/courses?'));
     expect(courseCalls.length).toBeGreaterThan(0);
