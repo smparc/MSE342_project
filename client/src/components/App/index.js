@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import NavBar, { NAV_WIDTH_COLLAPSED } from './NavBar';
@@ -8,35 +8,35 @@ import CourseSearch from '../CourseSearch';
 import CourseSubmit from '../CourseSubmit';
 import Messaging from '../Messaging';
 
-// Replace with auth when available (used for course search shortlist & submit)
-const CURRENT_USER = 'elly';
+import PrivateRoute from '../Navigation/PrivateRoute';
+import { FirebaseContext } from '../Firebase';
 
-const MainLayout = ({ children }) => (
-  <Box
-    sx={{
-      minHeight: '100vh',
-      backgroundColor: 'background.default',
-      pl: `${NAV_WIDTH_COLLAPSED}px`,
-    }}
-  >
-    {children}
-  </Box>
-);
+
 
 const App = () => {
+  const [authUser, setAuthUser] = useState(null);
+  const firebase = useContext(FirebaseContext);
+
+  useEffect(() => {
+    if (firebase) {
+      const listener = firebase.auth.onAuthStateChanged(user => {
+        if (user) {
+          setAuthUser(user);
+        } else {
+          setAuthUser(null);
+        }
+      });
+      // Cleanup: unsubscribe the listener when the component unmounts
+      return () => listener();
+    }
+  }, [firebase]);
+
+  const authenticated = !!authUser;
+
   return (
     <BrowserRouter>
-      <NavBar />
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/profile" replace />} />
-          <Route path="/messages" element={<Messaging />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={CURRENT_USER} />} />
-          <Route path="/course-equivalency" element={<CourseSearch currentUser={CURRENT_USER} />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
-      </MainLayout>
+      <PrivateRoute authenticated={authenticated} authUser={authUser} />
+      
     </BrowserRouter>
   );
 };

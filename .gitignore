@@ -21,3 +21,6 @@ client/package-lock.json
 .vscode/launch.json
 
 uploads/
+
+# serviceAccountKeys
+serviceAccountKey.json
