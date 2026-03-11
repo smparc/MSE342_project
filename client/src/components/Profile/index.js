@@ -31,12 +31,17 @@ const Profile = ({ currentUser, authUser }) => {
     const [posts, setPosts] = React.useState([])
 
     const fetchUserData = React.useCallback(async () => {
+        if (!currentUsername) return
         try {
             const response = await fetch(`/api/user/${currentUsername}`)
+            if (!response.ok) {
+                console.error('Failed to fetch user data:', response.status)
+                return
+            }
             const data = await response.json()
             setDisplayName(data.display_name || '')
             setBio(data.bio || '')
-            setUsername(data.username || '')
+            setUsername(data.username || currentUsername)
             setFaculty(data.faculty || '')
             setProgram(data.program || '')
             setGradYear(data.grad_year || '')
@@ -47,12 +52,19 @@ const Profile = ({ currentUser, authUser }) => {
     }, [currentUsername])
 
     const fetchPosts = React.useCallback(async () => {
+        if (!currentUsername) return
         try {
             const response = await fetch(`/api/posts/${currentUsername}`)
+            if (!response.ok) {
+                console.error('Failed to fetch posts:', response.status)
+                setPosts([])
+                return
+            }
             const data = await response.json()
-            setPosts(data)
+            setPosts(Array.isArray(data) ? data : [])
         } catch (error) {
             console.error('Error fetching posts:', error)
+            setPosts([])
         }
     }, [currentUsername])
 

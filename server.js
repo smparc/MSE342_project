@@ -215,9 +215,13 @@ app.get('/api/user/:username', (req, res) => {
     connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
-            return res.status(500).send(error);
+            return res.status(500).json({ error: 'Database error' });
         }
-        res.send(results[0]);
+        if (results.length === 0) {
+            // Return empty user object for new users
+            return res.json({ username: username, display_name: '', bio: '' });
+        }
+        res.json(results[0]);
     });
 });
 
@@ -242,9 +246,10 @@ app.get('/api/posts/:username', (req, res) => {
     connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
-            return res.status(500).send(error);
+            return res.status(500).json({ error: 'Database error' });
         }
-        res.send(results);
+        // Always return an array (empty if no posts)
+        res.json(results || []);
     });
 });
 
