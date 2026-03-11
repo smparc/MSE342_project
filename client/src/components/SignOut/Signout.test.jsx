@@ -71,7 +71,9 @@ describe('SignOut Component (Story 8)', () => {
     const mockSignOut = jest.fn();
     renderSignOut({ requireConfirm: true, onSignOut: mockSignOut });
     fireEvent.click(screen.getByRole('button', { name: /sign out/i }));
-    fireEvent.click(screen.getByRole('button', { name: /^sign out$/i }));
+    // Two buttons now share the name "Sign Out" (trigger + confirm); pick the confirm one
+    const allSignOutBtns = screen.getAllByRole('button', { name: /sign out/i });
+    fireEvent.click(allSignOutBtns[allSignOutBtns.length - 1]);
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });

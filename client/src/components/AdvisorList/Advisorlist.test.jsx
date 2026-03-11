@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AdvisorsList from './index';
 
@@ -89,8 +89,8 @@ describe('Story 4 — Academic Advisors List', () => {
   test('AC#8 — displays programs advised for each advisor', async () => {
     render(<AdvisorsList />);
     await waitFor(() => {
-      expect(screen.getByText(/SE/i)).toBeInTheDocument();
-      expect(screen.getByText(/CS/i)).toBeInTheDocument();
+      expect(screen.getByText('SE')).toBeInTheDocument();
+      expect(screen.getByText('CS')).toBeInTheDocument();
     });
   });
 

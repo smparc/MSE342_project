@@ -164,7 +164,7 @@ describe('Story 6 — Delete Account', () => {
     await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/', expect.anything());
+      expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });
 

@@ -26,8 +26,7 @@ describe('UserTags Component (Story 9)', () => {
     render(<UserTags username="otheruser" />);
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/users/otheruser/tags'),
-        expect.anything()
+        expect.stringContaining('/api/users/otheruser/tags')
       );
     });
   });
