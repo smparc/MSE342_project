@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -7,6 +7,10 @@ import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import EmailIcon from '@mui/icons-material/Email';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { withFirebase } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,18 +23,29 @@ const SignIn = ({ firebase }) => {
     const [program, setProgram] = useState('');
     const [gradYear, setGradYear] = useState('');
     const [exchangeTerm, setExchangeTerm] = useState('');
-
+    
     // UI state
     const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
     const [isSignUp, setIsSignUp] = useState(false);
-    const [step, setStep] = useState(1); // 1 = account info, 2 = profile info
+    const [step, setStep] = useState(1); // 1 = account info, 2 = profile info, 3 = email verification
     const [loading, setLoading] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [checkingVerification, setCheckingVerification] = useState(false);
     const navigate = useNavigate();
+
+    // Countdown timer for resend button
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendCooldown]);
 
     // Convert Firebase error codes to user-friendly messages
     const getErrorMessage = (error) => {
         const code = error.code || '';
-
+        
         switch (code) {
             case 'auth/invalid-email':
                 return 'Please enter a valid email address';
@@ -74,33 +89,40 @@ const SignIn = ({ firebase }) => {
 
     const handleBack = () => {
         setError(null);
-        setStep(1);
+        if (step === 3) {
+            setStep(2);
+        } else {
+            setStep(1);
+        }
     };
 
-    const onSubmit = async (event) => {
-        event.preventDefault();
+    const handleResendVerification = async () => {
         setError(null);
-
-        if (!isSignUp) {
-            if (!email.trim()) {
-                setError({ message: 'Email is required to log in' });
-                return;
-            }
-            if (!password.trim()) {
-                setError({ message: 'Password is required to log in' });
-                return;
-            }
-        }
+        setSuccess(null);
         setLoading(true);
 
         try {
-            if (isSignUp) {
-                // Create Firebase auth user
-                const userCredential = await firebase.doCreateUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
+            await firebase.doSendEmailVerification();
+            setSuccess('Verification email sent! Check your inbox.');
+            setResendCooldown(60);
+        } catch (err) {
+            setError({ message: getErrorMessage(err) });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCheckVerification = async () => {
+        setError(null);
+        setCheckingVerification(true);
+
+        try {
+            await firebase.auth.currentUser.reload();
+            const user = firebase.auth.currentUser;
+
+            if (user.emailVerified) {
                 const token = await user.getIdToken();
 
-                // Create user in database with profile info
                 const response = await fetch('/api/users', {
                     method: 'POST',
                     headers: {
@@ -115,6 +137,7 @@ const SignIn = ({ firebase }) => {
                         program: program.trim() || null,
                         grad_year: gradYear ? parseInt(gradYear) : null,
                         exchange_term: exchangeTerm.trim() || null,
+                        uw_verified: true,
                     }),
                 });
 
@@ -125,7 +148,39 @@ const SignIn = ({ firebase }) => {
 
                 navigate('/');
             } else {
-                // Sign in
+                setError({ message: 'Email not verified yet. Please check your inbox and click the verification link.' });
+            }
+        } catch (err) {
+            setError({ message: getErrorMessage(err) });
+        } finally {
+            setCheckingVerification(false);
+        }
+    };
+
+    const onSubmit = async (event) => {
+        event.preventDefault();
+        setError(null);
+        
+        if (!isSignUp) {
+            if (!email.trim()) {
+                setError({ message: 'Email is required to log in' });
+                return;
+            }
+            if (!password.trim()) {
+                setError({ message: 'Password is required to log in' });
+                return;
+            }
+        }
+        
+        setLoading(true);
+
+        try {
+            if (isSignUp) {
+                await firebase.doCreateUserWithEmailAndPassword(email, password);
+                await firebase.doSendEmailVerification();
+                setResendCooldown(60);
+                setStep(3);
+            } else {
                 await firebase.doSignInWithEmailAndPassword(email, password);
                 navigate('/');
             }
@@ -140,36 +195,20 @@ const SignIn = ({ firebase }) => {
         setIsSignUp(!isSignUp);
         setStep(1);
         setError(null);
+        setSuccess(null);
         setFaculty('');
         setProgram('');
         setGradYear('');
         setExchangeTerm('');
     };
 
-    // Step 1: Account Information (Sign In or Sign Up basics)
+    // Step 1: Account Information
     const renderStep1 = () => (
-        <Paper
-            elevation={6}
-            sx={{
-                p: 5,
-                borderRadius: 3,
-            }}
-        >
-            <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
-                fontWeight="bold"
-                textAlign="center"
-            >
+        <Paper elevation={6} sx={{ p: 5, borderRadius: 3 }}>
+            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold" textAlign="center">
                 WATExchange
             </Typography>
-            <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ mb: 3 }}
-                textAlign="center"
-            >
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }} textAlign="center">
                 Connect with fellow exchange students and share your experiences
             </Typography>
 
@@ -218,28 +257,18 @@ const SignIn = ({ firebase }) => {
                 />
 
                 {error && (
-                    <Typography
-                        align="center"
-                        color="error"
-                        sx={{ mt: 2, p: 1 }}
-                    >
-                        {error.message || 'Email or password are incorrect'}
+                    <Typography align="center" color="error" sx={{ mt: 2, p: 1 }}>
+                        {error.message}
                     </Typography>
                 )}
 
-                <Button
+                <Button 
                     type="submit"
-                    fullWidth
-                    variant="contained"
+                    fullWidth 
+                    variant="contained" 
                     color="primary"
                     disabled={loading}
-                    sx={{
-                        mt: 3,
-                        mb: 2,
-                        py: 1.5,
-                        textTransform: 'none',
-                        fontSize: '1rem',
-                    }}
+                    sx={{ mt: 3, mb: 2, py: 1.5, textTransform: 'none', fontSize: '1rem' }}
                 >
                     {loading ? 'Please wait...' : (isSignUp ? 'Next' : 'Sign In')}
                 </Button>
@@ -252,39 +281,20 @@ const SignIn = ({ firebase }) => {
                         onClick={resetForm}
                         sx={{ cursor: 'pointer' }}
                     >
-                        {isSignUp
-                            ? 'Already have an account? Sign In'
-                            : "Don't have an account? Sign Up"}
+                        {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
                     </Link>
                 </Box>
             </form>
         </Paper>
     );
 
-    // Step 2: Profile Information (Sign Up only)
+    // Step 2: Profile Information
     const renderStep2 = () => (
-        <Paper
-            elevation={6}
-            sx={{
-                p: 5,
-                borderRadius: 3,
-            }}
-        >
-            <Typography
-                variant="h5"
-                component="h1"
-                gutterBottom
-                fontWeight="bold"
-                textAlign="center"
-            >
+        <Paper elevation={6} sx={{ p: 5, borderRadius: 3 }}>
+            <Typography variant="h5" component="h1" gutterBottom fontWeight="bold" textAlign="center">
                 Profile Information
             </Typography>
-            <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mb: 3 }}
-                textAlign="center"
-            >
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }} textAlign="center">
                 Help others find and connect with you (optional - you can add this later)
             </Typography>
 
@@ -342,47 +352,99 @@ const SignIn = ({ firebase }) => {
                 </Grid>
 
                 {error && (
-                    <Typography
-                        align="center"
-                        color="error"
-                        sx={{ mt: 2, p: 1 }}
-                    >
-                        {error.message || 'Something went wrong'}
+                    <Typography align="center" color="error" sx={{ mt: 2, p: 1 }}>
+                        {error.message}
                     </Typography>
                 )}
 
                 <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-                    <Button
+                    <Button 
                         type="button"
-                        fullWidth
-                        variant="outlined"
+                        fullWidth 
+                        variant="outlined" 
                         color="primary"
                         onClick={handleBack}
                         disabled={loading}
-                        sx={{
-                            py: 1.5,
-                            textTransform: 'none',
-                            fontSize: '1rem',
-                        }}
+                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
                     >
                         Back
                     </Button>
-                    <Button
+                    <Button 
                         type="submit"
-                        fullWidth
-                        variant="contained"
+                        fullWidth 
+                        variant="contained" 
                         color="primary"
                         disabled={loading}
-                        sx={{
-                            py: 1.5,
-                            textTransform: 'none',
-                            fontSize: '1rem',
-                        }}
+                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
                     >
-                        {loading ? 'Creating Account...' : 'Create Account'}
+                        {loading ? 'Sending Verification...' : 'Create Account'}
                     </Button>
                 </Box>
             </form>
+        </Paper>
+    );
+
+    // Step 3: Email Verification
+    const renderStep3 = () => (
+        <Paper elevation={6} sx={{ p: 5, borderRadius: 3, textAlign: 'center' }}>
+            <Box sx={{ mb: 3 }}>
+                <EmailIcon sx={{ fontSize: 64, color: 'primary.main' }} />
+            </Box>
+            
+            <Typography variant="h5" component="h1" gutterBottom fontWeight="bold">
+                Verify Your Email
+            </Typography>
+            
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                We've sent a verification link to:
+            </Typography>
+            
+            <Typography variant="body1" fontWeight="medium" sx={{ mb: 3, color: 'primary.main' }}>
+                {email}
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                Click the link in your email to verify your account, then come back here and click the button below.
+            </Typography>
+
+            {success && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                    {success}
+                </Alert>
+            )}
+
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error.message}
+                </Alert>
+            )}
+
+            <Button 
+                fullWidth 
+                variant="contained" 
+                color="primary"
+                onClick={handleCheckVerification}
+                disabled={checkingVerification}
+                startIcon={checkingVerification ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
+                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
+            >
+                {checkingVerification ? 'Checking...' : "I've Verified My Email"}
+            </Button>
+
+            <Button 
+                fullWidth 
+                variant="outlined" 
+                color="primary"
+                onClick={handleResendVerification}
+                disabled={loading || resendCooldown > 0}
+                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
+            >
+                {resendCooldown > 0 ? `Resend Email (${resendCooldown}s)` : 'Resend Verification Email'}
+            </Button>
+
+            <Typography variant="body2" color="text.secondary">
+                Didn't receive the email? Check your spam folder.
+            </Typography>
         </Paper>
     );
 
@@ -398,7 +460,9 @@ const SignIn = ({ firebase }) => {
             }}
         >
             <Container maxWidth="sm">
-                {step === 1 ? renderStep1() : renderStep2()}
+                {step === 1 && renderStep1()}
+                {step === 2 && renderStep2()}
+                {step === 3 && renderStep3()}
             </Container>
         </Box>
     );
