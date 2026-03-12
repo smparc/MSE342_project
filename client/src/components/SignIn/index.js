@@ -28,10 +28,12 @@ const SignIn = ({ firebase }) => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [isSignUp, setIsSignUp] = useState(false);
-    const [step, setStep] = useState(1); // 1 = account info, 2 = profile info, 3 = email verification
+    // Steps: 1 = account info, 2 = email verification (optional), 3 = profile info
+    const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     const [checkingVerification, setCheckingVerification] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
     const navigate = useNavigate();
 
     // Countdown timer for resend button
@@ -80,17 +82,45 @@ const SignIn = ({ firebase }) => {
         return true;
     };
 
-    const handleNext = () => {
+    const handleNextToVerification = async () => {
         setError(null);
-        if (validateStep1()) {
-            setStep(2);
+        if (!validateStep1()) return;
+        
+        setLoading(true);
+        try {
+            // Create Firebase account first
+            await firebase.doCreateUserWithEmailAndPassword(email, password);
+            
+            // Check if it's a UWaterloo email
+            if (email.trim().toLowerCase().endsWith('@uwaterloo.ca')) {
+                // Send verification email and go to verification step
+                await firebase.doSendEmailVerification();
+                setResendCooldown(60);
+                setStep(2);
+            } else {
+                // Non-UW email, skip verification and go to profile step
+                setStep(3);
+            }
+        } catch (err) {
+            setError({ message: getErrorMessage(err) });
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const handleSkipVerification = () => {
+        setError(null);
+        setIsVerified(false);
+        setStep(3);
     };
 
     const handleBack = () => {
         setError(null);
         if (step === 3) {
-            setStep(2);
+            // Can't go back from profile if we've already created the Firebase account
+            // Just stay on step 3
+        } else if (step === 2) {
+            // Can't go back from verification - account already created
         } else {
             setStep(1);
         }
@@ -121,32 +151,12 @@ const SignIn = ({ firebase }) => {
             const user = firebase.auth.currentUser;
 
             if (user.emailVerified) {
-                const token = await user.getIdToken();
-
-                const response = await fetch('/api/users', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': token,
-                    },
-                    body: JSON.stringify({
-                        username: username.trim(),
-                        email: email,
-                        display_name: username.trim(),
-                        faculty: faculty.trim() || null,
-                        program: program.trim() || null,
-                        grad_year: gradYear ? parseInt(gradYear) : null,
-                        exchange_term: exchangeTerm.trim() || null,
-                        uw_verified: true,
-                    }),
-                });
-
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Failed to create user profile');
-                }
-
-                navigate('/');
+                setIsVerified(true);
+                setSuccess('Email verified! You now have the UW Verified badge.');
+                // Move to profile step after short delay
+                setTimeout(() => {
+                    setStep(3);
+                }, 1500);
             } else {
                 setError({ message: 'Email not verified yet. Please check your inbox and click the verification link.' });
             }
@@ -157,33 +167,64 @@ const SignIn = ({ firebase }) => {
         }
     };
 
-    const onSubmit = async (event) => {
+    const handleCreateAccount = async (event) => {
+        event.preventDefault();
+        setError(null);
+        setLoading(true);
+
+        try {
+            const user = firebase.auth.currentUser;
+            const token = await user.getIdToken();
+
+            const response = await fetch('/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token,
+                },
+                body: JSON.stringify({
+                    username: username.trim(),
+                    email: email,
+                    display_name: username.trim(),
+                    faculty: faculty.trim() || null,
+                    program: program.trim() || null,
+                    grad_year: gradYear ? parseInt(gradYear) : null,
+                    exchange_term: exchangeTerm.trim() || null,
+                    uw_verified: isVerified,
+                }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to create user profile');
+            }
+
+            navigate('/');
+        } catch (err) {
+            setError({ message: getErrorMessage(err) });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const onSignIn = async (event) => {
         event.preventDefault();
         setError(null);
         
-        if (!isSignUp) {
-            if (!email.trim()) {
-                setError({ message: 'Email is required to log in' });
-                return;
-            }
-            if (!password.trim()) {
-                setError({ message: 'Password is required to log in' });
-                return;
-            }
+        if (!email.trim()) {
+            setError({ message: 'Email is required to log in' });
+            return;
+        }
+        if (!password.trim()) {
+            setError({ message: 'Password is required to log in' });
+            return;
         }
         
         setLoading(true);
 
         try {
-            if (isSignUp) {
-                await firebase.doCreateUserWithEmailAndPassword(email, password);
-                await firebase.doSendEmailVerification();
-                setResendCooldown(60);
-                setStep(3);
-            } else {
-                await firebase.doSignInWithEmailAndPassword(email, password);
-                navigate('/');
-            }
+            await firebase.doSignInWithEmailAndPassword(email, password);
+            navigate('/');
         } catch (err) {
             setError({ message: getErrorMessage(err) });
         } finally {
@@ -196,6 +237,7 @@ const SignIn = ({ firebase }) => {
         setStep(1);
         setError(null);
         setSuccess(null);
+        setIsVerified(false);
         setFaculty('');
         setProgram('');
         setGradYear('');
@@ -212,7 +254,7 @@ const SignIn = ({ firebase }) => {
                 Connect with fellow exchange students and share your experiences
             </Typography>
 
-            <form noValidate onSubmit={isSignUp ? (e) => { e.preventDefault(); handleNext(); } : onSubmit}>
+            <form noValidate onSubmit={isSignUp ? (e) => { e.preventDefault(); handleNextToVerification(); } : onSignIn}>
                 <TextField
                     variant="outlined"
                     margin="normal"
@@ -224,6 +266,7 @@ const SignIn = ({ firebase }) => {
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    helperText={isSignUp ? "Use your @uwaterloo.ca email to get verified" : ""}
                 />
 
                 {isSignUp && (
@@ -288,8 +331,82 @@ const SignIn = ({ firebase }) => {
         </Paper>
     );
 
-    // Step 2: Profile Information
+    // Step 2: Email Verification (Optional)
     const renderStep2 = () => (
+        <Paper elevation={6} sx={{ p: 5, borderRadius: 3, textAlign: 'center' }}>
+            <Box sx={{ mb: 3 }}>
+                <EmailIcon sx={{ fontSize: 64, color: 'primary.main' }} />
+            </Box>
+            
+            <Typography variant="h5" component="h1" gutterBottom fontWeight="bold">
+                Verify Your UWaterloo Email
+            </Typography>
+            
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                We've sent a verification link to:
+            </Typography>
+            
+            <Typography variant="body1" fontWeight="medium" sx={{ mb: 3, color: 'primary.main' }}>
+                {email}
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                Verify your email to get the "UW Verified" badge on your profile. This helps other students know you're a real UWaterloo student.
+            </Typography>
+
+            {success && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                    {success}
+                </Alert>
+            )}
+
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error.message}
+                </Alert>
+            )}
+
+            <Button 
+                fullWidth 
+                variant="contained" 
+                color="primary"
+                onClick={handleCheckVerification}
+                disabled={checkingVerification}
+                startIcon={checkingVerification ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
+                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
+            >
+                {checkingVerification ? 'Checking...' : "I've Verified My Email"}
+            </Button>
+
+            <Button 
+                fullWidth 
+                variant="outlined" 
+                color="primary"
+                onClick={handleResendVerification}
+                disabled={loading || resendCooldown > 0}
+                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
+            >
+                {resendCooldown > 0 ? `Resend Email (${resendCooldown}s)` : 'Resend Verification Email'}
+            </Button>
+
+            <Button 
+                fullWidth 
+                variant="text" 
+                color="inherit"
+                onClick={handleSkipVerification}
+                sx={{ py: 1, textTransform: 'none', fontSize: '0.9rem', color: 'text.secondary' }}
+            >
+                Skip for now
+            </Button>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                Didn't receive the email? Check your spam folder.
+            </Typography>
+        </Paper>
+    );
+
+    // Step 3: Profile Information
+    const renderStep3 = () => (
         <Paper elevation={6} sx={{ p: 5, borderRadius: 3 }}>
             <Typography variant="h5" component="h1" gutterBottom fontWeight="bold" textAlign="center">
                 Profile Information
@@ -298,7 +415,13 @@ const SignIn = ({ firebase }) => {
                 Help others find and connect with you (optional - you can add this later)
             </Typography>
 
-            <form noValidate onSubmit={onSubmit}>
+            {isVerified && (
+                <Alert severity="success" sx={{ mb: 3 }}>
+                    Your UWaterloo email has been verified! You'll have the "UW Verified" badge.
+                </Alert>
+            )}
+
+            <form noValidate onSubmit={handleCreateAccount}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                         <TextField
@@ -357,94 +480,17 @@ const SignIn = ({ firebase }) => {
                     </Typography>
                 )}
 
-                <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-                    <Button 
-                        type="button"
-                        fullWidth 
-                        variant="outlined" 
-                        color="primary"
-                        onClick={handleBack}
-                        disabled={loading}
-                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
-                    >
-                        Back
-                    </Button>
-                    <Button 
-                        type="submit"
-                        fullWidth 
-                        variant="contained" 
-                        color="primary"
-                        disabled={loading}
-                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
-                    >
-                        {loading ? 'Sending Verification...' : 'Create Account'}
-                    </Button>
-                </Box>
+                <Button 
+                    type="submit"
+                    fullWidth 
+                    variant="contained" 
+                    color="primary"
+                    disabled={loading}
+                    sx={{ mt: 3, py: 1.5, textTransform: 'none', fontSize: '1rem' }}
+                >
+                    {loading ? 'Creating Account...' : 'Complete Sign Up'}
+                </Button>
             </form>
-        </Paper>
-    );
-
-    // Step 3: Email Verification
-    const renderStep3 = () => (
-        <Paper elevation={6} sx={{ p: 5, borderRadius: 3, textAlign: 'center' }}>
-            <Box sx={{ mb: 3 }}>
-                <EmailIcon sx={{ fontSize: 64, color: 'primary.main' }} />
-            </Box>
-            
-            <Typography variant="h5" component="h1" gutterBottom fontWeight="bold">
-                Verify Your Email
-            </Typography>
-            
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                We've sent a verification link to:
-            </Typography>
-            
-            <Typography variant="body1" fontWeight="medium" sx={{ mb: 3, color: 'primary.main' }}>
-                {email}
-            </Typography>
-            
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                Click the link in your email to verify your account, then come back here and click the button below.
-            </Typography>
-
-            {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                    {success}
-                </Alert>
-            )}
-
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error.message}
-                </Alert>
-            )}
-
-            <Button 
-                fullWidth 
-                variant="contained" 
-                color="primary"
-                onClick={handleCheckVerification}
-                disabled={checkingVerification}
-                startIcon={checkingVerification ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
-                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
-            >
-                {checkingVerification ? 'Checking...' : "I've Verified My Email"}
-            </Button>
-
-            <Button 
-                fullWidth 
-                variant="outlined" 
-                color="primary"
-                onClick={handleResendVerification}
-                disabled={loading || resendCooldown > 0}
-                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
-            >
-                {resendCooldown > 0 ? `Resend Email (${resendCooldown}s)` : 'Resend Verification Email'}
-            </Button>
-
-            <Typography variant="body2" color="text.secondary">
-                Didn't receive the email? Check your spam folder.
-            </Typography>
         </Paper>
     );
 
