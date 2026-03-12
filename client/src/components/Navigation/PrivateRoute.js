@@ -26,8 +26,6 @@ const MainLayout = ({ children }) => (
 const PrivateRoute = ({ authenticated, authUser }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [userExistsInDb, setUserExistsInDb] = useState(false);
-
 
     // Fetch username from database based on email
     useEffect(() => {
@@ -41,19 +39,14 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                 const response = await fetch(`/api/users/by-email/${encodeURIComponent(authUser.email)}`);
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.username) {
-                        setCurrentUser(data.username);
-                        setUserExistsInDb(true);
-                    } else {
-                        setUserExistsInDb(false);
-                    }
+                    setCurrentUser(data.username);
                 } else {
-                    // User not found in DB - they need to complete sign-up
-                    setUserExistsInDb(false);
+                    // Fallback to email prefix if user not found in DB
+                    setCurrentUser(authUser.email.split('@')[0]);
                 }
             } catch (error) {
                 console.error('Error fetching user:', error);
-                setUserExistsInDb(false);
+                setCurrentUser(authUser.email.split('@')[0]);
             } finally {
                 setLoading(false);
             }
@@ -63,12 +56,19 @@ const PrivateRoute = ({ authenticated, authUser }) => {
             fetchUsername();
         } else {
             setLoading(false);
-            setUserExistsInDb(false);
         }
     }, [authenticated, authUser]);
 
+    if (!authenticated) {
+        return (
+            <Routes>
+                <Route path="*" element={<SignIn />} />
+            </Routes>
+        );
+    }
+
     // Show loading while fetching username
-    if (authenticated && loading) {
+    if (loading) {
         return (
             <Box
                 sx={{
@@ -80,14 +80,6 @@ const PrivateRoute = ({ authenticated, authUser }) => {
             >
                 <CircularProgress />
             </Box>
-        );
-    }
-
-    if (!authenticated || !userExistsInDb) {
-        return (
-            <Routes>
-                <Route path="*" element={<SignIn />} />
-            </Routes>
         );
     }
 

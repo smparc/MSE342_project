@@ -82,33 +82,11 @@ const SignIn = ({ firebase }) => {
         return true;
     };
 
-    const handleNextToVerification = async () => {
+    const handleNextToProfileInfo = () => {
         setError(null);
         if (!validateStep1()) return;
-
-        setLoading(true);
-        try {
-            // Create Firebase account first
-            await firebase.doCreateUserWithEmailAndPassword(email, password);
-
-            // Check if it's a UWaterloo email
-            // if (email.trim().toLowerCase().endsWith('@uwaterloo.ca')) {
-            //     // Send verification email and go to verification step
-            //     await firebase.doSendEmailVerification();
-            //     setResendCooldown(60);
-            //     setStep(2);
-            // } else {
-            //     // Non-UW email, skip verification and go to profile step
-            //     setStep(3);
-            // }
-            // await firebase.doSendEmailVerification();
-            // setResendCooldown(60);
-            setStep(3);
-        } catch (err) {
-            setError({ message: getErrorMessage(err) });
-        } finally {
-            setLoading(false);
-        }
+        // Just go to step 3 (profile info) - Firebase account created on final submit
+        setStep(3);
     };
 
     const handleSkipVerification = () => {
@@ -176,9 +154,13 @@ const SignIn = ({ firebase }) => {
         setLoading(true);
 
         try {
+            // Create Firebase account first
+            await firebase.doCreateUserWithEmailAndPassword(email, password);
+            
             const user = firebase.auth.currentUser;
             const token = await user.getIdToken();
 
+            // Create user in database
             const response = await fetch('/api/users', {
                 method: 'POST',
                 headers: {
@@ -202,7 +184,8 @@ const SignIn = ({ firebase }) => {
                 throw new Error(data.error || 'Failed to create user profile');
             }
 
-            navigate('/');
+            // Redirect to app - Firebase auth state will be detected
+            window.location.href = '/';
         } catch (err) {
             setError({ message: getErrorMessage(err) });
         } finally {
@@ -257,7 +240,7 @@ const SignIn = ({ firebase }) => {
                 Connect with fellow exchange students and share your experiences
             </Typography>
 
-            <form noValidate onSubmit={isSignUp ? (e) => { e.preventDefault(); handleNextToVerification(); } : onSignIn}>
+            <form noValidate onSubmit={isSignUp ? (e) => { e.preventDefault(); handleNextToProfileInfo(); } : onSignIn}>
                 <TextField
                     variant="outlined"
                     margin="normal"
