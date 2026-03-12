@@ -72,13 +72,13 @@ const checkAuth = (req, res, next) => {
     if (!idToken) {
         return res.status(403).json({ error: 'Unauthorized: No token provided' });
     }
-    
+
     // Check if Firebase Admin is initialized
     if (!admin.apps.length) {
         console.warn('Firebase Admin not initialized, skipping auth check');
         return next();
     }
-    
+
     admin.auth().verifyIdToken(idToken)
         .then(decodedToken => {
             req.user = decodedToken;
@@ -182,8 +182,8 @@ app.post('/api/users', checkAuth, (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const params = [
-            username.trim(), 
-            display_name || username.trim(), 
+            username.trim(),
+            display_name || username.trim(),
             email,
             faculty || null,
             program || null,
@@ -191,14 +191,14 @@ app.post('/api/users', checkAuth, (req, res) => {
             exchange_term || null,
             uw_verified || false
         ];
-        
+
         connection.query(insertSql, params, (error, results) => {
             if (error) {
                 console.error('Database error:', error);
                 return res.status(500).json({ error: 'Failed to create user' });
             }
-            res.status(201).json({ 
-                success: true, 
+            res.status(201).json({
+                success: true,
                 message: 'User created successfully',
                 username: username.trim()
             });
