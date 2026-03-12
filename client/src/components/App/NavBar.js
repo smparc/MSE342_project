@@ -13,16 +13,19 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
-import TimelineIcon from '@mui/icons-material/Timeline';
+import TimelineIcon from '@mui/icons-material/CalendarToday';
 
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 220;
+
+// <Route path="/advisors" element={<AdvisorsList />} />
 
 const navItems = [
   { path: '/messages', label: 'Messages', icon: ChatIcon },
   { path: '/search', label: 'Search', icon: SearchIcon },
   { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon },
   { path: '/timeline', label: 'Timeline', icon: TimelineIcon },
+  { path: '/contacts', label: 'Contacts', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },
 ];
 
@@ -107,7 +110,7 @@ const NavBar = () => {
       </List>
 
       <Divider />
-      
+
       <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
           onClick={handleSignOut}
