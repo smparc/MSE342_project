@@ -24,6 +24,9 @@ export default function CourseSearch({ currentUser, authUser }) {
   const [filters, setFilters] = useState({ country: '', continent: '', faculty: '', term: '' });
   const [filterMeta, setFilterMeta] = useState({ countries: [], continents: [], terms: [] });
 
+  // Sprint 2 — sort state (Story 5)
+  const [sort, setSort] = useState('last_updated');
+
   // Results state
   const [courses, setCourses] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -73,6 +76,8 @@ export default function CourseSearch({ currentUser, authUser }) {
           continent: filters.continent,
           faculty: filters.faculty,
           term: filters.term,
+          // Sprint 2 — pass sort param to API (Story 5)
+          sort,
           page: pageNum,
           limit: 15,
         });
@@ -86,7 +91,7 @@ export default function CourseSearch({ currentUser, authUser }) {
         setLoading(false);
       }
     },
-    [query, filters]
+    [query, filters, sort]
   );
 
   // Debounce search as user types (AC#5 partial search)
@@ -223,11 +228,27 @@ export default function CourseSearch({ currentUser, authUser }) {
         )}
       </div>
 
-      {/* ── Results ── */}
+      {/* ── Results header + Sort (Sprint 2 Story 5) ── */}
       <div className="cs-results-header">
         <span className="cs-count">
           {loading ? 'Loading…' : `${pagination.total || 0} course${pagination.total !== 1 ? 's' : ''} found`}
         </span>
+
+        {/* Sprint 2 — sort dropdown (Story 5) */}
+        <div className="cs-sort-row">
+          <label htmlFor="cs-sort-select" className="cs-sort-label">Sort by</label>
+          <select
+            id="cs-sort-select"
+            className="cs-select cs-sort-select"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            aria-label="Sort by"
+          >
+            <option value="last_updated">Most Recently Updated</option>
+            <option value="avg_rating">Average Rating</option>
+            <option value="university">University Name</option>
+          </select>
+        </div>
       </div>
 
       {error && <div className="cs-error">{error}</div>}

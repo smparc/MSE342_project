@@ -8,6 +8,12 @@ import Search from '../App/Search';
 import CourseSearch from '../CourseSearch';
 import CourseSubmit from '../CourseSubmit';
 import Messaging from '../Messaging';
+import Timeline from '../Timeline';
+import ContactsList from '../ContactsList';
+import AdvisorsList from '../AdvisorsList';
+import DeleteAccount from '../DeleteAccount';
+import UserTypeSelect from '../UserTypeSelect';
+import SignOut from '../SignOut';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -96,6 +102,22 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                     <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={currentUser} authUser={authUser} />} />
                     <Route path="/course-equivalency" element={<CourseSearch currentUser={currentUser} authUser={authUser} />} />
                     <Route path="/profile" element={<Profile currentUser={currentUser} authUser={authUser} />} />
+                    {/* Sprint 2 routes */}
+                    <Route path="/timeline" element={<Timeline currentUser={currentUser} authUser={authUser} />} />
+                    <Route path="/contacts" element={<ContactsList />} />
+                    <Route path="/advisors" element={<AdvisorsList />} />
+                    <Route
+                        path="/settings/delete-account"
+                        element={<DeleteAccount currentUser={currentUser} authUser={authUser} />}
+                    />
+                    <Route
+                        path="/settings/user-type"
+                        element={<UserTypeSelect currentUser={currentUser} authUser={authUser} />}
+                    />
+                    <Route
+                        path="/signout"
+                        element={<SignOut currentUser={currentUser} authUser={authUser} onSignOut={() => { }} />}
+                    />
                 </Routes>
             </MainLayout>
         </>

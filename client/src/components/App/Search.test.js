@@ -43,12 +43,14 @@ describe('Search', () => {
   describe('initial render', () => {
     it('renders the Search heading', () => {
       renderWithTheme(<Search />);
-      expect(screen.getByText('Search')).toBeInTheDocument();
+      // getByText('Search') matches both the h6 and the button — use heading role instead
+      expect(screen.getByRole('heading', { name: 'Search' })).toBeInTheDocument();
     });
 
     it('renders the search input field', () => {
       renderWithTheme(<Search />);
-      expect(screen.getByPlaceholderText(/Search by username/i)).toBeInTheDocument();
+      // Actual placeholder is "Search by EXACT username"
+      expect(screen.getByPlaceholderText(/Search by EXACT username/i)).toBeInTheDocument();
     });
 
     it('renders the Search button', () => {
@@ -66,7 +68,8 @@ describe('Search', () => {
 
       renderWithTheme(<Search />);
 
-      const input = screen.getByPlaceholderText(/Search by username/i);
+      // Actual placeholder is "Search by EXACT username"
+      const input = screen.getByPlaceholderText(/Search by EXACT username/i);
       fireEvent.change(input, { target: { value: 'john.doe' } });
       fireEvent.click(screen.getByRole('button', { name: /Search/i }));
 

@@ -1,12 +1,5 @@
 import { useEffect, useState, useContext } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import NavBar, { NAV_WIDTH_COLLAPSED } from './NavBar';
-import Profile from '../Profile';
-import Search from './Search';
-import CourseSearch from '../CourseSearch';
-import CourseSubmit from '../CourseSubmit';
-import Messaging from '../Messaging';
+import { BrowserRouter} from 'react-router-dom';
 
 import PrivateRoute from '../Navigation/PrivateRoute';
 import { FirebaseContext } from '../Firebase';
@@ -36,7 +29,6 @@ const App = () => {
   return (
     <BrowserRouter>
       <PrivateRoute authenticated={authenticated} authUser={authUser} />
-      
     </BrowserRouter>
   );
 };
