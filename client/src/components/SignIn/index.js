@@ -23,7 +23,7 @@ const SignIn = ({ firebase }) => {
     const [program, setProgram] = useState('');
     const [gradYear, setGradYear] = useState('');
     const [exchangeTerm, setExchangeTerm] = useState('');
-    
+
     // UI state
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
@@ -47,7 +47,7 @@ const SignIn = ({ firebase }) => {
     // Convert Firebase error codes to user-friendly messages
     const getErrorMessage = (error) => {
         const code = error.code || '';
-        
+
         switch (code) {
             case 'auth/invalid-email':
                 return 'Please enter a valid email address';
@@ -85,22 +85,25 @@ const SignIn = ({ firebase }) => {
     const handleNextToVerification = async () => {
         setError(null);
         if (!validateStep1()) return;
-        
+
         setLoading(true);
         try {
             // Create Firebase account first
             await firebase.doCreateUserWithEmailAndPassword(email, password);
-            
+
             // Check if it's a UWaterloo email
-            if (email.trim().toLowerCase().endsWith('@uwaterloo.ca')) {
-                // Send verification email and go to verification step
-                await firebase.doSendEmailVerification();
-                setResendCooldown(60);
-                setStep(2);
-            } else {
-                // Non-UW email, skip verification and go to profile step
-                setStep(3);
-            }
+            // if (email.trim().toLowerCase().endsWith('@uwaterloo.ca')) {
+            //     // Send verification email and go to verification step
+            //     await firebase.doSendEmailVerification();
+            //     setResendCooldown(60);
+            //     setStep(2);
+            // } else {
+            //     // Non-UW email, skip verification and go to profile step
+            //     setStep(3);
+            // }
+            // await firebase.doSendEmailVerification();
+            // setResendCooldown(60);
+            setStep(3);
         } catch (err) {
             setError({ message: getErrorMessage(err) });
         } finally {
@@ -210,7 +213,7 @@ const SignIn = ({ firebase }) => {
     const onSignIn = async (event) => {
         event.preventDefault();
         setError(null);
-        
+
         if (!email.trim()) {
             setError({ message: 'Email is required to log in' });
             return;
@@ -219,7 +222,7 @@ const SignIn = ({ firebase }) => {
             setError({ message: 'Password is required to log in' });
             return;
         }
-        
+
         setLoading(true);
 
         try {
@@ -305,10 +308,10 @@ const SignIn = ({ firebase }) => {
                     </Typography>
                 )}
 
-                <Button 
+                <Button
                     type="submit"
-                    fullWidth 
-                    variant="contained" 
+                    fullWidth
+                    variant="contained"
                     color="primary"
                     disabled={loading}
                     sx={{ mt: 3, mb: 2, py: 1.5, textTransform: 'none', fontSize: '1rem' }}
@@ -337,19 +340,19 @@ const SignIn = ({ firebase }) => {
             <Box sx={{ mb: 3 }}>
                 <EmailIcon sx={{ fontSize: 64, color: 'primary.main' }} />
             </Box>
-            
+
             <Typography variant="h5" component="h1" gutterBottom fontWeight="bold">
                 Verify Your UWaterloo Email
             </Typography>
-            
+
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                 We've sent a verification link to:
             </Typography>
-            
+
             <Typography variant="body1" fontWeight="medium" sx={{ mb: 3, color: 'primary.main' }}>
                 {email}
             </Typography>
-            
+
             <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                 Verify your email to get the "UW Verified" badge on your profile. This helps other students know you're a real UWaterloo student.
             </Typography>
@@ -366,9 +369,9 @@ const SignIn = ({ firebase }) => {
                 </Alert>
             )}
 
-            <Button 
-                fullWidth 
-                variant="contained" 
+            <Button
+                fullWidth
+                variant="contained"
                 color="primary"
                 onClick={handleCheckVerification}
                 disabled={checkingVerification}
@@ -378,9 +381,9 @@ const SignIn = ({ firebase }) => {
                 {checkingVerification ? 'Checking...' : "I've Verified My Email"}
             </Button>
 
-            <Button 
-                fullWidth 
-                variant="outlined" 
+            <Button
+                fullWidth
+                variant="outlined"
                 color="primary"
                 onClick={handleResendVerification}
                 disabled={loading || resendCooldown > 0}
@@ -389,9 +392,9 @@ const SignIn = ({ firebase }) => {
                 {resendCooldown > 0 ? `Resend Email (${resendCooldown}s)` : 'Resend Verification Email'}
             </Button>
 
-            <Button 
-                fullWidth 
-                variant="text" 
+            <Button
+                fullWidth
+                variant="text"
                 color="inherit"
                 onClick={handleSkipVerification}
                 sx={{ py: 1, textTransform: 'none', fontSize: '0.9rem', color: 'text.secondary' }}
@@ -480,10 +483,10 @@ const SignIn = ({ firebase }) => {
                     </Typography>
                 )}
 
-                <Button 
+                <Button
                     type="submit"
-                    fullWidth 
-                    variant="contained" 
+                    fullWidth
+                    variant="contained"
                     color="primary"
                     disabled={loading}
                     sx={{ mt: 3, py: 1.5, textTransform: 'none', fontSize: '1rem' }}
@@ -507,7 +510,7 @@ const SignIn = ({ firebase }) => {
         >
             <Container maxWidth="sm">
                 {step === 1 && renderStep1()}
-                {step === 2 && renderStep2()}
+                {/*step === 2 && renderStep2()*/}
                 {step === 3 && renderStep3()}
             </Container>
         </Box>
