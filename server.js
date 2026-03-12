@@ -158,7 +158,7 @@ app.delete('/api/posts/:id', checkAuth, (req, res) => {
 
 // API to create a new user (for sign up)
 app.post('/api/users', checkAuth, (req, res) => {
-    const { username, email, display_name, faculty, program, grad_year, exchange_term } = req.body;
+    const { username, email, display_name, faculty, program, grad_year, exchange_term, uw_verified } = req.body;
 
     if (!username || !username.trim()) {
         return res.status(400).json({ error: 'Username is required' });
@@ -178,8 +178,8 @@ app.post('/api/users', checkAuth, (req, res) => {
 
         // Create new user with email and profile info
         const insertSql = `
-            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term, uw_verified) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const params = [
             username.trim(), 
@@ -188,7 +188,8 @@ app.post('/api/users', checkAuth, (req, res) => {
             faculty || null,
             program || null,
             grad_year || null,
-            exchange_term || null
+            exchange_term || null,
+            uw_verified || false
         ];
         
         connection.query(insertSql, params, (error, results) => {
