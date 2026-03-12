@@ -19,13 +19,35 @@ const SignIn = ({ firebase }) => {
     const [program, setProgram] = useState('');
     const [gradYear, setGradYear] = useState('');
     const [exchangeTerm, setExchangeTerm] = useState('');
-    
+
     // UI state
     const [error, setError] = useState(null);
     const [isSignUp, setIsSignUp] = useState(false);
     const [step, setStep] = useState(1); // 1 = account info, 2 = profile info
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    // Convert Firebase error codes to user-friendly messages
+    const getErrorMessage = (error) => {
+        const code = error.code || '';
+
+        switch (code) {
+            case 'auth/invalid-email':
+                return 'Please enter a valid email address';
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                return 'Invalid email or password';
+            case 'auth/email-already-in-use':
+                return 'An account with this email already exists';
+            case 'auth/weak-password':
+                return 'Password must be at least 6 characters';
+            case 'auth/too-many-requests':
+                return 'Too many failed attempts. Please try again later';
+            default:
+                return error.message || 'Something went wrong. Please try again';
+        }
+    };
 
     const validateStep1 = () => {
         if (!email.trim()) {
@@ -58,6 +80,17 @@ const SignIn = ({ firebase }) => {
     const onSubmit = async (event) => {
         event.preventDefault();
         setError(null);
+
+        if (!isSignUp) {
+            if (!email.trim()) {
+                setError({ message: 'Email is required to log in' });
+                return;
+            }
+            if (!password.trim()) {
+                setError({ message: 'Password is required to log in' });
+                return;
+            }
+        }
         setLoading(true);
 
         try {
@@ -97,7 +130,7 @@ const SignIn = ({ firebase }) => {
                 navigate('/');
             }
         } catch (err) {
-            setError(err);
+            setError({ message: getErrorMessage(err) });
         } finally {
             setLoading(false);
         }
@@ -122,18 +155,18 @@ const SignIn = ({ firebase }) => {
                 borderRadius: 3,
             }}
         >
-            <Typography 
-                variant="h4" 
-                component="h1" 
-                gutterBottom 
+            <Typography
+                variant="h4"
+                component="h1"
+                gutterBottom
                 fontWeight="bold"
                 textAlign="center"
             >
                 WATExchange
             </Typography>
-            <Typography 
-                variant="body1" 
-                color="text.secondary" 
+            <Typography
+                variant="body1"
+                color="text.secondary"
                 sx={{ mb: 3 }}
                 textAlign="center"
             >
@@ -194,15 +227,15 @@ const SignIn = ({ firebase }) => {
                     </Typography>
                 )}
 
-                <Button 
+                <Button
                     type="submit"
-                    fullWidth 
-                    variant="contained" 
+                    fullWidth
+                    variant="contained"
                     color="primary"
                     disabled={loading}
-                    sx={{ 
-                        mt: 3, 
-                        mb: 2, 
+                    sx={{
+                        mt: 3,
+                        mb: 2,
                         py: 1.5,
                         textTransform: 'none',
                         fontSize: '1rem',
@@ -219,8 +252,8 @@ const SignIn = ({ firebase }) => {
                         onClick={resetForm}
                         sx={{ cursor: 'pointer' }}
                     >
-                        {isSignUp 
-                            ? 'Already have an account? Sign In' 
+                        {isSignUp
+                            ? 'Already have an account? Sign In'
                             : "Don't have an account? Sign Up"}
                     </Link>
                 </Box>
@@ -237,18 +270,18 @@ const SignIn = ({ firebase }) => {
                 borderRadius: 3,
             }}
         >
-            <Typography 
-                variant="h5" 
-                component="h1" 
-                gutterBottom 
+            <Typography
+                variant="h5"
+                component="h1"
+                gutterBottom
                 fontWeight="bold"
                 textAlign="center"
             >
                 Profile Information
             </Typography>
-            <Typography 
-                variant="body2" 
-                color="text.secondary" 
+            <Typography
+                variant="body2"
+                color="text.secondary"
                 sx={{ mb: 3 }}
                 textAlign="center"
             >
@@ -319,14 +352,14 @@ const SignIn = ({ firebase }) => {
                 )}
 
                 <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-                    <Button 
+                    <Button
                         type="button"
-                        fullWidth 
-                        variant="outlined" 
+                        fullWidth
+                        variant="outlined"
                         color="primary"
                         onClick={handleBack}
                         disabled={loading}
-                        sx={{ 
+                        sx={{
                             py: 1.5,
                             textTransform: 'none',
                             fontSize: '1rem',
@@ -334,13 +367,13 @@ const SignIn = ({ firebase }) => {
                     >
                         Back
                     </Button>
-                    <Button 
+                    <Button
                         type="submit"
-                        fullWidth 
-                        variant="contained" 
+                        fullWidth
+                        variant="contained"
                         color="primary"
                         disabled={loading}
-                        sx={{ 
+                        sx={{
                             py: 1.5,
                             textTransform: 'none',
                             fontSize: '1rem',
