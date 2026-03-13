@@ -452,24 +452,39 @@ app.get('/api/courses/meta/filters', (req, res) => {
 });
 
 app.get('/api/courses', (req, res) => {
-    const { q, country, continent, faculty, term, page = 1, limit = 15 } = req.query;
+    const { q, country, continent, faculty, term, sort = 'last_updated', page = 1, limit = 15 } = req.query;
     const offset = (page - 1) * limit;
 
-    // Basic dynamic search logic
-    let sql = "SELECT * FROM course_equivalencies WHERE 1=1";
+    // Join course_reviews for avg_rating sort
+    let sql = `SELECT c.*, AVG(r.cleanliness_rating) AS avg_rating
+               FROM course_equivalencies c
+               LEFT JOIN course_reviews r ON r.course_id = c.course_id
+               WHERE 1=1`;
     const params = [];
 
     if (q) {
-        sql += " AND (host_university LIKE ? OR host_course_name LIKE ? OR host_course_code LIKE ?)";
+        sql += " AND (c.host_university LIKE ? OR c.host_course_name LIKE ? OR c.host_course_code LIKE ?)";
         const search = `%${q}%`;
         params.push(search, search, search);
     }
-    if (country) { sql += " AND country = ?"; params.push(country); }
-    if (continent) { sql += " AND continent = ?"; params.push(continent); }
-    if (term) { sql += " AND term_taken = ?"; params.push(term); }
+    if (country)   { sql += " AND c.country = ?";    params.push(country); }
+    if (continent) { sql += " AND c.continent = ?";  params.push(continent); }
+    if (term)      { sql += " AND c.term_taken = ?"; params.push(term); }
 
-    // First get total count for pagination
-    connection.query(sql.replace("*", "COUNT(*) as total"), params, (err, countResult) => {
+    sql += " GROUP BY c.course_id";
+
+    // Sort order
+    const ORDER = {
+        avg_rating:   "avg_rating DESC",
+        university:   "c.host_university ASC",
+        last_updated: "c.last_updated DESC",
+    };
+    sql += ` ORDER BY ${ORDER[sort] || ORDER.last_updated}`;
+
+    // Count query (wrap to get total after filters)
+    const countSql = `SELECT COUNT(*) AS total FROM (${sql}) AS sub`;
+
+    connection.query(countSql, params, (err, countResult) => {
         if (err) return res.status(500).send(err);
 
         // Then get actual data with LIMIT
@@ -478,7 +493,7 @@ app.get('/api/courses', (req, res) => {
 
         connection.query(sql, params, (err, results) => {
             if (err) return res.status(500).send(err);
-            
+
             res.json({
                 courses: results,
                 pagination: {
@@ -495,7 +510,7 @@ app.get('/api/courses', (req, res) => {
 
 // --- End Course Equivalency APIs ---
 
-// --- Sprint 2 APIs for matthew---
+// --- Sprint 2 APIs ---
 
 // GET /api/users/:username/milestones/export - export milestones as .ics calendar file
 // Must stay BEFORE /:username/milestones to avoid :username catching 'export'
