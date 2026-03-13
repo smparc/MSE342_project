@@ -1,4 +1,3 @@
-// Import the functions needed from the Firebase SDKs
 import { initializeApp } from 'firebase/app';
 import {
     getAuth,
@@ -40,7 +39,7 @@ class Firebase {
     doPasswordReset = email => sendPasswordResetEmail(this.auth, email);
     doPasswordUpdate = password =>
         updatePassword(this.auth.currentUser, password);
-    doSendEmailVerification = () =>
+    doSendEmailVerification = (continueUrl) =>
         sendEmailVerification(this.auth.currentUser);
     // Function to get ID Token of the currently signed-in user
     doGetIdToken = () => {
