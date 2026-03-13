@@ -1,5 +1,6 @@
 describe('Exchange App', () => {
   beforeEach(() => {
+    cy.intercept('GET', '/api/users/by-email/*', { username: 'elly' });
     cy.intercept('GET', '/api/user/*', {
       id: 1,
       display_name: 'Elly Hayakawa',
