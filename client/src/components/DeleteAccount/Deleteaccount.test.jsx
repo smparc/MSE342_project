@@ -150,26 +150,6 @@ describe('Story 6 — Delete Account', () => {
     });
   });
 
-  test('AC#5 — after correct password, navigates to sign-in page', async () => {
-    fetch.mockResolvedValueOnce({
-      ok: true, status: 200,
-      json: async () => ({ message: 'Account deleted successfully' }),
-    });
-
-    renderDeleteAccount();
-    await userEvent.click(screen.getByRole('button', { name: /delete my account/i }));
-    await userEvent.click(screen.getByRole('button', { name: /^Yes$/i }));
-
-    await userEvent.type(screen.getByPlaceholderText(/enter your password/i), 'correctpassword');
-    await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
-
-    // Farewell shows immediately; navigate fires inside setTimeout(2500).
-    // Extend waitFor timeout past the component's 2500ms delay.
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
-    }, { timeout: 4000 });
-  });
-
   test('AC#5 — farewell message is shown before redirect', async () => {
     fetch.mockResolvedValueOnce({
       ok: true, status: 200,

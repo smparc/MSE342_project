@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Alert, Snackbar, IconButton } from '@mui/material'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { FirebaseContext, authFetch } from '../Firebase'
 
 const CourseTable = ({ username }) => {
-
+    const firebase = React.useContext(FirebaseContext)
 
     const [list, setList] = React.useState([])
     const [dataFormStatus, setDataFormStatus] = React.useState(false)
@@ -25,7 +26,7 @@ const CourseTable = ({ username }) => {
     const fetchCourses = React.useCallback(async () => {
         if (!username) return
         try {
-            const response = await fetch(`/api/courses/user/${username}`)
+            const response = await fetch(`/api/courses/user/${username}`);
             const data = await response.json()
             setList(data)
         } catch (error) {
@@ -61,11 +62,10 @@ const CourseTable = ({ username }) => {
         try {
             const endpoint = editID ? `/api/courses/${editID}` : '/api/courses'
             const method = editID ? 'PUT' : 'POST'
-            const response = await fetch(endpoint, {
+            const response = await authFetch(endpoint, {
                 method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(courseData)
-            })
+                body: JSON.stringify(courseData),
+            }, firebase)
 
             if (!response.ok) {
                 const data = await response.json()
@@ -113,9 +113,9 @@ const CourseTable = ({ username }) => {
 
     async function deleteRow(id) {
         try {
-            const response = await fetch(`/api/courses/${id}`, {
-                method: 'DELETE'
-            })
+            const response = await authFetch(`/api/courses/${id}`, {
+                method: 'DELETE',
+            }, firebase)
             if (response.ok) {
                 fetchCourses()
                 setOutputAlert(true)
