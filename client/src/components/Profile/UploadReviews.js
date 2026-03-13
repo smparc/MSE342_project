@@ -2,10 +2,10 @@ import * as React from 'react'
 import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Rating, Input, Typography, Button, Snackbar, Alert } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import InputAdornment from '@mui/material/InputAdornment';
-import { authFetch } from '../Firebase'
+import { FirebaseContext, authFetch } from '../Firebase'
 
 const UploadReviews = ({ username }) => {
-
+    const firebase = React.useContext(FirebaseContext)
     const [openExpenses, setOpenExpenses] = React.useState(true)
     const [openRatings, setOpenRatings] = React.useState(true)
     const [saveSuccess, setSaveSuccess] = React.useState(false)
@@ -105,7 +105,7 @@ const UploadReviews = ({ username }) => {
             await authFetch(`/api/users/${username}/expenses`, {
                 method: 'PUT',
                 body: JSON.stringify(expenseData)
-            })
+            }, firebase)
 
             // Save ratings
             const ratingData = {}
@@ -115,7 +115,7 @@ const UploadReviews = ({ username }) => {
             await authFetch(`/api/users/${username}/ratings`, {
                 method: 'PUT',
                 body: JSON.stringify(ratingData)
-            })
+            }, firebase)
 
             setSaveSuccess(true)
         } catch (error) {

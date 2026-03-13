@@ -13,7 +13,6 @@ import ContactsList from '../ContactsList';
 import AdvisorsList from '../AdvisorsList';
 import DeleteAccount from '../DeleteAccount';
 import UserTypeSelect from '../UserTypeSelect';
-import SignOut from '../SignOut';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -121,10 +120,6 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                     <Route
                         path="/settings/user-type"
                         element={<UserTypeSelect currentUser={currentUser} authUser={authUser} />}
-                    />
-                    <Route
-                        path="/signout"
-                        element={<SignOut currentUser={currentUser} authUser={authUser} onSignOut={() => { }} />}
                     />
                 </Routes>
             </MainLayout>

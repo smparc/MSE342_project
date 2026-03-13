@@ -306,14 +306,14 @@ app.get('/api/users/:username/ratings', (req, res) => {
 // PUT user ratings (protected)
 app.put('/api/users/:username/ratings', checkAuth, (req, res) => {
     const { username } = req.params;
-    const { 
-        difficulty_rating, 
-        safety_rating, 
-        cleanliness_rating, 
-        travel_opp_rating, 
-        food_rating, 
-        scenery_rating, 
-        activities_rating 
+    const {
+        difficulty_rating,
+        safety_rating,
+        cleanliness_rating,
+        travel_opp_rating,
+        food_rating,
+        scenery_rating,
+        activities_rating
     } = req.body;
     const sql = `
         INSERT INTO user_ratings (username, difficulty_rating, safety_rating, cleanliness_rating, travel_opp_rating, food_rating, scenery_rating, activities_rating)
@@ -328,13 +328,13 @@ app.put('/api/users/:username/ratings', checkAuth, (req, res) => {
         activities_rating = VALUES(activities_rating)
     `;
     const params = [
-        username, 
-        difficulty_rating, 
-        safety_rating, 
-        cleanliness_rating, 
-        travel_opp_rating, 
-        food_rating, 
-        scenery_rating, 
+        username,
+        difficulty_rating,
+        safety_rating,
+        cleanliness_rating,
+        travel_opp_rating,
+        food_rating,
+        scenery_rating,
         activities_rating
     ];
     connection.query(sql, params, (error, results) => {
@@ -673,16 +673,16 @@ app.get('/api/courses', (req, res) => {
         const search = `%${q}%`;
         params.push(search, search, search);
     }
-    if (country)   { sql += " AND c.country = ?";    params.push(country); }
-    if (continent) { sql += " AND c.continent = ?";  params.push(continent); }
-    if (term)      { sql += " AND c.term_taken = ?"; params.push(term); }
+    if (country) { sql += " AND c.country = ?"; params.push(country); }
+    if (continent) { sql += " AND c.continent = ?"; params.push(continent); }
+    if (term) { sql += " AND c.term_taken = ?"; params.push(term); }
 
     sql += " GROUP BY c.course_id";
 
     // Sort order
     const ORDER = {
-        avg_rating:   "avg_rating DESC",
-        university:   "c.host_university ASC",
+        avg_rating: "avg_rating DESC",
+        university: "c.host_university ASC",
         last_updated: "c.last_updated DESC",
     };
     sql += ` ORDER BY ${ORDER[sort] || ORDER.last_updated}`;

@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DeleteAccount.css';
+import { FirebaseContext } from '../Firebase';
 
 const API = process.env.REACT_APP_API_URL || '';
 
 // step: 'idle' → 'confirm' → 'password' → 'farewell'
 const DeleteAccount = ({ currentUser, onDeleted }) => {
-  const navigate  = useNavigate();
-  const [step, setStep]       = useState('idle');
+  const firebase = React.useContext(FirebaseContext);
+  const navigate = useNavigate();
+  const [step, setStep] = useState('idle');
   const [password, setPassword] = useState('');
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleDeleteClick = () => setStep('confirm');
-  const handleNo          = () => { setStep('idle'); setError(''); };
-  const handleYes         = () => setStep('password');
+  const handleNo = () => { setStep('idle'); setError(''); };
+  const handleYes = () => setStep('password');
 
   const handleConfirm = async () => {
     if (!password.trim()) { setError('Please enter your password.'); return; }
@@ -39,7 +41,9 @@ const DeleteAccount = ({ currentUser, onDeleted }) => {
       setStep('farewell');
       setTimeout(() => {
         if (onDeleted) onDeleted();
-        navigate('/', { replace: true });
+        firebase.doSignOut().then(() => {
+          navigate('/');
+        });
       }, 2500);
     } catch {
       setError('Something went wrong. Please try again.');

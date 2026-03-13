@@ -15,6 +15,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
 import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
+import { DeleteForever, Settings } from '@mui/icons-material';
 
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 240;
@@ -27,7 +28,10 @@ const navItems = [
   { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
   { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
   { path: '/contacts', label: 'Contacts', icon: PersonIcon },
+  { path: '/advisors', label: 'Advisors', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },
+  { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
+  { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
 
 const NavBar = () => {
