@@ -14,17 +14,18 @@ import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
 import TimelineIcon from '@mui/icons-material/CalendarToday';
+import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
 
 const NAV_WIDTH_COLLAPSED = 72;
-const NAV_WIDTH_EXPANDED = 220;
+const NAV_WIDTH_EXPANDED = 240;
 
 // <Route path="/advisors" element={<AdvisorsList />} />
 
 const navItems = [
-  { path: '/messages', label: 'Messages', icon: ChatIcon },
-  { path: '/search', label: 'Search', icon: SearchIcon },
-  { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon },
-  { path: '/timeline', label: 'Timeline', icon: TimelineIcon },
+  { path: '/messages', label: 'Messages', icon: ChatIcon, testId: 'ChatIcon' },
+  { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
+  { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
+  { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
   { path: '/contacts', label: 'Contacts', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },
 ];
@@ -67,6 +68,35 @@ const NavBar = () => {
         flexDirection: 'column',
       }}
     >
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: expanded ? 'flex-start' : 'center',
+          py: 1.5,
+          px: 2,
+          borderBottom: 1,
+          borderColor: 'divider',
+          minHeight: 56,
+          boxSizing: 'border-box',
+        }}
+      >
+        <Box
+          sx={{
+            minWidth: expanded ? 56 : 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            display: 'flex',
+          }}
+        >
+          <AirplaneTicketIcon fontSize="medium" sx={{ color: 'primary.main' }} />
+        </Box>
+        {expanded && (
+          <Typography variant="h6" fontWeight={700} noWrap sx={{ color: 'text.primary' }}>
+            WatExchange
+          </Typography>
+        )}
+      </Box>
       <List disablePadding sx={{ pt: 2, flex: 1 }}>
         {navItems.map((item) => {
           const active = isActive(item.path);
@@ -76,6 +106,7 @@ const NavBar = () => {
               key={item.path}
               selected={active}
               onClick={() => navigate(item.path)}
+              {...(item.testId && { 'data-testid': item.testId })}
               sx={{
                 py: 1.5,
                 px: 2,

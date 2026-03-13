@@ -10,6 +10,7 @@ import Grid from '@mui/material/Grid';
 import Alert from '@mui/material/Alert';
 import { withFirebase } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
+import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket';
 
 const SignIn = ({ firebase }) => {
     // Form fields
@@ -362,8 +363,24 @@ const SignIn = ({ firebase }) => {
                 justifyContent: 'center',
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 py: 4,
+                position: 'relative',
             }}
         >
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: 24,
+                    left: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                }}
+            >
+                <AirplaneTicketIcon sx={{ fontSize: 32, color: 'white' }} />
+                <Typography variant="h5" fontWeight={700} sx={{ color: 'white' }}>
+                    WatExchange
+                </Typography>
+            </Box>
             <Container maxWidth="sm">
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
