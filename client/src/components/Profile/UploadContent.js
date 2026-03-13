@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal, IconButton, Snackbar, Alert } from '@mui/material'
 import { ChevronLeft, ChevronRight, PhotoCamera, FileUpload, Delete } from '@mui/icons-material'
 
-const UploadContent = ({ fetchPosts, posts, cols }) => {
+const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase }) => {
 
     const [fileUrl, setFileUrl] = React.useState('')
     const [selectedPost, setSelectedPost] = React.useState(null)
@@ -37,8 +37,16 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
 
     const handleDelete = async (postId) => {
         try {
+            // Get ID token for authentication
+            let headers = {}
+            if (firebase && firebase.auth.currentUser) {
+                const token = await firebase.auth.currentUser.getIdToken()
+                headers.Authorization = token
+            }
+            
             const response = await fetch(`/api/posts/${postId}`, {
                 method: 'DELETE',
+                headers,
             })
             const data = await response.json()
             if (data.success) {
@@ -72,12 +80,19 @@ const UploadContent = ({ fetchPosts, posts, cols }) => {
         // Upload to backend
         const formData = new FormData()
         formData.append('image', selectedFile)
-        // TODO: Replace hardcoded username with actual user data from context or auth
-        formData.append('username', 'john.doe')
+        formData.append('username', currentUsername || 'john.doe')
 
         try {
+            // Get ID token for authentication
+            let headers = {}
+            if (firebase && firebase.auth.currentUser) {
+                const token = await firebase.auth.currentUser.getIdToken()
+                headers.Authorization = token
+            }
+            
             const response = await fetch('/api/upload', {
                 method: 'POST',
+                headers,
                 body: formData,
             })
             const data = await response.json()

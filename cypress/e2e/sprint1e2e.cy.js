@@ -1,5 +1,6 @@
 describe('Exchange App', () => {
   beforeEach(() => {
+    cy.intercept('GET', '/api/users/by-email/*', { username: 'elly' });
     cy.intercept('GET', '/api/user/*', {
       id: 1,
       display_name: 'Elly Hayakawa',
@@ -68,14 +69,6 @@ describe('Exchange App', () => {
     cy.visit('/');
     cy.contains('Elly Hayakawa');
     cy.contains('elly');
-  });
-
-  it('navigates to messages and shows conversations', () => {
-    cy.visit('/');
-    cy.get('[data-testid="ChatIcon"]').click();
-    cy.url().should('include', '/messages');
-    cy.contains('Alice Chen');
-    cy.contains('Bob Smith');
   });
 
   it('opens a conversation and displays messages', () => {

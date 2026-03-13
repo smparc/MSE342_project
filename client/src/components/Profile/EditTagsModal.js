@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert } from '@mui/material';
 
-const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, displayName, bio, setProfileChanged }) => {
+const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, displayName, bio, setProfileChanged, firebase }) => {
 
     const [tempFaculty, setTempFaculty] = React.useState(faculty)
     const [tempProgram, setTempProgram] = React.useState(program)
@@ -26,11 +26,16 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
         setError(false)
 
         try {
+            // Get ID token for authentication
+            let headers = { 'Content-Type': 'application/json' }
+            if (firebase && firebase.auth.currentUser) {
+                const token = await firebase.auth.currentUser.getIdToken()
+                headers.Authorization = token
+            }
+            
             const response = await fetch(`/api/user/${username}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({
                     display_name: displayName,
                     bio: bio,

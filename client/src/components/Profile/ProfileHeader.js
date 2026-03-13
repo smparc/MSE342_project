@@ -7,7 +7,7 @@ import EditProfileModal from './EditProfileModal'
 import EditTagsModal from './EditTagsModal'
 
 
-const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm }) => {
+const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, uwVerified, firebase }) => {
 
     const [modalStatus, setModalStatus] = React.useState(false)
     const [tagsModalStatus, setTagsModalStatus] = React.useState(false)
@@ -96,6 +96,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                         </Grid>
                                         <Grid item>
                                             <Grid container spacing={1}>
+                                                {uwVerified && <Grid item><Chip label="UW Verified" size="small" sx={{ bgcolor: '#E8F5E9', color: '#2E7D32', border: '1px solid #A5D6A7', fontWeight: '500' }} /></Grid>}
                                                 {faculty && <Grid item><Chip label={faculty} size="small" sx={{ bgcolor: '#FFF9C4', color: '#827717', border: '1px solid #FFF176', fontWeight: '500' }} /></Grid>}
                                                 {program && <Grid item><Chip label={program} size="small" sx={{ bgcolor: '#FCE4EC', color: '#C2185B', border: '1px solid #F8BBD0', fontWeight: '500' }} /></Grid>}
                                                 {gradYear && <Grid item><Chip label={`Class of ${gradYear}`} size="small" sx={{ bgcolor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2', fontWeight: '500' }} /></Grid>}
@@ -145,7 +146,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                 </Grid>
                             </Grid>
                         </Grid>
-                        <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} faculty={faculty} program={program} gradYear={gradYear} exchangeTerm={exchangeTerm} profileChanged={profileChanged} setProfileChanged={setProfileChanged} />
+                        <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} faculty={faculty} program={program} gradYear={gradYear} exchangeTerm={exchangeTerm} profileChanged={profileChanged} setProfileChanged={setProfileChanged} firebase={firebase} />
                         <EditTagsModal
                             open={tagsModalStatus}
                             handleClose={() => setTagsModalStatus(false)}
@@ -161,6 +162,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                             displayName={displayName}
                             bio={bio}
                             setProfileChanged={setProfileChanged}
+                            firebase={firebase}
                         />
 
                         {/* <Grid item xs={12}>

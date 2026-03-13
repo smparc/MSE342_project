@@ -55,6 +55,7 @@ Steps:
    
    ```
 	ssh -o ServerAliveInterval=30 -L 3306:localhost:3306 <your-user-name>@mse-msci-245.uwaterloo.ca
+   ssh -o ServerAliveInterval=30 -L 3306:localhost:3306 m74park@mse-msci-245.uwaterloo.ca
    ```
 
    You should see the prompt change to a line like this:
@@ -160,6 +161,12 @@ Created Sprint 1 Branch -->
 * **User Search:** Search for users by name, school, country, or UW faculty to find relevant information.
 * **Information Transparency:** View another user's program, year, destination country, and school tags.
 * **Direct Messaging:** Contact exchange alumni directly from their profile and access a full chat history for follow-up questions.
+
+### 🔐 Authentication & Access Control
+* **Secure Sign-In:** Users can create accounts and sign in using email authentication.
+* **Protected Content:** Alumni profiles and uploaded content are only accessible to authenticated users.
+* **Session Management:** Logged-in users remain authenticated across sessions until they sign out.
+* **Email Verification:** Users who register with an email address ending in @uwaterloo.ca are automatically assigned a “UW Verified Student” tag to indicate they are University of Waterloo students. Firebase’s built-in email verification was initially considered and attempted however, emails sent to the uwaterloo.ca domain were automatically pre-checked by the university’s email security system. This caused the verification links to be opened before reaching the user, marking them as already used. As a result, domain-based verification was implemented as a less secure alternative.
 
 ---
 
