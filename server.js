@@ -90,18 +90,18 @@ const checkAuth = (req, res, next) => {
         });
 };
 
-// API to upload a post (protected)
+// API to upload a post
 app.post('/api/upload', checkAuth, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
 
-    // TODO: Replace hardcoded userId with actual authenticated user session data
-    const userId = req.body.userId || 1;
+    // TODO: Replace hardcoded username with actual authenticated user session data
+    const username = req.body.username || 'john.doe';
     const filePath = req.file.path;
 
-    const sql = "INSERT INTO posts (user_id, image_path) VALUES (?, ?)";
-    connection.query(sql, [userId, filePath], (error, results) => {
+    const sql = "INSERT INTO posts (username, image_path) VALUES (?, ?)";
+    connection.query(sql, [username, filePath], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -110,7 +110,7 @@ app.post('/api/upload', checkAuth, upload.single('image'), (req, res) => {
             success: true,
             message: 'File uploaded and saved to database',
             filePath: filePath,
-            postId: results.insertId
+            photoId: results.insertId
         });
     });
 });
@@ -516,7 +516,7 @@ app.delete('/api/courses/:id', checkAuth, (req, res) => {
 app.post('/api/users/:username/saved-courses', checkAuth, (req, res) => {
     const { username } = req.params;
     const { course_id } = req.body;
-    
+
     // Logic: check if exists, if so delete (unsave), if not insert (save)
     const checkSql = "SELECT * FROM user_saved_courses WHERE username = ? AND course_id = ?";
     connection.query(checkSql, [username, course_id], (err, results) => {
@@ -554,7 +554,7 @@ app.get('/api/courses/meta/filters', (req, res) => {
             // Fallback so the frontend doesn't crash
             return res.json({ countries: [], continents: [], terms: [] });
         }
-        
+
         // results will be an array of 3 arrays because of the semicolons
         res.json({
             countries: results[0].map(r => r.country),
@@ -591,7 +591,7 @@ app.get('/api/courses', (req, res) => {
 
         connection.query(sql, params, (err, results) => {
             if (err) return res.status(500).send(err);
-            
+
             res.json({
                 courses: results,
                 pagination: {
@@ -684,8 +684,8 @@ app.get('/api/users/:username/milestones', (req, res) => {
     `;
     const params = [username];
 
-    if (type)        { sql += " AND m.milestone_type = ?";      params.push(type); }
-    if (phase)       { sql += " AND m.phase = ?";               params.push(phase); }
+    if (type) { sql += " AND m.milestone_type = ?"; params.push(type); }
+    if (phase) { sql += " AND m.phase = ?"; params.push(phase); }
     if (destination) { sql += " AND m.destination_country = ?"; params.push(destination); }
 
     sql += " ORDER BY m.phase, m.deadline_utc ASC";
@@ -697,14 +697,14 @@ app.get('/api/users/:username/milestones', (req, res) => {
         const enriched = rows.map(m => {
             const deadlineMs = new Date(m.deadline_utc).getTime();
             const hoursUntil = (deadlineMs - now) / (1000 * 60 * 60);
-            const daysUntil  = Math.ceil((deadlineMs - now) / (1000 * 60 * 60 * 24));
+            const daysUntil = Math.ceil((deadlineMs - now) / (1000 * 60 * 60 * 24));
             return {
                 ...m,
-                days_remaining:     daysUntil > 0 ? daysUntil : 0,
-                buffer_days:        m.is_completed ? daysUntil : null,
+                days_remaining: daysUntil > 0 ? daysUntil : 0,
+                buffer_days: m.is_completed ? daysUntil : null,
                 is_approaching_48h: hoursUntil > 0 && hoursUntil <= 48,
-                is_approaching_7d:  hoursUntil > 0 && hoursUntil <= 168,
-                is_overdue:         hoursUntil < 0 && !m.is_completed,
+                is_approaching_7d: hoursUntil > 0 && hoursUntil <= 168,
+                is_overdue: hoursUntil < 0 && !m.is_completed,
             };
         });
 
@@ -749,11 +749,11 @@ app.patch('/api/milestones/:id', (req, res) => {
     const fields = [];
     const values = [];
 
-    if (is_completed        !== undefined) { fields.push('is_completed = ?');        values.push(is_completed); }
-    if (title               !== undefined) { fields.push('title = ?');               values.push(title); }
-    if (deadline_utc        !== undefined) { fields.push('deadline_utc = ?');        values.push(deadline_utc); }
-    if (form_link           !== undefined) { fields.push('form_link = ?');           values.push(form_link); }
-    if (phase               !== undefined) { fields.push('phase = ?');               values.push(phase); }
+    if (is_completed !== undefined) { fields.push('is_completed = ?'); values.push(is_completed); }
+    if (title !== undefined) { fields.push('title = ?'); values.push(title); }
+    if (deadline_utc !== undefined) { fields.push('deadline_utc = ?'); values.push(deadline_utc); }
+    if (form_link !== undefined) { fields.push('form_link = ?'); values.push(form_link); }
+    if (phase !== undefined) { fields.push('phase = ?'); values.push(phase); }
     if (destination_country !== undefined) { fields.push('destination_country = ?'); values.push(destination_country); }
 
     if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
@@ -864,11 +864,11 @@ app.post('/api/users/:username/tags', (req, res) => {
     const { program, grad_year, destination_country, destination_school, exchange_term } = req.body;
 
     const tags = [];
-    if (program)             tags.push([username, 'program', program]);
-    if (grad_year)           tags.push([username, 'year', String(grad_year)]);
+    if (program) tags.push([username, 'program', program]);
+    if (grad_year) tags.push([username, 'year', String(grad_year)]);
     if (destination_country) tags.push([username, 'country', destination_country]);
-    if (destination_school)  tags.push([username, 'school', destination_school]);
-    if (exchange_term)       tags.push([username, 'term', exchange_term]);
+    if (destination_school) tags.push([username, 'school', destination_school]);
+    if (exchange_term) tags.push([username, 'term', exchange_term]);
 
     if (!tags.length) return res.json({ success: true });
 
@@ -885,4 +885,4 @@ app.post('/api/users/:username/tags', (req, res) => {
 
 // --- End Sprint 2 APIs ---
 
-    app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
+app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version

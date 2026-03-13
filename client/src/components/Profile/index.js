@@ -23,6 +23,7 @@ const Profile = ({ currentUser, authUser }) => {
     const [program, setProgram] = React.useState('')
     const [gradYear, setGradYear] = React.useState('')
     const [exchangeTerm, setExchangeTerm] = React.useState('')
+    const [uwVerified, setUwVerified] = React.useState(false)
 
     // Use authenticated user's identifier, fallback to prop or default
     const currentUsername = currentUser || authUser?.email?.split('@')[0] || 'john.doe'
@@ -46,6 +47,7 @@ const Profile = ({ currentUser, authUser }) => {
             setProgram(data.program || '')
             setGradYear(data.grad_year || '')
             setExchangeTerm(data.exchange_term || '')
+            setUwVerified(!!data.uw_verified)
         } catch (error) {
             console.error('Error fetching user data:', error)
         }
@@ -100,6 +102,7 @@ const Profile = ({ currentUser, authUser }) => {
                         setGradYear={setGradYear}
                         exchangeTerm={exchangeTerm}
                         setExchangeTerm={setExchangeTerm}
+                        uwVerified={uwVerified}
                         firebase={firebase}
                     />
                 </Grid>
