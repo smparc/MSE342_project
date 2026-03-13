@@ -5,6 +5,24 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import admin from 'firebase-admin';
+import { readFileSync } from 'fs';
+
+// Initialize Firebase Admin SDK
+// Note: You need to download serviceAccountKey.json from Firebase Console
+// Go to: Project Settings > Service Accounts > Generate new private key
+const serviceAccountPath = './serviceAccountKey.json';
+try {
+    const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+    });
+    console.log('Firebase Admin SDK initialized successfully');
+} catch (error) {
+    console.warn('Warning: Firebase Admin SDK not initialized.', error.message);
+    console.warn('Server will run but authentication will not work.');
+    console.warn('Download serviceAccountKey.json from Firebase Console and place it in the project root.');
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,18 +66,42 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Middleware to verify Firebase ID Token
+const checkAuth = (req, res, next) => {
+    const idToken = req.headers.authorization;
+    if (!idToken) {
+        return res.status(403).json({ error: 'Unauthorized: No token provided' });
+    }
+
+    // Check if Firebase Admin is initialized
+    if (!admin.apps.length) {
+        console.warn('Firebase Admin not initialized, skipping auth check');
+        return next();
+    }
+
+    admin.auth().verifyIdToken(idToken)
+        .then(decodedToken => {
+            req.user = decodedToken;
+            next();
+        })
+        .catch(error => {
+            console.error('Token verification failed:', error.message);
+            res.status(403).json({ error: 'Unauthorized: Invalid token' });
+        });
+};
+
 // API to upload a post
-app.post('/api/upload', upload.single('image'), (req, res) => {
+app.post('/api/upload', checkAuth, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
 
-    // TODO: Replace hardcoded userId with actual authenticated user session data
-    const userId = req.body.userId || 1;
+    // TODO: Replace hardcoded username with actual authenticated user session data
+    const username = req.body.username || 'john.doe';
     const filePath = req.file.path;
 
-    const sql = "INSERT INTO posts (user_id, image_path) VALUES (?, ?)";
-    connection.query(sql, [userId, filePath], (error, results) => {
+    const sql = "INSERT INTO posts (username, image_path) VALUES (?, ?)";
+    connection.query(sql, [username, filePath], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -68,14 +110,13 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
             success: true,
             message: 'File uploaded and saved to database',
             filePath: filePath,
-            postId: results.insertId
+            photoId: results.insertId
         });
     });
 });
 
-// API to delete a post
-
-app.delete('/api/posts/:id', (req, res) => {
+// API to delete a post (protected)
+app.delete('/api/posts/:id', checkAuth, (req, res) => {
     const { id } = req.params;
 
     // Get image path from db
@@ -115,6 +156,72 @@ app.delete('/api/posts/:id', (req, res) => {
     });
 });
 
+// API to create a new user (for sign up)
+app.post('/api/users', checkAuth, (req, res) => {
+    const { username, email, display_name, faculty, program, grad_year, exchange_term, uw_verified } = req.body;
+
+    if (!username || !username.trim()) {
+        return res.status(400).json({ error: 'Username is required' });
+    }
+
+    // Check if username already exists
+    const checkSql = "SELECT username FROM users WHERE username = ?";
+    connection.query(checkSql, [username.trim()], (checkError, checkResults) => {
+        if (checkError) {
+            console.error('Database error:', checkError);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (checkResults.length > 0) {
+            return res.status(409).json({ error: 'Username already exists' });
+        }
+
+        // Create new user with email and profile info
+        const insertSql = `
+            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term, uw_verified) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        const params = [
+            username.trim(),
+            display_name || username.trim(),
+            email,
+            faculty || null,
+            program || null,
+            grad_year || null,
+            exchange_term || null,
+            uw_verified || false
+        ];
+
+        connection.query(insertSql, params, (error, results) => {
+            if (error) {
+                console.error('Database error:', error);
+                return res.status(500).json({ error: 'Failed to create user' });
+            }
+            res.status(201).json({
+                success: true,
+                message: 'User created successfully',
+                username: username.trim()
+            });
+        });
+    });
+});
+
+// API to get user by email (for auth lookup)
+app.get('/api/users/by-email/:email', (req, res) => {
+    const email = req.params.email;
+    const sql = "SELECT username, display_name FROM users WHERE email = ?";
+    connection.query(sql, [email], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json(results[0]);
+    });
+});
+
 // API to get a user
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username;
@@ -122,14 +229,18 @@ app.get('/api/user/:username', (req, res) => {
     connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
-            return res.status(500).send(error);
+            return res.status(500).json({ error: 'Database error' });
         }
-        res.send(results[0]);
+        if (results.length === 0) {
+            // Return empty user object for new users
+            return res.json({ username: username, display_name: '', bio: '' });
+        }
+        res.json(results[0]);
     });
 });
 
-// API to update a user
-app.put('/api/user/:username', (req, res) => {
+// API to update a user (protected)
+app.put('/api/user/:username', checkAuth, (req, res) => {
     const username = req.params.username;
     const { display_name, bio, faculty, program, grad_year, exchange_term } = req.body;
     const sql = "UPDATE users SET display_name = ?, bio = ?, faculty = ?, program = ?, grad_year = ?, exchange_term = ? WHERE username = ?";
@@ -149,9 +260,10 @@ app.get('/api/posts/:username', (req, res) => {
     connection.query(sql, [username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
-            return res.status(500).send(error);
+            return res.status(500).json({ error: 'Database error' });
         }
-        res.send(results);
+        // Always return an array (empty if no posts)
+        res.json(results || []);
     });
 });
 
@@ -251,11 +363,11 @@ app.get('/api/conversations/:conversationId/messages', (req, res) => {
     });
 });
 
-// 3) POST /api/conversations/:conversationId/messages - send a new message
+// 3) POST /api/conversations/:conversationId/messages - send a new message (protected)
 // Body: { content }
 // Query: userId (required) - sender
 // Returns: { id, senderId, senderName, content, created_at }
-app.post('/api/conversations/:conversationId/messages', (req, res) => {
+app.post('/api/conversations/:conversationId/messages', checkAuth, (req, res) => {
     const { conversationId } = req.params;
     const username = req.query.username;
     const { content } = req.body;
@@ -318,8 +430,8 @@ app.get('/api/courses/user/:username', (req, res) => {
     });
 });
 
-// POST /api/courses - Create a new course equivalency
-app.post('/api/courses', (req, res) => {
+// POST /api/courses - Create a new course equivalency (protected)
+app.post('/api/courses', checkAuth, (req, res) => {
     const {
         username,
         uw_course_code,
@@ -356,8 +468,8 @@ app.post('/api/courses', (req, res) => {
     });
 });
 
-// PUT /api/courses/:id - Update an existing course equivalency
-app.put('/api/courses/:id', (req, res) => {
+// PUT /api/courses/:id - Update an existing course equivalency (protected)
+app.put('/api/courses/:id', checkAuth, (req, res) => {
     const { id } = req.params;
     const {
         uw_course_code,
@@ -387,8 +499,8 @@ app.put('/api/courses/:id', (req, res) => {
     });
 });
 
-// DELETE /api/courses/:id - Delete a course equivalency
-app.delete('/api/courses/:id', (req, res) => {
+// DELETE /api/courses/:id - Delete a course equivalency (protected)
+app.delete('/api/courses/:id', checkAuth, (req, res) => {
     const { id } = req.params;
     const sql = "DELETE FROM course_equivalencies WHERE course_id = ?";
     connection.query(sql, [id], (error, results) => {
@@ -400,10 +512,11 @@ app.delete('/api/courses/:id', (req, res) => {
     });
 });
 
-app.post('/api/users/:username/saved-courses', (req, res) => {
+// Toggle saved course (protected)
+app.post('/api/users/:username/saved-courses', checkAuth, (req, res) => {
     const { username } = req.params;
     const { course_id } = req.body;
-    
+
     // Logic: check if exists, if so delete (unsave), if not insert (save)
     const checkSql = "SELECT * FROM user_saved_courses WHERE username = ? AND course_id = ?";
     connection.query(checkSql, [username, course_id], (err, results) => {
@@ -441,7 +554,7 @@ app.get('/api/courses/meta/filters', (req, res) => {
             // Fallback so the frontend doesn't crash
             return res.json({ countries: [], continents: [], terms: [] });
         }
-        
+
         // results will be an array of 3 arrays because of the semicolons
         res.json({
             countries: results[0].map(r => r.country),
@@ -478,7 +591,7 @@ app.get('/api/courses', (req, res) => {
 
         connection.query(sql, params, (err, results) => {
             if (err) return res.status(500).send(err);
-            
+
             res.json({
                 courses: results,
                 pagination: {
@@ -492,6 +605,27 @@ app.get('/api/courses', (req, res) => {
 });
 
 
+
+// GET /api/courses/:id - Get a single course by ID
+app.get('/api/courses/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = `
+        SELECT c.*, u.display_name 
+        FROM course_equivalencies c 
+        LEFT JOIN users u ON c.username = u.username 
+        WHERE c.course_id = ?
+    `;
+    connection.query(sql, [id], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Course not found' });
+        }
+        res.json(results[0]);
+    });
+});
 
 // --- End Course Equivalency APIs ---
 
@@ -550,8 +684,8 @@ app.get('/api/users/:username/milestones', (req, res) => {
     `;
     const params = [username];
 
-    if (type)        { sql += " AND m.milestone_type = ?";      params.push(type); }
-    if (phase)       { sql += " AND m.phase = ?";               params.push(phase); }
+    if (type) { sql += " AND m.milestone_type = ?"; params.push(type); }
+    if (phase) { sql += " AND m.phase = ?"; params.push(phase); }
     if (destination) { sql += " AND m.destination_country = ?"; params.push(destination); }
 
     sql += " ORDER BY m.phase, m.deadline_utc ASC";
@@ -563,14 +697,14 @@ app.get('/api/users/:username/milestones', (req, res) => {
         const enriched = rows.map(m => {
             const deadlineMs = new Date(m.deadline_utc).getTime();
             const hoursUntil = (deadlineMs - now) / (1000 * 60 * 60);
-            const daysUntil  = Math.ceil((deadlineMs - now) / (1000 * 60 * 60 * 24));
+            const daysUntil = Math.ceil((deadlineMs - now) / (1000 * 60 * 60 * 24));
             return {
                 ...m,
-                days_remaining:     daysUntil > 0 ? daysUntil : 0,
-                buffer_days:        m.is_completed ? daysUntil : null,
+                days_remaining: daysUntil > 0 ? daysUntil : 0,
+                buffer_days: m.is_completed ? daysUntil : null,
                 is_approaching_48h: hoursUntil > 0 && hoursUntil <= 48,
-                is_approaching_7d:  hoursUntil > 0 && hoursUntil <= 168,
-                is_overdue:         hoursUntil < 0 && !m.is_completed,
+                is_approaching_7d: hoursUntil > 0 && hoursUntil <= 168,
+                is_overdue: hoursUntil < 0 && !m.is_completed,
             };
         });
 
@@ -615,11 +749,11 @@ app.patch('/api/milestones/:id', (req, res) => {
     const fields = [];
     const values = [];
 
-    if (is_completed        !== undefined) { fields.push('is_completed = ?');        values.push(is_completed); }
-    if (title               !== undefined) { fields.push('title = ?');               values.push(title); }
-    if (deadline_utc        !== undefined) { fields.push('deadline_utc = ?');        values.push(deadline_utc); }
-    if (form_link           !== undefined) { fields.push('form_link = ?');           values.push(form_link); }
-    if (phase               !== undefined) { fields.push('phase = ?');               values.push(phase); }
+    if (is_completed !== undefined) { fields.push('is_completed = ?'); values.push(is_completed); }
+    if (title !== undefined) { fields.push('title = ?'); values.push(title); }
+    if (deadline_utc !== undefined) { fields.push('deadline_utc = ?'); values.push(deadline_utc); }
+    if (form_link !== undefined) { fields.push('form_link = ?'); values.push(form_link); }
+    if (phase !== undefined) { fields.push('phase = ?'); values.push(phase); }
     if (destination_country !== undefined) { fields.push('destination_country = ?'); values.push(destination_country); }
 
     if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
@@ -730,11 +864,11 @@ app.post('/api/users/:username/tags', (req, res) => {
     const { program, grad_year, destination_country, destination_school, exchange_term } = req.body;
 
     const tags = [];
-    if (program)             tags.push([username, 'program', program]);
-    if (grad_year)           tags.push([username, 'year', String(grad_year)]);
+    if (program) tags.push([username, 'program', program]);
+    if (grad_year) tags.push([username, 'year', String(grad_year)]);
     if (destination_country) tags.push([username, 'country', destination_country]);
-    if (destination_school)  tags.push([username, 'school', destination_school]);
-    if (exchange_term)       tags.push([username, 'term', exchange_term]);
+    if (destination_school) tags.push([username, 'school', destination_school]);
+    if (exchange_term) tags.push([username, 'term', exchange_term]);
 
     if (!tags.length) return res.json({ success: true });
 
@@ -751,4 +885,4 @@ app.post('/api/users/:username/tags', (req, res) => {
 
 // --- End Sprint 2 APIs ---
 
-    app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version
+app.listen(port, () => console.log(`Listening on port ${port}`)); //for the dev version

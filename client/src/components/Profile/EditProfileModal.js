@@ -4,7 +4,7 @@ import { Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTi
 
 // skipping dialog content text for now
 
-const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio, setBio, username, faculty, program, gradYear, exchangeTerm, setProfileChanged }) => {
+const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio, setBio, username, faculty, program, gradYear, exchangeTerm, setProfileChanged, firebase }) => {
 
 
     const [tempName, setTempName] = React.useState(displayName)
@@ -23,11 +23,16 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
         setError(false)
 
         try {
+            // Get ID token for authentication
+            let headers = { 'Content-Type': 'application/json' }
+            if (firebase && firebase.auth.currentUser) {
+                const token = await firebase.auth.currentUser.getIdToken()
+                headers.Authorization = token
+            }
+            
             const response = await fetch(`/api/user/${username}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({
                     display_name: tempName,
                     bio: tempBio,

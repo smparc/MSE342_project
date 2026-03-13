@@ -7,9 +7,7 @@ import ConversationList from './ConversationList';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { formatMessageTimestamp } from './utils';
-
-// Current user username - replace with auth when available
-const CURRENT_USERNAME = 'elly';
+import { FirebaseContext, authFetch } from '../Firebase';
 
 const sortConversationsByLastActive = (list) => {
   return [...list].sort((a, b) => {
@@ -19,8 +17,12 @@ const sortConversationsByLastActive = (list) => {
   });
 };
 
-const Messaging = () => {
+const Messaging = ({ currentUser, authUser }) => {
   const theme = useTheme();
+  const firebase = React.useContext(FirebaseContext);
+  
+  // Use authenticated user's identifier
+  const CURRENT_USERNAME = currentUser || authUser?.email?.split('@')[0] || 'elly';
   const [conversations, setConversations] = React.useState([]);
   const [messages, setMessages] = React.useState({});
   const [selectedConversationId, setSelectedConversationId] = React.useState(null);
@@ -106,13 +108,13 @@ const Messaging = () => {
     if (!content || !selectedConversationId) return;
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `/api/conversations/${selectedConversationId}/messages?username=${encodeURIComponent(CURRENT_USERNAME)}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content }),
-        }
+        },
+        firebase
       );
       const data = await response.json();
 
