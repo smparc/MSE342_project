@@ -10,6 +10,7 @@ import Grid from '@mui/material/Grid';
 import Alert from '@mui/material/Alert';
 import { withFirebase } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
+import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket';
 
 const SignIn = ({ firebase }) => {
     // Form fields
