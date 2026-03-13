@@ -5,6 +5,7 @@ import SectionTab from './SectionTab'
 import UploadContent from './UploadContent'
 import CourseTable from './CourseTable'
 import { FirebaseContext, authFetch } from '../Firebase'
+import UploadReviews from './UploadReviews'
 
 
 const Profile = ({ currentUser, authUser }) => {
@@ -129,7 +130,7 @@ const Profile = ({ currentUser, authUser }) => {
                         />
                     )}
                     {tabIndex === 1 && <CourseTable username={username} />}
-                    {tabIndex === 2 && <Typography>This will display ratings</Typography>}
+                    {tabIndex === 2 && <UploadReviews />}
                 </Grid>
             </Grid>
 
