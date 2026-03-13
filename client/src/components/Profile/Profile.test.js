@@ -496,5 +496,29 @@ describe('Profile Photo Upload', () => {
         expect(screen.getByText(/Reviews updated successfully!/i)).toBeInTheDocument();
       });
     });
+
+    it('should load initial expenses from the API', async () => {
+      // Check if values from mockExpenses are displayed
+      expect(screen.getByDisplayValue('1500')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('800')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('15')).toBeInTheDocument();
+      const coffeeInput = container.querySelector('input[type="number"][value="5"]');
+      expect(coffeeInput).toBeInTheDocument();
+
+      expect(screen.getByDisplayValue('1200')).toBeInTheDocument();
+    });
+
+    it('should load initial ratings from the API', async () => {
+      // Check if ratings from mockRatings are correctly set
+      // The difficulty_rating is 3, so the radio button with value="3" should be checked
+      const difficultyRating = container.querySelector('input[name="difficulty"][value="3"]');
+      expect(difficultyRating).toBeChecked();
+
+      const safetyRating = container.querySelector('input[name="safety"][value="4"]');
+      expect(safetyRating).toBeChecked();
+
+      const cleanlinessRating = container.querySelector('input[name="cleanliness"][value="5"]');
+      expect(cleanlinessRating).toBeChecked();
+    });
   });
 });
