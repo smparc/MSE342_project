@@ -10,7 +10,7 @@ const UploadReviews = () => {
 
     const [openExpenses, setOpenExpenses] = React.useState(true)
     const [openRatings, setOpenRatings] = React.useState(true)
-    const NUM = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    // const NUM = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
     const expensesList =[
@@ -18,7 +18,7 @@ const UploadReviews = () => {
         {id: 'rent', label: 'Monthly Rent'},
         {id: 'meal', label: 'Cost of Meal'},
         {id: 'coffee', label: 'Cup of Coffee'},
-        {id: 'flight', label: '2-way Flight (Canada - Destination)'},
+        {id: 'flight', label: '2-Way Flight (Canada - Exchange Destination)'},
     ]
 
 
@@ -58,7 +58,7 @@ const UploadReviews = () => {
     return (
         <>
         <Grid container alignItems={'center'} justifyContent={'center'} rowGap={4}>
-            <Grid item xs={11} md={9} lg={6.8}>
+            <Grid item xs={11} md={9} lg={6.5}>
                 <Paper elevation={3} sx={{ p: 3, px: 5, borderRadius: 3 }}>
 
                 <Grid container justifyContent={'space-between'} px={'11px'}>
@@ -84,11 +84,11 @@ const UploadReviews = () => {
                         <TableBody>
                             {expensesList.map(row => (
                                 <TableRow key={row.id}>
-                                    <TableCell align={'left'}>{row.label}</TableCell>
+                                    <TableCell align={'left'}><Typography fontSize={'15px'}>{row.label}</Typography></TableCell>
                                     {/* <TableCell align={'center'}>hi</TableCell> */}
                                     <TableCell align={'center'}>
                                         <Input 
-                                        sx={{color: 'black'}} 
+                                         
                                         startAdornment={<InputAdornment position="start">$</InputAdornment>}
                                         value={expenses[row.id]}
                                         error={isNaN(expenses[row.id])}
@@ -112,7 +112,7 @@ const UploadReviews = () => {
             </Grid>
 
 
-            <Grid item xs={11} md={9} lg={6.8}>
+            <Grid item xs={11} md={9} lg={6.5}>
                 <Paper elevation={3} sx={{ p: 3, px: 5, borderRadius: 3 }}>
                     <Grid container justifyContent={'space-between'} px={'11px'}>
                     <Grid item>
@@ -136,7 +136,7 @@ const UploadReviews = () => {
                         <TableBody>
                             {ratingsList.map(row => (
                                 <TableRow key={row.id}>
-                                    <TableCell align={'left'}>{row.label}</TableCell>
+                                    <TableCell align={'left'}><Typography fontSize={'15px'}>{row.label}</Typography></TableCell>
                                     <TableCell align={'center'}><Rating
                                         precision={0.5}
                                         name={row.id}

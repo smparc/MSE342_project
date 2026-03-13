@@ -55,6 +55,7 @@ Steps:
    
    ```
 	ssh -o ServerAliveInterval=30 -L 3306:localhost:3306 <your-user-name>@mse-msci-245.uwaterloo.ca
+   ssh -o ServerAliveInterval=30 -L 3306:localhost:3306 m74park@mse-msci-245.uwaterloo.ca
    ```
 
    You should see the prompt change to a line like this:
