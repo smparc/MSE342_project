@@ -397,4 +397,104 @@ describe('Profile Photo Upload', () => {
       expect(screen.getByText(/Profile changes saved/i)).toBeInTheDocument();
     });
   });
+
+  describe('User Reviews', () => {
+    const mockExpenses = {
+      monthly_cost: 1500,
+      rent_cost: 800,
+      meal_cost: 15,
+      coffee_cost: 5,
+      flight_cost: 1200
+    };
+
+    const mockRatings = {
+      difficulty_rating: 3,
+      safety_rating: 4,
+      cleanliness_rating: 5,
+      travel_opp_rating: 4,
+      food_rating: 4.5,
+      scenery_rating: 5,
+      activities_rating: 3.5
+    };
+
+    let container;
+
+    beforeEach(async () => {
+      global.fetch.mockReset();
+      global.fetch.mockImplementation((url) => {
+        if (url.includes('/api/user/')) {
+          return Promise.resolve({ ok: true, json: async () => mockUser });
+        }
+        if (url.includes('/api/posts/')) {
+          return Promise.resolve({ ok: true, json: async () => [] });
+        }
+        if (url.includes('/expenses')) {
+          return Promise.resolve({ ok: true, json: async () => mockExpenses });
+        }
+        if (url.includes('/ratings')) {
+          return Promise.resolve({ ok: true, json: async () => mockRatings });
+        }
+        return Promise.reject(new Error(`Unhandled request: ${url}`));
+      });
+
+      const rendered = renderWithTheme(<Profile />);
+      container = rendered.container;
+      await screen.findByText('john.doe');
+
+      // Switch to UploadReviews tab (star icon)
+      const starTab = screen.getByLabelText('star');
+      fireEvent.click(starTab);
+
+      // Wait for reviews to load
+      await screen.findByText('Expenses');
+      await screen.findByText('Ratings');
+    });
+
+    it('should successfully update and save expenses', async () => {
+      // Find the "Monthly Rent" input. It's inside a TableCell and is an MUI Input.
+      // Find it by its value.
+      const rentInput = screen.getAllByDisplayValue('800')[0];
+      fireEvent.change(rentInput, { target: { value: '950' } });
+
+      // Mock the successful PUT for expenses and ratings
+      global.fetch.mockImplementation((url, options) => {
+        if (options?.method === 'PUT') {
+          return Promise.resolve({ ok: true, json: async () => ({ success: true }) });
+        }
+        return Promise.resolve({ ok: true, json: async () => ({}) });
+      });
+
+      // Click "Save Reviews"
+      const saveButton = screen.getByRole('button', { name: /Save Reviews/i });
+      fireEvent.click(saveButton);
+
+      // Verify success snackbar appears
+      await waitFor(() => {
+        expect(screen.getByText(/Reviews updated successfully!/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should successfully update and save ratings', async () => {
+      // Find the Rating component for "School Difficulty". It has name="difficulty".
+      const difficultyRating = container.querySelector('input[name="difficulty"][value="5"]');
+      fireEvent.click(difficultyRating);
+
+      // Mock the successful PUT
+      global.fetch.mockImplementation((url, options) => {
+        if (options?.method === 'PUT') {
+          return Promise.resolve({ ok: true, json: async () => ({ success: true }) });
+        }
+        return Promise.resolve({ ok: true, json: async () => ({}) });
+      });
+
+      // Click "Save Reviews"
+      const saveButton = screen.getByRole('button', { name: /Save Reviews/i });
+      fireEvent.click(saveButton);
+
+      // Verify success snackbar appears
+      await waitFor(() => {
+        expect(screen.getByText(/Reviews updated successfully!/i)).toBeInTheDocument();
+      });
+    });
+  });
 });
