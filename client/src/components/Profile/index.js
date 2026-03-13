@@ -130,7 +130,7 @@ const Profile = ({ currentUser, authUser }) => {
                         />
                     )}
                     {tabIndex === 1 && <CourseTable username={username} />}
-                    {tabIndex === 2 && <UploadReviews />}
+                    {tabIndex === 2 && <UploadReviews username={username} />}
                 </Grid>
             </Grid>
 

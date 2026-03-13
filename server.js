@@ -253,6 +253,99 @@ app.put('/api/user/:username', checkAuth, (req, res) => {
     });
 });
 
+// GET user expenses
+app.get('/api/users/:username/expenses', (req, res) => {
+    const { username } = req.params;
+    const sql = "SELECT * FROM user_expenses WHERE username = ?";
+    connection.query(sql, [username], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.json(results[0] || {});
+    });
+});
+
+// PUT user expenses (protected)
+app.put('/api/users/:username/expenses', checkAuth, (req, res) => {
+    const { username } = req.params;
+    const { monthly_cost, rent_cost, meal_cost, coffee_cost, flight_cost } = req.body;
+    const sql = `
+        INSERT INTO user_expenses (username, monthly_cost, rent_cost, meal_cost, coffee_cost, flight_cost)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+        monthly_cost = VALUES(monthly_cost),
+        rent_cost = VALUES(rent_cost),
+        meal_cost = VALUES(meal_cost),
+        coffee_cost = VALUES(coffee_cost),
+        flight_cost = VALUES(flight_cost)
+    `;
+    const params = [username, monthly_cost, rent_cost, meal_cost, coffee_cost, flight_cost];
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.json({ success: true });
+    });
+});
+
+// GET user ratings
+app.get('/api/users/:username/ratings', (req, res) => {
+    const { username } = req.params;
+    const sql = "SELECT * FROM user_ratings WHERE username = ?";
+    connection.query(sql, [username], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.json(results[0] || {});
+    });
+});
+
+// PUT user ratings (protected)
+app.put('/api/users/:username/ratings', checkAuth, (req, res) => {
+    const { username } = req.params;
+    const { 
+        difficulty_rating, 
+        safety_rating, 
+        cleanliness_rating, 
+        travel_opp_rating, 
+        food_rating, 
+        scenery_rating, 
+        activities_rating 
+    } = req.body;
+    const sql = `
+        INSERT INTO user_ratings (username, difficulty_rating, safety_rating, cleanliness_rating, travel_opp_rating, food_rating, scenery_rating, activities_rating)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+        difficulty_rating = VALUES(difficulty_rating),
+        safety_rating = VALUES(safety_rating),
+        cleanliness_rating = VALUES(cleanliness_rating),
+        travel_opp_rating = VALUES(travel_opp_rating),
+        food_rating = VALUES(food_rating),
+        scenery_rating = VALUES(scenery_rating),
+        activities_rating = VALUES(activities_rating)
+    `;
+    const params = [
+        username, 
+        difficulty_rating, 
+        safety_rating, 
+        cleanliness_rating, 
+        travel_opp_rating, 
+        food_rating, 
+        scenery_rating, 
+        activities_rating
+    ];
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).send(error);
+        }
+        res.json({ success: true });
+    });
+});
+
 // API to get all posts for a user
 app.get('/api/posts/:username', (req, res) => {
     const username = req.params.username;
