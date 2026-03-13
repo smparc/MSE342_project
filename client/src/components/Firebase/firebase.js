@@ -8,7 +8,6 @@ import {
     signOut,
     sendPasswordResetEmail,
     updatePassword,
-    sendEmailVerification,
 } from 'firebase/auth';
 // Your web app's Firebase configuration
 // Paste the config you copied in Step 1 here
@@ -39,8 +38,7 @@ class Firebase {
     doPasswordReset = email => sendPasswordResetEmail(this.auth, email);
     doPasswordUpdate = password =>
         updatePassword(this.auth.currentUser, password);
-    doSendEmailVerification = (continueUrl) =>
-        sendEmailVerification(this.auth.currentUser);
+
     // Function to get ID Token of the currently signed-in user
     doGetIdToken = () => {
         return new Promise((resolve, reject) => {
