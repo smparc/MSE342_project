@@ -22,10 +22,10 @@ const NAV_WIDTH_EXPANDED = 240;
 // <Route path="/advisors" element={<AdvisorsList />} />
 
 const navItems = [
-  { path: '/messages', label: 'Messages', icon: ChatIcon },
-  { path: '/search', label: 'Search', icon: SearchIcon },
-  { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon },
-  { path: '/timeline', label: 'Timeline', icon: TimelineIcon },
+  { path: '/messages', label: 'Messages', icon: ChatIcon, testId: 'ChatIcon' },
+  { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
+  { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
+  { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
   { path: '/contacts', label: 'Contacts', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },
 ];
@@ -106,6 +106,7 @@ const NavBar = () => {
               key={item.path}
               selected={active}
               onClick={() => navigate(item.path)}
+              {...(item.testId && { 'data-testid': item.testId })}
               sx={{
                 py: 1.5,
                 px: 2,
