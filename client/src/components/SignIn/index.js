@@ -82,11 +82,29 @@ const SignIn = ({ firebase }) => {
         return true;
     };
 
-    const handleNextToProfileInfo = () => {
+    const handleNextToProfileInfo = async () => {
         setError(null);
         if (!validateStep1()) return;
-        // Just go to step 3 (profile info) - Firebase account created on final submit
-        setStep(3);
+        
+        const isUwEmail = email.trim().toLowerCase().endsWith('@uwaterloo.ca');
+        
+        if (isUwEmail) {
+            // For UWaterloo emails, create Firebase account and go to verification step
+            setLoading(true);
+            try {
+                await firebase.doCreateUserWithEmailAndPassword(email, password);
+                await firebase.doSendEmailVerification();
+                setResendCooldown(60);
+                setStep(2);
+            } catch (err) {
+                setError({ message: getErrorMessage(err) });
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            // For non-UW emails, skip verification and go to profile step
+            setStep(3);
+        }
     };
 
     const handleSkipVerification = () => {
@@ -98,10 +116,15 @@ const SignIn = ({ firebase }) => {
     const handleBack = () => {
         setError(null);
         if (step === 3) {
-            // Can't go back from profile if we've already created the Firebase account
-            // Just stay on step 3
+            // Check if this is UW email flow (Firebase account already created)
+            const isUwEmail = email.trim().toLowerCase().endsWith('@uwaterloo.ca');
+            if (isUwEmail) {
+                // Go back to verification step
+                setStep(2);
+            }
+            // For non-UW emails, can't go back since we're about to create the account
         } else if (step === 2) {
-            // Can't go back from verification - account already created
+            // Can't go back from verification - Firebase account already created
         } else {
             setStep(1);
         }
@@ -154,10 +177,15 @@ const SignIn = ({ firebase }) => {
         setLoading(true);
 
         try {
-            // Create Firebase account first
-            await firebase.doCreateUserWithEmailAndPassword(email, password);
+            // Check if Firebase account already exists (UW email flow)
+            let user = firebase.auth.currentUser;
             
-            const user = firebase.auth.currentUser;
+            // If no user, create Firebase account (non-UW email flow)
+            if (!user) {
+                await firebase.doCreateUserWithEmailAndPassword(email, password);
+                user = firebase.auth.currentUser;
+            }
+            
             const token = await user.getIdToken();
 
             // Create user in database
@@ -466,16 +494,31 @@ const SignIn = ({ firebase }) => {
                     </Typography>
                 )}
 
-                <Button
-                    type="submit"
-                    fullWidth
-                    variant="contained"
-                    color="primary"
-                    disabled={loading}
-                    sx={{ mt: 3, py: 1.5, textTransform: 'none', fontSize: '1rem' }}
-                >
-                    {loading ? 'Creating Account...' : 'Complete Sign Up'}
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                    {email.trim().toLowerCase().endsWith('@uwaterloo.ca') && (
+                        <Button
+                            type="button"
+                            fullWidth
+                            variant="outlined"
+                            color="primary"
+                            onClick={handleBack}
+                            disabled={loading}
+                            sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
+                        >
+                            Back
+                        </Button>
+                    )}
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        color="primary"
+                        disabled={loading}
+                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
+                    >
+                        {loading ? 'Creating Account...' : 'Complete Sign Up'}
+                    </Button>
+                </Box>
             </form>
         </Paper>
     );
