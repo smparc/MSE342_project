@@ -28,12 +28,11 @@ const SignIn = ({ firebase }) => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [isSignUp, setIsSignUp] = useState(false);
-    // Steps: 1 = account info, 2 = email verification (optional), 3 = profile info
+    // Steps: 1 = account info, 2 = profile info, 3 = email verification (UW only)
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     const [checkingVerification, setCheckingVerification] = useState(false);
-    const [isVerified, setIsVerified] = useState(false);
     const navigate = useNavigate();
 
     // Countdown timer for resend button
@@ -82,52 +81,70 @@ const SignIn = ({ firebase }) => {
         return true;
     };
 
-    const handleNextToProfileInfo = async () => {
+    // Step 1 -> Step 2 (profile info)
+    const handleNextToProfile = () => {
         setError(null);
         if (!validateStep1()) return;
-        
+        setStep(2);
+    };
+
+    // Step 2 -> Create account (non-UW) or Step 3 (UW verification)
+    const handleCompleteSignUp = async (event) => {
+        event.preventDefault();
+        setError(null);
+        setLoading(true);
+
         const isUwEmail = email.trim().toLowerCase().endsWith('@uwaterloo.ca');
-        
-        if (isUwEmail) {
-            // For UWaterloo emails, create Firebase account and go to verification step
-            setLoading(true);
-            try {
+
+        try {
+            if (isUwEmail) {
+                // UW email: create Firebase account, send verification, go to step 3
                 await firebase.doCreateUserWithEmailAndPassword(email, password);
                 await firebase.doSendEmailVerification();
                 setResendCooldown(60);
-                setStep(2);
-            } catch (err) {
-                setError({ message: getErrorMessage(err) });
-            } finally {
-                setLoading(false);
+                setStep(3);
+            } else {
+                // Non-UW email: create Firebase account + DB user immediately
+                await firebase.doCreateUserWithEmailAndPassword(email, password);
+                const user = firebase.auth.currentUser;
+                const token = await user.getIdToken();
+
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token,
+                    },
+                    body: JSON.stringify({
+                        username: username.trim(),
+                        email: email,
+                        display_name: username.trim(),
+                        faculty: faculty.trim() || null,
+                        program: program.trim() || null,
+                        grad_year: gradYear ? parseInt(gradYear) : null,
+                        exchange_term: exchangeTerm.trim() || null,
+                        uw_verified: false,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to create user profile');
+                }
+
+                window.location.href = '/';
             }
-        } else {
-            // For non-UW emails, skip verification and go to profile step
-            setStep(3);
+        } catch (err) {
+            setError({ message: getErrorMessage(err) });
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleSkipVerification = () => {
+    // Step 2 <- back to Step 1
+    const handleBackToStep1 = () => {
         setError(null);
-        setIsVerified(false);
-        setStep(3);
-    };
-
-    const handleBack = () => {
-        setError(null);
-        if (step === 3) {
-            // Check if this is UW email flow (Firebase account already created)
-            const isUwEmail = email.trim().toLowerCase().endsWith('@uwaterloo.ca');
-            if (isUwEmail) {
-                // Go back to verification step
-                setStep(2);
-            }
-            // For non-UW emails, can't go back since we're about to create the account
-        } else if (step === 2) {
-            // Can't go back from verification - Firebase account already created
-        } else {
-            setStep(1);
-        }
+        setStep(1);
     };
 
     const handleResendVerification = async () => {
@@ -146,6 +163,7 @@ const SignIn = ({ firebase }) => {
         }
     };
 
+    // Check verification and create DB user
     const handleCheckVerification = async () => {
         setError(null);
         setCheckingVerification(true);
@@ -155,12 +173,34 @@ const SignIn = ({ firebase }) => {
             const user = firebase.auth.currentUser;
 
             if (user.emailVerified) {
-                setIsVerified(true);
-                setSuccess('Email verified! You now have the UW Verified badge.');
-                // Move to profile step after short delay
-                setTimeout(() => {
-                    setStep(3);
-                }, 1500);
+                setSuccess('Email verified! Creating your account...');
+                
+                const token = await user.getIdToken();
+
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token,
+                    },
+                    body: JSON.stringify({
+                        username: username.trim(),
+                        email: email,
+                        display_name: username.trim(),
+                        faculty: faculty.trim() || null,
+                        program: program.trim() || null,
+                        grad_year: gradYear ? parseInt(gradYear) : null,
+                        exchange_term: exchangeTerm.trim() || null,
+                        uw_verified: true,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to create user profile');
+                }
+
+                window.location.href = '/';
             } else {
                 setError({ message: 'Email not verified yet. Please check your inbox and click the verification link.' });
             }
@@ -171,24 +211,15 @@ const SignIn = ({ firebase }) => {
         }
     };
 
-    const handleCreateAccount = async (event) => {
-        event.preventDefault();
+    // Skip verification - create account without UW Verified badge
+    const handleSkipVerification = async () => {
         setError(null);
         setLoading(true);
 
         try {
-            // Check if Firebase account already exists (UW email flow)
-            let user = firebase.auth.currentUser;
-            
-            // If no user, create Firebase account (non-UW email flow)
-            if (!user) {
-                await firebase.doCreateUserWithEmailAndPassword(email, password);
-                user = firebase.auth.currentUser;
-            }
-            
+            const user = firebase.auth.currentUser;
             const token = await user.getIdToken();
 
-            // Create user in database
             const response = await fetch('/api/users', {
                 method: 'POST',
                 headers: {
@@ -203,7 +234,7 @@ const SignIn = ({ firebase }) => {
                     program: program.trim() || null,
                     grad_year: gradYear ? parseInt(gradYear) : null,
                     exchange_term: exchangeTerm.trim() || null,
-                    uw_verified: isVerified,
+                    uw_verified: false,
                 }),
             });
 
@@ -212,7 +243,6 @@ const SignIn = ({ firebase }) => {
                 throw new Error(data.error || 'Failed to create user profile');
             }
 
-            // Redirect to app - Firebase auth state will be detected
             window.location.href = '/';
         } catch (err) {
             setError({ message: getErrorMessage(err) });
@@ -251,7 +281,6 @@ const SignIn = ({ firebase }) => {
         setStep(1);
         setError(null);
         setSuccess(null);
-        setIsVerified(false);
         setFaculty('');
         setProgram('');
         setGradYear('');
@@ -268,7 +297,7 @@ const SignIn = ({ firebase }) => {
                 Connect with fellow exchange students and share your experiences
             </Typography>
 
-            <form noValidate onSubmit={isSignUp ? (e) => { e.preventDefault(); handleNextToProfileInfo(); } : onSignIn}>
+            <form noValidate onSubmit={isSignUp ? (e) => { e.preventDefault(); handleNextToProfile(); } : onSignIn}>
                 <TextField
                     variant="outlined"
                     margin="normal"
@@ -345,82 +374,8 @@ const SignIn = ({ firebase }) => {
         </Paper>
     );
 
-    // Step 2: Email Verification (Optional)
+    // Step 2: Profile Information
     const renderStep2 = () => (
-        <Paper elevation={6} sx={{ p: 5, borderRadius: 3, textAlign: 'center' }}>
-            <Box sx={{ mb: 3 }}>
-                <EmailIcon sx={{ fontSize: 64, color: 'primary.main' }} />
-            </Box>
-
-            <Typography variant="h5" component="h1" gutterBottom fontWeight="bold">
-                Verify Your UWaterloo Email
-            </Typography>
-
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                We've sent a verification link to:
-            </Typography>
-
-            <Typography variant="body1" fontWeight="medium" sx={{ mb: 3, color: 'primary.main' }}>
-                {email}
-            </Typography>
-
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                Verify your email to get the "UW Verified" badge on your profile. This helps other students know you're a real UWaterloo student.
-            </Typography>
-
-            {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                    {success}
-                </Alert>
-            )}
-
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error.message}
-                </Alert>
-            )}
-
-            <Button
-                fullWidth
-                variant="contained"
-                color="primary"
-                onClick={handleCheckVerification}
-                disabled={checkingVerification}
-                startIcon={checkingVerification ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
-                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
-            >
-                {checkingVerification ? 'Checking...' : "I've Verified My Email"}
-            </Button>
-
-            <Button
-                fullWidth
-                variant="outlined"
-                color="primary"
-                onClick={handleResendVerification}
-                disabled={loading || resendCooldown > 0}
-                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
-            >
-                {resendCooldown > 0 ? `Resend Email (${resendCooldown}s)` : 'Resend Verification Email'}
-            </Button>
-
-            <Button
-                fullWidth
-                variant="text"
-                color="inherit"
-                onClick={handleSkipVerification}
-                sx={{ py: 1, textTransform: 'none', fontSize: '0.9rem', color: 'text.secondary' }}
-            >
-                Skip for now
-            </Button>
-
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                Didn't receive the email? Check your spam folder.
-            </Typography>
-        </Paper>
-    );
-
-    // Step 3: Profile Information
-    const renderStep3 = () => (
         <Paper elevation={6} sx={{ p: 5, borderRadius: 3 }}>
             <Typography variant="h5" component="h1" gutterBottom fontWeight="bold" textAlign="center">
                 Profile Information
@@ -429,13 +384,7 @@ const SignIn = ({ firebase }) => {
                 Help others find and connect with you (optional - you can add this later)
             </Typography>
 
-            {isVerified && (
-                <Alert severity="success" sx={{ mb: 3 }}>
-                    Your UWaterloo email has been verified! You'll have the "UW Verified" badge.
-                </Alert>
-            )}
-
-            <form noValidate onSubmit={handleCreateAccount}>
+            <form noValidate onSubmit={handleCompleteSignUp}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                         <TextField
@@ -495,19 +444,17 @@ const SignIn = ({ firebase }) => {
                 )}
 
                 <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-                    {email.trim().toLowerCase().endsWith('@uwaterloo.ca') && (
-                        <Button
-                            type="button"
-                            fullWidth
-                            variant="outlined"
-                            color="primary"
-                            onClick={handleBack}
-                            disabled={loading}
-                            sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
-                        >
-                            Back
-                        </Button>
-                    )}
+                    <Button
+                        type="button"
+                        fullWidth
+                        variant="outlined"
+                        color="primary"
+                        onClick={handleBackToStep1}
+                        disabled={loading}
+                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
+                    >
+                        Back
+                    </Button>
                     <Button
                         type="submit"
                         fullWidth
@@ -516,10 +463,85 @@ const SignIn = ({ firebase }) => {
                         disabled={loading}
                         sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
                     >
-                        {loading ? 'Creating Account...' : 'Complete Sign Up'}
+                        {loading ? 'Please wait...' : (email.trim().toLowerCase().endsWith('@uwaterloo.ca') ? 'Next' : 'Complete Sign Up')}
                     </Button>
                 </Box>
             </form>
+        </Paper>
+    );
+
+    // Step 3: Email Verification (UW emails only)
+    const renderStep3 = () => (
+        <Paper elevation={6} sx={{ p: 5, borderRadius: 3, textAlign: 'center' }}>
+            <Box sx={{ mb: 3 }}>
+                <EmailIcon sx={{ fontSize: 64, color: 'primary.main' }} />
+            </Box>
+
+            <Typography variant="h5" component="h1" gutterBottom fontWeight="bold">
+                Verify Your UWaterloo Email
+            </Typography>
+
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                We've sent a verification link to:
+            </Typography>
+
+            <Typography variant="body1" fontWeight="medium" sx={{ mb: 3, color: 'primary.main' }}>
+                {email}
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                Verify your email to get the "UW Verified" badge on your profile. This helps other students know you're a real UWaterloo student.
+            </Typography>
+
+            {success && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                    {success}
+                </Alert>
+            )}
+
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error.message}
+                </Alert>
+            )}
+
+            <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                onClick={handleCheckVerification}
+                disabled={checkingVerification || loading}
+                startIcon={checkingVerification ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
+                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
+            >
+                {checkingVerification ? 'Checking...' : "I've Verified My Email"}
+            </Button>
+
+            <Button
+                fullWidth
+                variant="outlined"
+                color="primary"
+                onClick={handleResendVerification}
+                disabled={loading || resendCooldown > 0}
+                sx={{ py: 1.5, mb: 2, textTransform: 'none', fontSize: '1rem' }}
+            >
+                {resendCooldown > 0 ? `Resend Email (${resendCooldown}s)` : 'Resend Verification Email'}
+            </Button>
+
+            <Button
+                fullWidth
+                variant="text"
+                color="inherit"
+                onClick={handleSkipVerification}
+                disabled={loading}
+                sx={{ py: 1, textTransform: 'none', fontSize: '0.9rem', color: 'text.secondary' }}
+            >
+                Skip for now (no UW Verified badge)
+            </Button>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                Didn't receive the email? Check your spam folder.
+            </Typography>
         </Paper>
     );
 
@@ -536,7 +558,7 @@ const SignIn = ({ firebase }) => {
         >
             <Container maxWidth="sm">
                 {step === 1 && renderStep1()}
-                {/*step === 2 && renderStep2()*/}
+                {step === 2 && renderStep2()}
                 {step === 3 && renderStep3()}
             </Container>
         </Box>
