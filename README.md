@@ -162,6 +162,14 @@ Created Sprint 1 Branch -->
 * **Information Transparency:** View another user's program, year, destination country, and school tags.
 * **Direct Messaging:** Contact exchange alumni directly from their profile and access a full chat history for follow-up questions.
 
+### 🔐 Authentication & Access Control
+* **Secure Sign-In:** Users can create accounts and sign in using email authentication.
+* **Protected Content:** Alumni profiles and uploaded content are only accessible to authenticated users.
+* **Session Management:** Logged-in users remain authenticated across sessions until they sign out.
+* **Email Verification:** Users who register with an email address ending in @uwaterloo.ca are automatically assigned a “UW Verified Student” tag to indicate they are University of Waterloo students. Firebase’s built-in email verification was initially considered and attempted however, emails sent to the uwaterloo.ca domain were automatically pre-checked by the university’s email security system. This caused the verification links to be opened before reaching the user, marking them as already used. As a result, domain-based verification was implemented as a less secure alternative.
+
+
+
 ---
 
 ## 🛠 Technical Stack
@@ -171,7 +179,8 @@ Created Sprint 1 Branch -->
 
 ---
 
-## 👥 Development Team (Sprint 1)
+## 👥 Development Team 
+### (Sprint 1)
 
 | Team Member | Responsibility Area |
 | :--- | :--- |
@@ -180,10 +189,20 @@ Created Sprint 1 Branch -->
 | **Elly** | Messaging Systems (Direct Messaging, Chat History) |
 | **Cindy** | User search Functionality |
 
+### (Sprint 2)
+
+| Team Member | Responsibility Area |
+| :--- | :--- |
+| **Zeina** | Profile Management (Reviews, Financial Planning) |
+| **Matthew** | Course Equivalency (Sort) & Calendar/Resources (Contacts, Timeline)|
+| **Elly** | Sign In (Authentication, Sign Up, Sign In) |
+| **Cindy** | User search Functionality |
+
 ---
 
 
 AI declaration:
+
 Zeina - Used for occasional debugging (syntax errors, package/networking errors, etc.)
 * Used for fixing styling on some MUI components (ex. i learned from AI that a particular component comes with default styling)
 * Used to determine that I need to use Multer for posting photos
@@ -195,3 +214,7 @@ Cindy - Used for debugging and design aid
 * Used for making UI (e.g. flex box size) of some new components (e.g. loading screen) look more cohesive with existing components 
 * Used to make mock data for jest tests 
 * Used to help debug the syntax for the API url expression used in the stringMatching test 
+
+Elly - Used for debugging and UI design
+* Used to align UI elements such as the nav bar and logo
+* Used to update README with Authentication & Access Control information
