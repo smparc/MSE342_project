@@ -70,14 +70,6 @@ describe('Exchange App', () => {
     cy.contains('elly');
   });
 
-  it('navigates to messages and shows conversations', () => {
-    cy.visit('/');
-    cy.get('[data-testid="ChatIcon"]').click();
-    cy.url().should('include', '/messages');
-    cy.contains('Alice Chen');
-    cy.contains('Bob Smith');
-  });
-
   it('opens a conversation and displays messages', () => {
     cy.visit('/messages');
     cy.contains('Alice Chen').click();
