@@ -39,48 +39,51 @@ const createMockFirebase = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderWithProviders = (ui, { firebase = null } = {}) => {
-  const mockFirebase = firebase || createMockFirebase();
-
+function renderComponent(props = {}) {
+  const firebase = props.firebase || createMockFirebase();
   return render(
     <ThemeProvider theme={createTheme()}>
-      <MemoryRouter>
-        <FirebaseContext.Provider value={mockFirebase}>
-          {ui}
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <FirebaseContext.Provider value={firebase}>
+          <SignIn {...props} />
         </FirebaseContext.Provider>
       </MemoryRouter>
     </ThemeProvider>
   );
-};
+}
 
-describe('SignIn Component', () => {
-  let mockFirebase;
+// Submit form without triggering jsdom's unimplemented HTMLFormElement.submit
+function submitForm(buttonName) {
+  const button = screen.getByRole('button', { name: buttonName });
+  const form = button.closest('form');
+  if (form) fireEvent.submit(form);
+  else fireEvent.click(button);
+}
+
+describe('SignIn', () => {
+  let firebase;
 
   beforeEach(() => {
     mockNavigate.mockClear();
-    mockFirebase = createMockFirebase();
+    firebase = createMockFirebase();
     global.fetch = jest.fn();
-    Object.defineProperty(window, 'location', {
-      value: { href: '' },
-      writable: true,
-    });
+    Object.defineProperty(window, 'location', { value: { href: '' }, writable: true });
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('renders sign in form with Welcome Back heading by default', () => {
-    renderWithProviders(<SignIn />, { firebase: mockFirebase });
+  it('displays the sign in form', () => {
+    renderComponent({ firebase });
     expect(screen.getByText('Welcome Back')).toBeInTheDocument();
     expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sign In/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Don't have an account\? Sign Up/i })).toBeInTheDocument();
   });
 
-  it('renders sign up form when clicking Sign Up link', () => {
-    renderWithProviders(<SignIn />, { firebase: mockFirebase });
+  it('shows sign up form when clicking Sign Up link', () => {
+    renderComponent({ firebase });
     fireEvent.click(screen.getByRole('button', { name: /Don't have an account\? Sign Up/i }));
     expect(screen.getByText('Create Account')).toBeInTheDocument();
     expect(screen.getByLabelText(/Username/i)).toBeInTheDocument();
@@ -88,50 +91,46 @@ describe('SignIn Component', () => {
   });
 
   it('shows validation error when signing in with empty email', async () => {
-    renderWithProviders(<SignIn />, { firebase: mockFirebase });
+    renderComponent({ firebase });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
+    submitForm(/Sign In/i);
 
     await waitFor(() => {
       expect(screen.getByText(/Email is required to log in/i)).toBeInTheDocument();
     });
   });
 
-  it('shows validation error when signing up without username in step 1', async () => {
-    renderWithProviders(<SignIn />, { firebase: mockFirebase });
+  it('shows validation error when signing up without username', async () => {
+    renderComponent({ firebase });
     fireEvent.click(screen.getByRole('button', { name: /Don't have an account\? Sign Up/i }));
-
     fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
-    // Leave username empty
-    fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+    submitForm(/Next/i);
 
     await waitFor(() => {
       expect(screen.getByText(/Username is required/i)).toBeInTheDocument();
     });
   });
 
-  it('navigates to step 2 when valid sign up data is submitted in step 1', async () => {
-    renderWithProviders(<SignIn />, { firebase: mockFirebase });
+  it('navigates to step 2 when valid sign up data is submitted', async () => {
+    renderComponent({ firebase });
     fireEvent.click(screen.getByRole('button', { name: /Don't have an account\? Sign Up/i }));
-
     fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'student@uwaterloo.ca' } });
     fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'student1' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+    submitForm(/Next/i);
 
     await waitFor(() => {
       expect(screen.getByText('Profile Information')).toBeInTheDocument();
     });
   });
 
-  it('displays error message when sign in fails with invalid credentials', async () => {
-    mockFirebase.doSignInWithEmailAndPassword.mockRejectedValueOnce({ code: 'auth/invalid-credential' });
-
-    renderWithProviders(<SignIn />, { firebase: mockFirebase });
+  it('displays error when sign in fails with invalid credentials', async () => {
+    firebase.doSignInWithEmailAndPassword.mockRejectedValueOnce({ code: 'auth/invalid-credential' });
+    renderComponent({ firebase });
     fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'wrong@example.com' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'wrongpass' } });
-    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
+    submitForm(/Sign In/i);
 
     await waitFor(() => {
       expect(screen.getByText(/Invalid email or password/i)).toBeInTheDocument();
@@ -139,21 +138,20 @@ describe('SignIn Component', () => {
   });
 
   it('displays error when sign up API fails', async () => {
-    mockFirebase.doCreateUserWithEmailAndPassword.mockResolvedValueOnce();
-    mockFirebase.auth.currentUser.getIdToken.mockResolvedValueOnce('mock-token');
+    firebase.doCreateUserWithEmailAndPassword.mockResolvedValueOnce();
+    firebase.auth.currentUser.getIdToken.mockResolvedValueOnce('mock-token');
     global.fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Username already exists' }) });
 
-    renderWithProviders(<SignIn />, { firebase: mockFirebase });
+    renderComponent({ firebase });
     fireEvent.click(screen.getByRole('button', { name: /Don't have an account\? Sign Up/i }));
-
     fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'new@example.com' } });
     fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'newuser' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+    submitForm(/Next/i);
 
     await waitFor(() => screen.getByText('Profile Information'));
 
-    fireEvent.click(screen.getByRole('button', { name: /Complete Sign Up/i }));
+    submitForm(/Complete Sign Up/i);
 
     await waitFor(() => {
       expect(screen.getByText(/Username already exists/i)).toBeInTheDocument();
