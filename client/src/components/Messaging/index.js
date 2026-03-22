@@ -6,6 +6,7 @@ import { useTheme } from '@mui/material/styles';
 import ConversationList from './ConversationList';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import CreateMessage from './CreateMessage';
 import { formatMessageTimestamp } from './utils';
 import { FirebaseContext, authFetch } from '../Firebase';
 
@@ -28,6 +29,7 @@ const Messaging = ({ currentUser, authUser }) => {
   const [selectedConversationId, setSelectedConversationId] = React.useState(null);
   const [messagesLoading, setMessagesLoading] = React.useState(false);
   const [listLoadError, setListLoadError] = React.useState(false);
+  const [newMessageModalOpen, setNewMessageModalOpen] = React.useState(false);
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
   const currentMessages = messages[selectedConversationId] || [];
@@ -101,6 +103,27 @@ const Messaging = ({ currentUser, authUser }) => {
     setConversations((prev) =>
       prev.map((c) => (c.id === conversationId ? { ...c, unread: 0 } : c))
     );
+  };
+
+  const handleConversationCreated = (newConv) => {
+    const existing = conversations.find((c) => c.id === newConv.id);
+    if (!existing) {
+      setConversations((prev) =>
+        sortConversationsByLastActive([
+          {
+            id: newConv.id,
+            senderName: newConv.senderName,
+            lastMessage: '',
+            lastMessageAt: null,
+            unread: 0,
+          },
+          ...prev,
+        ])
+      );
+    }
+    setSelectedConversationId(newConv.id);
+    setNewMessageModalOpen(false);
+    loadConversationMessages(newConv.id);
   };
 
   const handleSendMessage = async (text) => {
@@ -197,6 +220,7 @@ const Messaging = ({ currentUser, authUser }) => {
           conversations={conversations}
           selectedId={selectedConversationId}
           onSelect={handleSelectConversation}
+          onNewMessage={() => setNewMessageModalOpen(true)}
         />
       </Paper>
 
@@ -233,6 +257,14 @@ const Messaging = ({ currentUser, authUser }) => {
           </Box>
         )}
       </Paper>
+      <NewMessageModal
+        open={newMessageModalOpen}
+        onClose={() => setNewMessageModalOpen(false)}
+        currentUsername={CURRENT_USERNAME}
+        authFetch={authFetch}
+        firebase={firebase}
+        onConversationCreated={handleConversationCreated}
+      />
     </Box>
   );
 };

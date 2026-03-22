@@ -222,6 +222,31 @@ app.get('/api/users/by-email/:email', (req, res) => {
     });
 });
 
+// API to search users (for new message - must be before /api/users/:username)
+// Query: q (search term), exclude (current username to exclude from results)
+app.get('/api/users/search', (req, res) => {
+    const q = (req.query.q || '').trim();
+    const exclude = (req.query.exclude || '').trim();
+    if (!exclude) {
+        return res.status(400).json({ error: 'exclude (current username) is required' });
+    }
+    let sql = "SELECT username, display_name FROM users WHERE username != ?";
+    const params = [exclude];
+    if (q) {
+        sql += " AND (username LIKE ? OR display_name LIKE ?)";
+        const pattern = `%${q}%`;
+        params.push(pattern, pattern);
+    }
+    sql += " ORDER BY display_name ASC LIMIT 50";
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        res.json(results);
+    });
+});
+
 // API to get a user
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username;
@@ -362,6 +387,81 @@ app.get('/api/posts/:username', (req, res) => {
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// POST /api/conversations - create or get existing conversation (protected)
+// Query: username (current user)  Body: { targetUsername }
+// Returns: { id, senderName } (conversation for display in list)
+app.post('/api/conversations', checkAuth, (req, res) => {
+    const username = req.query.username;
+    const { targetUsername } = req.body;
+
+    if (!username || !targetUsername || !String(targetUsername).trim()) {
+        return res.status(400).json({ error: 'username and targetUsername are required' });
+    }
+    const target = String(targetUsername).trim();
+    if (target.toLowerCase() === username.toLowerCase()) {
+        return res.status(400).json({ error: 'Cannot start a conversation with yourself' });
+    }
+
+    const conn = mysql.createConnection(config);
+
+    // Check if user exists
+    conn.query("SELECT username, display_name FROM users WHERE username = ?", [target], (err, users) => {
+        if (err) {
+            console.error('Error checking user:', err);
+            res.status(500).json({ error: 'Failed to create conversation' });
+            conn.end();
+            return;
+        }
+        if (!users || users.length === 0) {
+            res.status(404).json({ error: 'User not found' });
+            conn.end();
+            return;
+        }
+
+        const u1 = username < target ? username : target;
+        const u2 = username < target ? target : username;
+
+        // Find existing conversation (order-independent)
+        const findSql = `
+            SELECT id FROM conversations
+            WHERE (user1_username = ? AND user2_username = ?) OR (user1_username = ? AND user2_username = ?)
+        `;
+        conn.query(findSql, [u1, u2, u2, u1], (findErr, existing) => {
+            if (findErr) {
+                console.error('Error finding conversation:', findErr);
+                res.status(500).json({ error: 'Failed to create conversation' });
+                conn.end();
+                return;
+            }
+            if (existing && existing.length > 0) {
+                const convId = String(existing[0].id);
+                conn.end();
+                return res.status(200).json({
+                    id: convId,
+                    senderName: users[0].display_name || users[0].username,
+                });
+            }
+
+            // Create new conversation
+            const insertSql = "INSERT INTO conversations (user1_username, user2_username) VALUES (?, ?)";
+            conn.query(insertSql, [u1, u2], (insErr, result) => {
+                if (insErr) {
+                    console.error('Error creating conversation:', insErr);
+                    res.status(500).json({ error: 'Failed to create conversation' });
+                    conn.end();
+                    return;
+                }
+                const convId = String(result.insertId);
+                conn.end();
+                res.status(201).json({
+                    id: convId,
+                    senderName: users[0].display_name || users[0].username,
+                });
+            });
+        });
+    });
+});
 
 // 1) GET /api/messages-list - conversation list (left sidebar)
 // Query param: userId (required) eventually

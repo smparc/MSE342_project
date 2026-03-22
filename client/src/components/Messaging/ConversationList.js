@@ -5,12 +5,14 @@ import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
+import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
+import CreateIcon from '@mui/icons-material/Create';
 import { formatMessageTimestamp } from './utils';
 
-const ConversationList = ({ conversations, selectedId, onSelect }) => {
+const ConversationList = ({ conversations, selectedId, onSelect, onNewMessage }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const filteredConversations = React.useMemo(() => {
@@ -23,10 +25,29 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
 
   return (
     <Box sx={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ py: 1.5, px: 2, borderBottom: 1, borderColor: 'divider' }}>
+      <Box
+        sx={{
+          py: 1.5,
+          px: 2,
+          borderBottom: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Typography variant="h6" component="h2">
           Messages
         </Typography>
+        <IconButton
+          onClick={onNewMessage}
+          aria-label="Create or write new message"
+          size="small"
+          color="primary"
+          sx={{ ml: 0.5 }}
+        >
+          <CreateIcon />
+        </IconButton>
       </Box>
       <Box sx={{ px: 1.5, py: 1, borderBottom: 1, borderColor: 'divider' }}>
         <TextField
