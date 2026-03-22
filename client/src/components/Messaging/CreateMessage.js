@@ -78,10 +78,12 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
         setError(data.error || 'Failed to start conversation');
         return;
       }
+      const isExisting = response.status === 200;
       onConversationCreated &&
         onConversationCreated({
           id: data.id,
           senderName: data.senderName,
+          isExisting,
         });
       onClose();
     } catch (err) {
@@ -101,7 +103,13 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{ sx: { borderRadius: 4 } }}
+    >
       <DialogTitle>New message</DialogTitle>
       <DialogContent>
         <TextField

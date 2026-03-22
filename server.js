@@ -223,15 +223,24 @@ app.get('/api/users/by-email/:email', (req, res) => {
 });
 
 // API to search users (for new message - must be before /api/users/:username)
-// Query: q (search term), exclude (current username to exclude from results)
+// Query: q (search term), exclude (current username), excludeConversations (1 to hide existing conv partners)
 app.get('/api/users/search', (req, res) => {
     const q = (req.query.q || '').trim();
     const exclude = (req.query.exclude || '').trim();
+    const excludeConversations = req.query.excludeConversations === '1';
     if (!exclude) {
         return res.status(400).json({ error: 'exclude (current username) is required' });
     }
     let sql = "SELECT username, display_name FROM users WHERE username != ?";
     const params = [exclude];
+    if (excludeConversations) {
+        sql += ` AND username NOT IN (
+            SELECT user2_username FROM conversations WHERE user1_username = ?
+            UNION
+            SELECT user1_username FROM conversations WHERE user2_username = ?
+        )`;
+        params.push(exclude, exclude);
+    }
     if (q) {
         sql += " AND (username LIKE ? OR display_name LIKE ?)";
         const pattern = `%${q}%`;
@@ -388,7 +397,7 @@ app.get('/api/posts/:username', (req, res) => {
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// POST /api/conversations - create or get existing conversation (protected)
+// POST /api/conversations - create or get existing conversation
 // Query: username (current user)  Body: { targetUsername }
 // Returns: { id, senderName } (conversation for display in list)
 app.post('/api/conversations', checkAuth, (req, res) => {
@@ -497,7 +506,8 @@ app.get('/api/messages-list', (req, res) => {
                 AND (m.is_read = 0 OR m.is_read IS NULL)
             GROUP BY m.conversation_id
         ) unread ON unread.conversation_id = c.id
-        WHERE c.user1_username = ? OR c.user2_username = ?
+        WHERE (c.user1_username = ? OR c.user2_username = ?)
+        AND EXISTS (SELECT 1 FROM messages m2 WHERE m2.conversation_id = c.id)
         ORDER BY last_msg.created_at DESC
     `;
 
