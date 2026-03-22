@@ -506,8 +506,7 @@ app.get('/api/messages-list', (req, res) => {
                 AND (m.is_read = 0 OR m.is_read IS NULL)
             GROUP BY m.conversation_id
         ) unread ON unread.conversation_id = c.id
-        WHERE (c.user1_username = ? OR c.user2_username = ?)
-        AND EXISTS (SELECT 1 FROM messages m2 WHERE m2.conversation_id = c.id)
+        WHERE c.user1_username = ? OR c.user2_username = ?
         ORDER BY last_msg.created_at DESC
     `;
 

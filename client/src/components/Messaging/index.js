@@ -30,11 +30,8 @@ const Messaging = ({ currentUser, authUser }) => {
   const [messagesLoading, setMessagesLoading] = React.useState(false);
   const [listLoadError, setListLoadError] = React.useState(false);
   const [newMessageModalOpen, setNewMessageModalOpen] = React.useState(false);
-  const [pendingNewConversation, setPendingNewConversation] = React.useState(null);
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
-  const isPendingCompose = pendingNewConversation && selectedConversationId === pendingNewConversation.id;
-  const displayConversation = selectedConversation || (isPendingCompose ? pendingNewConversation : null);
   const currentMessages = messages[selectedConversationId] || [];
 
   const loadConversationList = React.useCallback(async () => {
@@ -102,7 +99,6 @@ const Messaging = ({ currentUser, authUser }) => {
   }, [loadConversationList]);
 
   const handleSelectConversation = (conversationId) => {
-    setPendingNewConversation(null);
     setSelectedConversationId(conversationId);
     setConversations((prev) =>
       prev.map((c) => (c.id === conversationId ? { ...c, unread: 0 } : c))
@@ -110,37 +106,24 @@ const Messaging = ({ currentUser, authUser }) => {
   };
 
   const handleConversationCreated = (newConv) => {
+    const existing = conversations.find((c) => c.id === newConv.id);
+    if (!existing) {
+      setConversations((prev) =>
+        sortConversationsByLastActive([
+          {
+            id: newConv.id,
+            senderName: newConv.senderName,
+            lastMessage: '',
+            lastMessageAt: null,
+            unread: 0,
+          },
+          ...prev,
+        ])
+      );
+    }
     setSelectedConversationId(newConv.id);
     setNewMessageModalOpen(false);
-    if (newConv.isExisting) {
-      setPendingNewConversation(null);
-      const existing = conversations.find((c) => c.id === newConv.id);
-      if (!existing) {
-        setConversations((prev) =>
-          sortConversationsByLastActive([
-            {
-              id: newConv.id,
-              senderName: newConv.senderName,
-              lastMessage: '',
-              lastMessageAt: null,
-              unread: 0,
-            },
-            ...prev,
-          ])
-        );
-      }
-      loadConversationMessages(newConv.id);
-      loadConversationList();
-    } else {
-      setPendingNewConversation({ id: newConv.id, senderName: newConv.senderName });
-      setMessages((prev) => ({ ...prev, [newConv.id]: [] }));
-      loadConversationMessages(newConv.id);
-    }
-  };
-
-  const handleCancelNewMessage = () => {
-    setPendingNewConversation(null);
-    setSelectedConversationId(null);
+    loadConversationMessages(newConv.id);
   };
 
   const handleSendMessage = async (text) => {
@@ -176,30 +159,15 @@ const Messaging = ({ currentUser, authUser }) => {
         [selectedConversationId]: [...(prev[selectedConversationId] || []), newMessage],
       }));
 
-      setPendingNewConversation(null);
-
-      setConversations((prev) => {
-        const existing = prev.find((c) => c.id === selectedConversationId);
-        if (existing) {
-          return sortConversationsByLastActive(
-            prev.map((c) =>
-              c.id === selectedConversationId
-                ? { ...c, lastMessage: content, lastMessageAt: data.created_at, unread: 0 }
-                : c
-            )
-          );
-        }
-        return sortConversationsByLastActive([
-          {
-            id: selectedConversationId,
-            senderName: displayConversation?.senderName || 'Unknown',
-            lastMessage: content,
-            lastMessageAt: data.created_at,
-            unread: 0,
-          },
-          ...prev,
-        ]);
-      });
+      setConversations((prev) =>
+        sortConversationsByLastActive(
+          prev.map((c) =>
+            c.id === selectedConversationId
+              ? { ...c, lastMessage: content, lastMessageAt: data.created_at, unread: 0 }
+              : c
+          )
+        )
+      );
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -266,13 +234,12 @@ const Messaging = ({ currentUser, authUser }) => {
           backgroundColor: 'background.default',
         }}
       >
-        {displayConversation ? (
+        {selectedConversation ? (
           <>
             <MessageList
-              conversationName={displayConversation.senderName || displayConversation.name || 'Unknown'}
+              conversationName={selectedConversation.senderName || selectedConversation.name || 'Unknown'}
               messages={currentMessages}
               loading={messagesLoading}
-              onCancel={isPendingCompose ? handleCancelNewMessage : undefined}
             />
             <MessageInput onSend={handleSendMessage} />
           </>
@@ -290,7 +257,7 @@ const Messaging = ({ currentUser, authUser }) => {
           </Box>
         )}
       </Paper>
-      <NewMessageModal
+      <CreateMessage
         open={newMessageModalOpen}
         onClose={() => setNewMessageModalOpen(false)}
         currentUsername={CURRENT_USERNAME}

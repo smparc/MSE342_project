@@ -4,11 +4,9 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
-import IconButton from '@mui/material/IconButton';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { formatDayHeader } from './utils';
 
-const MessageList = ({ conversationName, messages, loading, onCancel }) => {
+const MessageList = ({ conversationName, messages, loading }) => {
   const messageListRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -26,17 +24,9 @@ const MessageList = ({ conversationName, messages, loading, onCancel }) => {
           borderBottom: 1,
           borderColor: 'divider',
           backgroundColor: 'background.paper',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
         }}
       >
-        {onCancel && (
-          <IconButton onClick={onCancel} aria-label="Cancel new message" size="small" sx={{ mr: 0.5 }}>
-            <ArrowBackIcon />
-          </IconButton>
-        )}
-        <Typography variant="h6" component="h2" sx={{ flex: 1 }}>
+        <Typography variant="h6" component="h2">
           {conversationName}
         </Typography>
       </Box>
