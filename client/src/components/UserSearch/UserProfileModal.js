@@ -5,8 +5,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
-import CloseIcon from '@mui/icons-material/Close';
-import ChatIcon from '@mui/icons-material/Chat';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
@@ -17,7 +15,18 @@ import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import Modal from '@mui/material/Modal';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import Rating from '@mui/material/Rating';
+import CloseIcon from '@mui/icons-material/Close';
+import ChatIcon from '@mui/icons-material/Chat';
 import AvatarDisplay from '../Profile/AvatarDisplay';
+import CourseTable from '../Profile/CourseTable';
 
 const CHIP_STYLES = {
   uwVerified: { bgcolor: '#E8F5E9', color: '#2E7D32', border: '1px solid #A5D6A7', fontWeight: '500' },
@@ -34,6 +43,9 @@ const UserProfileModal = ({ open, onClose, user, currentUsername, authFetch, fir
   const [tabIndex, setTabIndex] = React.useState(0);
   const [posts, setPosts] = React.useState([]);
   const [postsLoading, setPostsLoading] = React.useState(false);
+  const [expenses, setExpenses] = React.useState(null);
+  const [ratings, setRatings] = React.useState(null);
+  const [expensesRatingsLoading, setExpensesRatingsLoading] = React.useState(false);
   const [selectedPost, setSelectedPost] = React.useState(null);
   const [messageLoading, setMessageLoading] = React.useState(false);
 
@@ -41,6 +53,8 @@ const UserProfileModal = ({ open, onClose, user, currentUsername, authFetch, fir
     if (!open || !user?.username) return;
     setTabIndex(0);
     setSelectedPost(null);
+    setExpenses(null);
+    setRatings(null);
     const fetchPosts = async () => {
       setPostsLoading(true);
       try {
@@ -55,6 +69,24 @@ const UserProfileModal = ({ open, onClose, user, currentUsername, authFetch, fir
     };
     fetchPosts();
   }, [open, user?.username]);
+
+  React.useEffect(() => {
+    if (!open || !user?.username || tabIndex !== 2) return;
+    setExpensesRatingsLoading(true);
+    Promise.all([
+      fetch(`/api/users/${user.username}/expenses`).then((r) => r.ok ? r.json() : {}),
+      fetch(`/api/users/${user.username}/ratings`).then((r) => r.ok ? r.json() : {}),
+    ])
+      .then(([expData, ratData]) => {
+        setExpenses(expData);
+        setRatings(ratData);
+      })
+      .catch(() => {
+        setExpenses({});
+        setRatings({});
+      })
+      .finally(() => setExpensesRatingsLoading(false));
+  }, [open, user?.username, tabIndex]);
 
   if (!user) return null;
 
@@ -141,7 +173,7 @@ const UserProfileModal = ({ open, onClose, user, currentUsername, authFetch, fir
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{ sx: { borderRadius: 2 } }}
     >
@@ -184,6 +216,8 @@ const UserProfileModal = ({ open, onClose, user, currentUsername, authFetch, fir
 
           <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)} sx={{ width: '100%', mt: 2 }}>
             <Tab label="Photos" />
+            <Tab label="Courses" />
+            <Tab label="Expenses & Ratings" />
           </Tabs>
 
           {tabIndex === 0 && (
@@ -213,6 +247,89 @@ const UserProfileModal = ({ open, onClose, user, currentUsername, authFetch, fir
                     </ImageListItem>
                   ))}
                 </ImageList>
+              )}
+            </Box>
+          )}
+
+          {tabIndex === 1 && (
+            <Box sx={{ width: '100%', mt: 1 }}>
+              <CourseTable username={username} readOnly />
+            </Box>
+          )}
+
+          {tabIndex === 2 && (
+            <Box sx={{ width: '100%', mt: 1 }}>
+              {expensesRatingsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress size={32} />
+                </Box>
+              ) : (
+                <Stack spacing={2}>
+                  <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography fontWeight={700} sx={{ mb: 1.5 }}>Expenses</Typography>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell><strong>Item</strong></TableCell>
+                            <TableCell align="right"><strong>Cost</strong></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {[
+                            { label: 'Total Monthly', field: 'monthly_cost' },
+                            { label: 'Monthly Rent', field: 'rent_cost' },
+                            { label: 'Cost of Meal', field: 'meal_cost' },
+                            { label: 'Cup of Coffee', field: 'coffee_cost' },
+                            { label: '2-Way Flight', field: 'flight_cost' },
+                          ].map(({ label, field }) => {
+                            const val = expenses?.[field];
+                            return (
+                              <TableRow key={field}>
+                                <TableCell>{label}</TableCell>
+                                <TableCell align="right">{val != null && val !== '' ? `$${val}` : '—'}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                  <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography fontWeight={700} sx={{ mb: 1.5 }}>Ratings</Typography>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell><strong>Item</strong></TableCell>
+                            <TableCell align="center"><strong>Rating</strong></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {[
+                            { label: 'School Difficulty', field: 'difficulty_rating' },
+                            { label: 'Safety', field: 'safety_rating' },
+                            { label: 'Cleanliness', field: 'cleanliness_rating' },
+                            { label: 'Travel Opportunities', field: 'travel_opp_rating' },
+                            { label: 'Food', field: 'food_rating' },
+                            { label: 'Scenery', field: 'scenery_rating' },
+                            { label: 'Leisure & Activities', field: 'activities_rating' },
+                          ].map(({ label, field }) => {
+                            const val = ratings?.[field];
+                            return (
+                              <TableRow key={field}>
+                                <TableCell>{label}</TableCell>
+                                <TableCell align="center">
+                                  {val != null && val > 0 ? <Rating value={Number(val)} readOnly size="small" /> : '—'}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                </Stack>
               )}
             </Box>
           )}

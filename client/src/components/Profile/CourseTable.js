@@ -3,7 +3,7 @@ import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { FirebaseContext, authFetch } from '../Firebase'
 
-const CourseTable = ({ username }) => {
+const CourseTable = ({ username, readOnly = false }) => {
     const firebase = React.useContext(FirebaseContext)
 
     const [list, setList] = React.useState([])
@@ -153,7 +153,7 @@ const CourseTable = ({ username }) => {
                                 <TableCell align={'left'}><strong>Host Code</strong></TableCell>
                                 <TableCell align={'left'}><strong>Host Course Name</strong></TableCell>
                                 <TableCell align={'center'}><strong>Status</strong></TableCell>
-                                <TableCell align={'center'}><strong>Actions</strong></TableCell>
+                                {!readOnly && <TableCell align={'center'}><strong>Actions</strong></TableCell>}
                             </TableRow>
 
                         </TableHead>
@@ -175,6 +175,7 @@ const CourseTable = ({ username }) => {
                                             {row.status}
                                         </Typography>
                                     </TableCell>
+                                    {!readOnly && (
                                     <TableCell align={'center'} sx={{ p: 0 }}>
                                         <IconButton size="small" onClick={() => editRow(row)} color="primary">
                                             <EditIcon fontSize="small" />
@@ -183,6 +184,7 @@ const CourseTable = ({ username }) => {
                                             <DeleteIcon fontSize="small" />
                                         </IconButton>
                                     </TableCell>
+                                    )}
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -190,13 +192,14 @@ const CourseTable = ({ username }) => {
 
                 </TableContainer>
 
-
+                {!readOnly && (
                 <Button variant='outlined' fullWidth onClick={handleClick}
                     sx={{ marginTop: '20px', border: '1px solid #3143E3', color: '#3143E3', ":hover": { bgcolor: '#3143E3', color: 'white' } }}>
                     Submit new course
                 </Button>
+                )}
 
-                {dataFormStatus &&
+                {!readOnly && dataFormStatus &&
                     <>
                         <Grid container alignItems={'center'} justifyContent={'center'} direction={'column'} spacing={2} mt={'10px'}>
                             <Grid item width="100%">
