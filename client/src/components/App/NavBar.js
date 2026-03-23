@@ -7,6 +7,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
+import Badge from '@mui/material/Badge';
 import ChatIcon from '@mui/icons-material/Chat';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -34,11 +35,35 @@ const navItems = [
   { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
 
-const NavBar = () => {
+const NavBar = ({ currentUser, authUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const firebase = React.useContext(FirebaseContext);
   const [expanded, setExpanded] = React.useState(false);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  const username = currentUser || authUser?.email?.split('@')[0];
+
+  React.useEffect(() => {
+    if (!username) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch(`/api/messages-unread-count?username=${encodeURIComponent(username)}`);
+        const data = await res.json();
+        if (res.ok && data.count != null) setUnreadCount(data.count);
+      } catch {
+        // ignore
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    const onRead = () => fetchUnread();
+    window.addEventListener('messages-read', onRead);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('messages-read', onRead);
+    };
+  }, [username]);
 
   const currentPath = location.pathname;
   const isActive = (path) =>
@@ -105,6 +130,7 @@ const NavBar = () => {
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
+          const showUnreadBadge = item.path === '/messages' && unreadCount > 0;
           return (
             <ListItemButton
               key={item.path}
@@ -130,7 +156,13 @@ const NavBar = () => {
                   display: 'flex',
                 }}
               >
-                <Icon fontSize="medium" />
+                {showUnreadBadge ? (
+                  <Badge badgeContent={unreadCount > 99 ? '99+' : unreadCount} color="error">
+                    <Icon fontSize="medium" />
+                  </Badge>
+                ) : (
+                  <Icon fontSize="medium" />
+                )}
               </ListItemIcon>
               {expanded && (
                 <ListItemText

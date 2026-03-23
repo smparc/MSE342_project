@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
@@ -74,6 +75,7 @@ const ConversationList = ({ conversations, selectedId, onSelect, onNewMessage })
       <List disablePadding sx={{ flex: 1, overflow: 'auto' }}>
         {filteredConversations.map((conv) => {
           const isSelected = conv.id === selectedId;
+          const hasUnread = (conv.unread || 0) > 0;
           return (
             <ListItemButton
               key={conv.id}
@@ -88,20 +90,30 @@ const ConversationList = ({ conversations, selectedId, onSelect, onNewMessage })
                 },
               }}
             >
-              <Avatar
-                sx={{
-                  bgcolor: isSelected ? 'primary.main' : 'grey.400',
-                  width: 48,
-                  height: 48,
-                  mr: 2,
-                }}
+              <Badge
+                badgeContent={hasUnread ? (conv.unread > 99 ? '99+' : conv.unread) : 0}
+                color="error"
+                invisible={!hasUnread}
+                sx={{ mr: 2 }}
               >
-                {(conv.senderName || '?').charAt(0)}
-              </Avatar>
+                <Avatar
+                  sx={{
+                    bgcolor: isSelected ? 'primary.main' : 'grey.400',
+                    width: 48,
+                    height: 48,
+                  }}
+                >
+                  {(conv.senderName || '?').charAt(0)}
+                </Avatar>
+              </Badge>
               <ListItemText
                 primary={
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="subtitle1" noWrap>
+                    <Typography
+                      variant="subtitle1"
+                      noWrap
+                      sx={{ fontWeight: hasUnread ? 600 : 400 }}
+                    >
                       {conv.senderName}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">

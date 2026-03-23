@@ -1,54 +1,34 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
 import CircularProgress from '@mui/material/CircularProgress';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
+import Grid from '@mui/material/Grid';
+import { UserSearchCard, useUserSearch } from '../UserSearch';
 
-const Search = () => {
-  const [query, setQuery] = React.useState('');
-  const [user, setUser] = React.useState(null);
-  // Implement next sprint
-  const [posts, setPosts] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [searched, setSearched] = React.useState(false);
+const Search = ({ currentUser, authUser }) => {
+  const navigate = useNavigate();
+  const currentUsername = currentUser || authUser?.email?.split('@')[0] || '';
+  const [searchQuery, setSearchQuery] = React.useState('');
 
-  const handleSearch = async () => {
-    const searchTerm = query.trim();
-    if (!searchTerm) return;
+  const { users, loading, error, searchUsers } = useUserSearch({
+    currentUsername,
+    searchQuery,
+    includeTags: true,
+    excludeConversations: false,
+    enabled: true,
+  });
 
-    setLoading(true);
-    setSearched(true);
-  
-    try {
-      // Get user profile by username (MUST BE EXACT USERNAME)
-      const userRes = await fetch(`/api/user/${encodeURIComponent(searchTerm)}`);
-      if (userRes.ok) {
-        const userData = await userRes.json();
-        setUser(userData || null);
-      } else {
-        // test to make sure ui still works
-        setUser(null);
-      }
+  React.useEffect(() => {
+    const timer = setTimeout(searchUsers, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchUsers]);
 
-      // Get all posts by the username
-      const postsRes = await fetch(`/api/posts/${encodeURIComponent(searchTerm)}`);
-      if (postsRes.ok) {
-        const postsData = await postsRes.json();
-        setPosts(postsData || []);
-      } else {
-        setPosts([]);
-      }
-    } catch (err) {
-      console.error('Search failed:', err);
-      setUser(null);
-      setPosts([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleUserClick = (username) => {
+    navigate(`/profile/${username}`);
   };
 
   return (
@@ -56,68 +36,63 @@ const Search = () => {
       sx={{
         p: 3,
         pb: 10,
-        maxWidth: 600,
+        maxWidth: 900,
         margin: '0 auto',
       }}
     >
-      {/* SEARCH FIELD */}
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Search
+        Search Users
       </Typography>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <TextField
-          fullWidth
-          placeholder="Search by EXACT username"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          variant="outlined"
-          size="small"
-          sx={{ mb: 2 }}
-        />
+      <TextField
+        fullWidth
+        placeholder="Search by username or display name..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        variant="outlined"
+        size="small"
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" color="action" />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ mb: 3 }}
+      />
 
-        <Button
-          variant="contained"
-          onClick={handleSearch}
-          disabled={loading || !query.trim()}
-          sx={{ whiteSpace: 'nowrap' }}
-        >
-          Search
-        </Button>
-      </Box>
-
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <CircularProgress size={28} />
-        </Box>
-      )}
-
-      {!loading && searched && !user && posts.length === 0 && (
-        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
-          No users or posts found for "{query}".
+      {error && (
+        <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+          {error}
         </Typography>
       )}
 
-      {/* USER RESULT
-          Next sprint: display profile picture, year, destination, and other attributes
-      */}
-      {!loading && user && (
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-            User
-          </Typography>
-          <List disablePadding>
-            <ListItem sx={{ bgcolor: 'grey.50', borderRadius: 1 }}>
-              <ListItemText
-                primary={user.display_name}
-              />
-            </ListItem>
-          </List>
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress size={32} />
         </Box>
       )}
 
-      {/* POST RESULT
-          Implement next sprint
-      */}
+      {!loading && searchQuery.trim() && users.length === 0 && (
+        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 6 }}>
+          No users match &quot;{searchQuery}&quot;
+        </Typography>
+      )}
+
+      {!loading && !searchQuery.trim() && (
+        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 6 }}>
+          Type to search for users
+        </Typography>
+      )}
+
+      {!loading && users.length > 0 && (
+        <Grid container spacing={2}>
+          {users.map((user) => (
+            <Grid item xs={12} sm={6} md={4} key={user.username}>
+              <UserSearchCard user={user} onClick={() => handleUserClick(user.username)} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
     </Box>
   );
 };

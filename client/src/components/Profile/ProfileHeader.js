@@ -7,7 +7,7 @@ import EditProfileModal from './EditProfileModal'
 import EditTagsModal from './EditTagsModal'
 
 
-const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, uwVerified, firebase }) => {
+const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, uwVerified, firebase, isOwnProfile = true }) => {
 
     const [modalStatus, setModalStatus] = React.useState(false)
     const [tagsModalStatus, setTagsModalStatus] = React.useState(false)
@@ -110,6 +110,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                         </Grid>
 
 
+                        {isOwnProfile && (
                         <Grid item xs={12}>
                             <Grid container columnGap={'10px'}>
                                 <Grid item xs>
@@ -146,6 +147,8 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                 </Grid>
                             </Grid>
                         </Grid>
+                        )}
+                        {isOwnProfile && <>
                         <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} faculty={faculty} program={program} gradYear={gradYear} exchangeTerm={exchangeTerm} profileChanged={profileChanged} setProfileChanged={setProfileChanged} firebase={firebase} />
                         <EditTagsModal
                             open={tagsModalStatus}
@@ -164,6 +167,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                             setProfileChanged={setProfileChanged}
                             firebase={firebase}
                         />
+                        </>}
 
                         {/* <Grid item xs={12}>
                         <Grid container justifyContent={'space-between'} alignItems={'center'}>

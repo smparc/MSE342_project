@@ -13,44 +13,26 @@ import Avatar from '@mui/material/Avatar';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { useUserSearch } from '../UserSearch';
 
 const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, onConversationCreated }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [users, setUsers] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [searching, setSearching] = React.useState(false);
   const [starting, setStarting] = React.useState(null);
-  const [error, setError] = React.useState('');
+  const [conversationError, setConversationError] = React.useState('');
 
-  const searchUsers = React.useCallback(async () => {
-    if (!currentUsername) return;
-    setSearching(true);
-    setError('');
-    try {
-      const q = searchQuery.trim();
-      const url = `/api/users/search?exclude=${encodeURIComponent(currentUsername)}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      if (!response.ok) {
-        setUsers([]);
-        setError(data.error || 'Failed to search users');
-        return;
-      }
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error searching users:', err);
-      setUsers([]);
-      setError('Failed to search users');
-    } finally {
-      setSearching(false);
-    }
-  }, [currentUsername, searchQuery]);
+  const { users, loading: searching, error: searchError, searchUsers } = useUserSearch({
+    currentUsername,
+    searchQuery,
+    includeTags: false,
+    excludeConversations: false,
+    enabled: open && !!currentUsername,
+  });
 
   React.useEffect(() => {
     if (open) {
       setSearchQuery('');
-      setError('');
-      setUsers([]);
+      setStarting(null);
+      setConversationError('');
     }
   }, [open]);
 
@@ -63,7 +45,7 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
   const handleStartConversation = async (targetUser) => {
     if (!currentUsername || !authFetch || !firebase) return;
     setStarting(targetUser.username);
-    setError('');
+    setConversationError('');
     try {
       const response = await authFetch(
         `/api/conversations?username=${encodeURIComponent(currentUsername)}`,
@@ -75,7 +57,7 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
       );
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error || 'Failed to start conversation');
+        setConversationError(data.error || 'Failed to start conversation');
         return;
       }
       onConversationCreated &&
@@ -86,7 +68,7 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
       onClose();
     } catch (err) {
       console.error('Error starting conversation:', err);
-      setError('Failed to start conversation');
+      setConversationError('Failed to start conversation');
     } finally {
       setStarting(null);
     }
@@ -94,8 +76,7 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
 
   const handleClose = () => {
     setSearchQuery('');
-    setUsers([]);
-    setError('');
+    setConversationError('');
     setStarting(null);
     onClose();
   };
@@ -127,9 +108,9 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
           }}
           sx={{ mb: 2, mt: 1 }}
         />
-        {error && (
+        {(searchError || conversationError) && (
           <Typography color="error" variant="body2" sx={{ mb: 2 }}>
-            {error}
+            {conversationError || searchError}
           </Typography>
         )}
         <Box sx={{ minHeight: 200 }}>

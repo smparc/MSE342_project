@@ -58,6 +58,13 @@ const Messaging = ({ currentUser, authUser }) => {
     }
     setMessagesLoading(true);
     try {
+      const readRes = await fetch(
+        `/api/conversations/${conversationId}/read?username=${encodeURIComponent(CURRENT_USERNAME)}`,
+        { method: 'PUT' }
+      );
+      if (readRes.ok) {
+        window.dispatchEvent(new CustomEvent('messages-read'));
+      }
       const response = await fetch(
         `/api/conversations/${conversationId}/messages?username=${encodeURIComponent(CURRENT_USERNAME)}`
       );
