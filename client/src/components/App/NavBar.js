@@ -32,7 +32,6 @@ const navItems = [
   { path: '/advisors', label: 'Advisors', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },
   { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
-  { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
 
 const NavBar = ({ currentUser, authUser }) => {

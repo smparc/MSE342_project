@@ -13,7 +13,6 @@ import Timeline from '../Timeline';
 import ContactsList from '../ContactsList';
 import AdvisorsList from '../AdvisorsList';
 import DeleteAccount from '../DeleteAccount';
-import UserTypeSelect from '../UserTypeSelect';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -118,10 +117,6 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                     <Route
                         path="/settings/delete-account"
                         element={<DeleteAccount currentUser={currentUser} authUser={authUser} />}
-                    />
-                    <Route
-                        path="/settings/user-type"
-                        element={<UserTypeSelect currentUser={currentUser} authUser={authUser} />}
                     />
                 </Routes>
             </MainLayout>
