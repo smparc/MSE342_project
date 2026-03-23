@@ -158,7 +158,7 @@ app.delete('/api/posts/:id', checkAuth, (req, res) => {
 
 // API to create a new user (for sign up)
 app.post('/api/users', checkAuth, (req, res) => {
-    const { username, email, display_name, faculty, program, grad_year, exchange_term, uw_verified } = req.body;
+    const { username, email, display_name, faculty, program, grad_year, exchange_term, uw_verified, user_type } = req.body;
 
     if (!username || !username.trim()) {
         return res.status(400).json({ error: 'Username is required' });
@@ -176,10 +176,13 @@ app.post('/api/users', checkAuth, (req, res) => {
             return res.status(409).json({ error: 'Username already exists' });
         }
 
+        const validUserTypes = ['current_exchange', 'prospective', 'alumni', 'browsing'];
+        const finalUserType = (user_type && validUserTypes.includes(user_type)) ? user_type : 'browsing';
+
         // Create new user with email and profile info
         const insertSql = `
-            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term, uw_verified) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term, uw_verified, user_type) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const params = [
             username.trim(),
@@ -189,7 +192,8 @@ app.post('/api/users', checkAuth, (req, res) => {
             program || null,
             grad_year || null,
             exchange_term || null,
-            uw_verified || false
+            uw_verified || false,
+            finalUserType
         ];
 
         connection.query(insertSql, params, (error, results) => {
@@ -197,11 +201,19 @@ app.post('/api/users', checkAuth, (req, res) => {
                 console.error('Database error:', error);
                 return res.status(500).json({ error: 'Failed to create user' });
             }
-            res.status(201).json({
-                success: true,
-                message: 'User created successfully',
-                username: username.trim()
-            });
+            const uname = username.trim();
+            connection.query(
+                "INSERT INTO profile_tags (username, tag_type, tag_value) VALUES (?, 'user_type', ?) ON DUPLICATE KEY UPDATE tag_value = ?",
+                [uname, finalUserType, finalUserType],
+                (tagErr) => {
+                    if (tagErr) console.error('Error adding user_type tag:', tagErr);
+                    res.status(201).json({
+                        success: true,
+                        message: 'User created successfully',
+                        username: uname
+                    });
+                }
+            );
         });
     });
 });

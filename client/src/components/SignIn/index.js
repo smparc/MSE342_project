@@ -10,6 +10,7 @@ import Grid from '@mui/material/Grid';
 import Alert from '@mui/material/Alert';
 import { withFirebase } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
+import UserTypeSelect from './UserTypeSelect';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket';
 
 const SignIn = ({ firebase }) => {
@@ -21,6 +22,7 @@ const SignIn = ({ firebase }) => {
     const [program, setProgram] = useState('');
     const [gradYear, setGradYear] = useState('');
     const [exchangeTerm, setExchangeTerm] = useState('');
+    const [userType, setUserType] = useState('browsing');
 
     // UI state
     const [error, setError] = useState(null);
@@ -75,7 +77,13 @@ const SignIn = ({ firebase }) => {
         setStep(2);
     };
 
-    // Step 2 -> Create account and redirect
+    // Step 2 -> Step 3 (user type)
+    const handleNextToUserType = () => {
+        setError(null);
+        setStep(3);
+    };
+
+    // Step 3 -> Create account and redirect
     const handleCompleteSignUp = async (event) => {
         event.preventDefault();
         setError(null);
@@ -103,6 +111,7 @@ const SignIn = ({ firebase }) => {
                     grad_year: gradYear ? parseInt(gradYear) : null,
                     exchange_term: exchangeTerm.trim() || null,
                     uw_verified: isUwEmail,
+                    user_type: userType,
                 }),
             });
 
@@ -123,6 +132,12 @@ const SignIn = ({ firebase }) => {
     const handleBackToStep1 = () => {
         setError(null);
         setStep(1);
+    };
+
+    // Step 3 <- back to Step 2
+    const handleBackToStep2 = () => {
+        setError(null);
+        setStep(2);
     };
 
     const onSignIn = async (event) => {
@@ -162,6 +177,7 @@ const SignIn = ({ firebase }) => {
         setProgram('');
         setGradYear('');
         setExchangeTerm('');
+        setUserType('browsing');
     };
 
     // Step 1: Sign In / Sign Up form
@@ -268,7 +284,7 @@ const SignIn = ({ firebase }) => {
                 Help others find and connect with you (optional - you can add this later)
             </Typography>
 
-            <form noValidate onSubmit={handleCompleteSignUp}>
+            <form noValidate onSubmit={handleNextToUserType}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                         <TextField
@@ -347,6 +363,56 @@ const SignIn = ({ firebase }) => {
                         disabled={loading}
                         sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
                     >
+                        Next
+                    </Button>
+                </Box>
+            </form>
+        </Paper>
+    );
+
+    // Step 3: User Type Selection
+    const renderStep3 = () => (
+        <Paper elevation={6} sx={{ p: 5, borderRadius: 3 }}>
+            <Typography variant="h5" component="h1" gutterBottom fontWeight="bold" textAlign="center">
+                Tell us about yourself
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }} textAlign="center">
+                This helps personalize your experience
+            </Typography>
+
+            <form noValidate onSubmit={handleCompleteSignUp}>
+                <UserTypeSelect
+                    value={userType}
+                    onChange={setUserType}
+                    disabled={loading}
+                />
+
+                {error && (
+                    <Typography align="center" color="error" sx={{ mt: 2, p: 1 }}>
+                        {error.message}
+                    </Typography>
+                )}
+
+                <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                    <Button
+                        type="button"
+                        fullWidth
+                        variant="outlined"
+                        color="primary"
+                        onClick={handleBackToStep2}
+                        disabled={loading}
+                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        color="primary"
+                        disabled={loading}
+                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
+                    >
                         {loading ? 'Please wait...' : 'Complete Sign Up'}
                     </Button>
                 </Box>
@@ -384,6 +450,7 @@ const SignIn = ({ firebase }) => {
             <Container maxWidth="sm">
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
+                {step === 3 && renderStep3()}
             </Container>
         </Box>
     );
