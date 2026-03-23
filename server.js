@@ -230,7 +230,7 @@ app.get('/api/users/search', (req, res) => {
     const excludeConversations = req.query.excludeConversations === '1';
     const includeTags = req.query.includeTags === '1';
 
-    let sql = "SELECT username, display_name FROM users WHERE 1=1";
+    let sql = "SELECT username, display_name, bio, faculty, program, grad_year, exchange_term, uw_verified FROM users WHERE 1=1";
     const params = [];
     if (exclude) {
         sql += " AND username != ?";

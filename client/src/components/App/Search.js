@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -7,12 +6,14 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
-import { UserSearchCard, useUserSearch } from '../UserSearch';
+import { UserSearchCard, UserProfileModal, useUserSearch } from '../UserSearch';
+import { FirebaseContext, authFetch } from '../Firebase';
 
 const Search = ({ currentUser, authUser }) => {
-  const navigate = useNavigate();
+  const firebase = React.useContext(FirebaseContext);
   const currentUsername = currentUser || authUser?.email?.split('@')[0] || '';
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [selectedUser, setSelectedUser] = React.useState(null);
 
   const { users, loading, error, searchUsers } = useUserSearch({
     currentUsername,
@@ -27,8 +28,8 @@ const Search = ({ currentUser, authUser }) => {
     return () => clearTimeout(timer);
   }, [searchQuery, searchUsers]);
 
-  const handleUserClick = (username) => {
-    navigate(`/profile/${username}`);
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
   };
 
   return (
@@ -88,11 +89,19 @@ const Search = ({ currentUser, authUser }) => {
         <Grid container spacing={2}>
           {users.map((user) => (
             <Grid item xs={12} sm={6} md={4} key={user.username}>
-              <UserSearchCard user={user} onClick={() => handleUserClick(user.username)} />
+              <UserSearchCard user={user} onClick={() => handleUserClick(user)} />
             </Grid>
           ))}
         </Grid>
       )}
+      <UserProfileModal
+        open={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        user={selectedUser}
+        currentUsername={currentUsername}
+        authFetch={authFetch}
+        firebase={firebase}
+      />
     </Box>
   );
 };

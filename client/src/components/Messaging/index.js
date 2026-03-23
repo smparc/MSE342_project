@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -21,7 +22,9 @@ const sortConversationsByLastActive = (list) => {
 const Messaging = ({ currentUser, authUser }) => {
   const theme = useTheme();
   const firebase = React.useContext(FirebaseContext);
-  
+  const location = useLocation();
+  const navigate = useNavigate();
+
   // Use authenticated user's identifier
   const CURRENT_USERNAME = currentUser || authUser?.email?.split('@')[0] || 'elly';
   const [conversations, setConversations] = React.useState([]);
@@ -93,6 +96,24 @@ const Messaging = ({ currentUser, authUser }) => {
   React.useEffect(() => {
     loadConversationList();
   }, [loadConversationList]);
+
+  const openConversationState = location.state?.openConversationId
+    ? { id: location.state.openConversationId, senderName: location.state.senderName }
+    : null;
+  React.useEffect(() => {
+    if (!openConversationState) return;
+    const { id, senderName } = openConversationState;
+    setConversations((prev) => {
+      const existing = prev.find((c) => c.id === id);
+      if (existing) return prev;
+      return sortConversationsByLastActive([
+        { id, senderName: senderName || 'Unknown', lastMessage: '', lastMessageAt: null, unread: 0 },
+        ...prev,
+      ]);
+    });
+    setSelectedConversationId(id);
+    navigate('/messages', { replace: true, state: {} });
+  }, [openConversationState?.id]);
 
   React.useEffect(() => {
     if (selectedConversationId) {
