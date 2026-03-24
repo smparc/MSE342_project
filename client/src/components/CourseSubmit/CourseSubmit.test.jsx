@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import CourseSubmit from './CourseSubmit_s3_index';
+import CourseSubmit from '.';
 
 // Mock Firebase so authFetch doesn't error in tests
 jest.mock('../Firebase', () => ({
