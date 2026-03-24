@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import ExchangeCalendar from './index';
+import ExchangeCalendar from './ExchangeCalendar_index';
 
 const now = new Date();
 

@@ -20,18 +20,21 @@ const INITIAL_FORM = {
 };
 
 export default function CourseSubmit({ currentUser, authUser }) {
-  const firebase = useContext(FirebaseContext);
+  const firebase      = useContext(FirebaseContext);
   const effectiveUser = currentUser || authUser?.email?.split('@')[0] || '';
-  const [form, setForm] = useState({ ...INITIAL_FORM, username: effectiveUser });
-  const [errors, setErrors] = useState({});
+  const [form, setForm]           = useState({ ...INITIAL_FORM, username: effectiveUser });
+  const [errors, setErrors]       = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(null);   // AC#6 upload: visible confirmation
-  const [apiError, setApiError] = useState('');
+  const [success, setSuccess]     = useState(null);
+  const [apiError, setApiError]   = useState('');
 
   // Edit mode
   const [editId, setEditId] = useState(null);
 
-  // File upload simulation (stores filename; real app would upload to S3/server)
+  // Story 4 AC4 — anonymous posting option
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
+  // File upload
   const [proofFile, setProofFile] = useState(null);
   const fileRef = useRef(null);
 
@@ -40,12 +43,12 @@ export default function CourseSubmit({ currentUser, authUser }) {
     if (!form.username.trim()) e.username = 'Username is required';
     if (!form.uw_course_code.trim()) e.uw_course_code = 'UW course code is required';
     else if (!/^[A-Z]{2,6}\s?\d{3}[A-Z]?$/i.test(form.uw_course_code.trim()))
-      e.uw_course_code = 'Use format like MSCI 342 or CS 341';  // AC#5 upload
+      e.uw_course_code = 'Use format like MSCI 342 or CS 341';
     if (!form.uw_course_name.trim()) e.uw_course_name = 'UW course name is required';
     if (!form.host_course_code.trim()) e.host_course_code = 'Host course code is required';
     if (!form.host_course_name.trim()) e.host_course_name = 'Host course name is required';
     if (!form.host_university.trim()) e.host_university = 'Host university is required';
-    if (!form.proof_url.trim() && !proofFile) e.proof_url = 'Proof document is required';  // AC#9 upload
+    if (!form.proof_url.trim() && !proofFile) e.proof_url = 'Proof document is required';
     return e;
   };
 
@@ -58,15 +61,12 @@ export default function CourseSubmit({ currentUser, authUser }) {
     const file = e.target.files[0];
     if (!file) return;
     setProofFile(file);
-    // Simulate file URL (in production, upload to storage first)
     setForm((prev) => ({ ...prev, proof_url: `uploads/${file.name}` }));
     setErrors((prev) => ({ ...prev, proof_url: '' }));
   };
 
   const handleSubmit = async () => {
     const e = validate();
-
-    // Focus first error field (AC#8 upload)
     if (Object.keys(e).length) {
       setErrors(e);
       const firstKey = Object.keys(e)[0];
@@ -81,22 +81,21 @@ export default function CourseSubmit({ currentUser, authUser }) {
 
     try {
       const endpoint = editId ? `/api/courses/${editId}` : '/api/courses';
-      const method = editId ? 'PUT' : 'POST';
+      const method   = editId ? 'PUT' : 'POST';
 
       const res = await authFetch(`${API}${endpoint}`, {
         method,
-        body: JSON.stringify(form),
+        // Story 4 AC4 — include is_anonymous in submission
+        body: JSON.stringify({ ...form, is_anonymous: isAnonymous ? 1 : 0 }),
       }, firebase);
 
       const data = await res.json();
 
       if (!res.ok) {
-        // Duplicate entry (AC#4)
         if (res.status === 409) {
           setApiError('This course equivalency has already been submitted. Please check the database.');
           return;
         }
-        // Missing fields highlighted by server
         if (data.fields) {
           const serverErrors = {};
           data.fields.forEach((f) => (serverErrors[f] = 'This field is required'));
@@ -107,17 +106,11 @@ export default function CourseSubmit({ currentUser, authUser }) {
         return;
       }
 
-      // AC#6: visible confirmation; AC#10: Pending Review status
-      setSuccess({
-        message: data.message,
-        status: data.status,
-        course_id: data.course_id,
-      });
-
-      // Reset form
+      setSuccess({ message: data.message, status: data.status, course_id: data.course_id });
       setForm({ ...INITIAL_FORM, username: effectiveUser });
       setProofFile(null);
       setEditId(null);
+      setIsAnonymous(false);
     } catch {
       setApiError('Network error. Please check your connection and try again.');
     } finally {
@@ -137,7 +130,7 @@ export default function CourseSubmit({ currentUser, authUser }) {
         </p>
       </div>
 
-      {/* Success Banner (AC#6, AC#10) */}
+      {/* Success Banner */}
       {success && (
         <div className="csub-success">
           <div className="csub-success-icon">✓</div>
@@ -151,13 +144,11 @@ export default function CourseSubmit({ currentUser, authUser }) {
 
       {/* API Error */}
       {apiError && (
-        <div className="csub-api-error">
-          ⚠ {apiError}
-        </div>
+        <div className="csub-api-error">⚠ {apiError}</div>
       )}
 
       <div className="csub-form">
-        {/* ── Section: UW Equivalent ── */}
+        {/* ── UW Equivalent ── */}
         <div className="csub-section">
           <h3 className="csub-section-title">UW Course Equivalent</h3>
           <div className="csub-row">
@@ -172,9 +163,7 @@ export default function CourseSubmit({ currentUser, authUser }) {
                 value={form.uw_course_code}
                 onChange={(e) => handleChange('uw_course_code', e.target.value.toUpperCase())}
               />
-              {errors.uw_course_code && (
-                <span className="csub-error-msg">{errors.uw_course_code}</span>
-              )}
+              {errors.uw_course_code && <span className="csub-error-msg">{errors.uw_course_code}</span>}
             </div>
             <div className="csub-field csub-field-wide">
               <label className="csub-label" htmlFor="cs-field-uw_course_name">
@@ -187,14 +176,12 @@ export default function CourseSubmit({ currentUser, authUser }) {
                 value={form.uw_course_name}
                 onChange={(e) => handleChange('uw_course_name', e.target.value)}
               />
-              {errors.uw_course_name && (
-                <span className="csub-error-msg">{errors.uw_course_name}</span>
-              )}
+              {errors.uw_course_name && <span className="csub-error-msg">{errors.uw_course_name}</span>}
             </div>
           </div>
         </div>
 
-        {/* ── Section: Host Course ── */}
+        {/* ── Host Course ── */}
         <div className="csub-section">
           <h3 className="csub-section-title">Host Institution Course</h3>
           <div className="csub-row">
@@ -209,9 +196,7 @@ export default function CourseSubmit({ currentUser, authUser }) {
                 value={form.host_course_code}
                 onChange={(e) => handleChange('host_course_code', e.target.value)}
               />
-              {errors.host_course_code && (
-                <span className="csub-error-msg">{errors.host_course_code}</span>
-              )}
+              {errors.host_course_code && <span className="csub-error-msg">{errors.host_course_code}</span>}
             </div>
             <div className="csub-field csub-field-wide">
               <label className="csub-label" htmlFor="cs-field-host_course_name">
@@ -224,14 +209,12 @@ export default function CourseSubmit({ currentUser, authUser }) {
                 value={form.host_course_name}
                 onChange={(e) => handleChange('host_course_name', e.target.value)}
               />
-              {errors.host_course_name && (
-                <span className="csub-error-msg">{errors.host_course_name}</span>
-              )}
+              {errors.host_course_name && <span className="csub-error-msg">{errors.host_course_name}</span>}
             </div>
           </div>
         </div>
 
-        {/* ── Section: Host University ── */}
+        {/* ── Host University ── */}
         <div className="csub-section">
           <h3 className="csub-section-title">Host University Details</h3>
           <div className="csub-row">
@@ -246,9 +229,7 @@ export default function CourseSubmit({ currentUser, authUser }) {
                 value={form.host_university}
                 onChange={(e) => handleChange('host_university', e.target.value)}
               />
-              {errors.host_university && (
-                <span className="csub-error-msg">{errors.host_university}</span>
-              )}
+              {errors.host_university && <span className="csub-error-msg">{errors.host_university}</span>}
             </div>
             <div className="csub-field">
               <label className="csub-label" htmlFor="cs-field-country">Country</label>
@@ -285,17 +266,16 @@ export default function CourseSubmit({ currentUser, authUser }) {
           </div>
         </div>
 
-        {/* ── Section: Proof Upload (AC#9) ── */}
+        {/* ── Proof Upload ── */}
         <div className="csub-section">
           <h3 className="csub-section-title">
             Proof of Match <span className="csub-req">*</span>
           </h3>
           <p className="csub-proof-hint">
             Upload a PDF of your grade report, email from faculty advisor, or official transcript.
-            The submit button will only activate once proof is provided.
           </p>
-
-          <div className={`csub-upload-area ${proofFile ? 'has-file' : ''} ${errors.proof_url ? 'error' : ''}`}
+          <div
+            className={`csub-upload-area ${proofFile ? 'has-file' : ''} ${errors.proof_url ? 'error' : ''}`}
             onClick={() => fileRef.current.click()}
           >
             {proofFile ? (
@@ -327,7 +307,6 @@ export default function CourseSubmit({ currentUser, authUser }) {
             style={{ display: 'none' }}
             onChange={handleFileChange}
           />
-
           <div style={{ marginTop: '0.6rem' }}>
             <label className="csub-label">Or paste a link to proof</label>
             <input
@@ -342,25 +321,43 @@ export default function CourseSubmit({ currentUser, authUser }) {
           {errors.proof_url && <span className="csub-error-msg">{errors.proof_url}</span>}
         </div>
 
-        {/* ── Submitter info ── */}
+        {/* ── Submitter info + Anonymous option ── */}
         <div className="csub-section">
           <h3 className="csub-section-title">Your Account</h3>
-          <div className="csub-field" style={{ maxWidth: '240px' }}>
-            <label className="csub-label" htmlFor="cs-field-username">
-              Username <span className="csub-req">*</span>
+          <div className="csub-row">
+            <div className="csub-field" style={{ maxWidth: '240px' }}>
+              <label className="csub-label" htmlFor="cs-field-username">
+                Username <span className="csub-req">*</span>
+              </label>
+              <input
+                id="cs-field-username"
+                className={`csub-input ${errors.username ? 'error' : ''}`}
+                placeholder="your username"
+                value={form.username}
+                onChange={(e) => handleChange('username', e.target.value)}
+              />
+              {errors.username && <span className="csub-error-msg">{errors.username}</span>}
+            </div>
+          </div>
+
+          {/* Story 4 AC4 — anonymous posting checkbox */}
+          <div className="csub-anon-row">
+            <label className="csub-anon-label">
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                aria-label="Post anonymously"
+              />
+              <span>Post anonymously</span>
             </label>
-            <input
-              id="cs-field-username"
-              className={`csub-input ${errors.username ? 'error' : ''}`}
-              placeholder="your username"
-              value={form.username}
-              onChange={(e) => handleChange('username', e.target.value)}
-            />
-            {errors.username && <span className="csub-error-msg">{errors.username}</span>}
+            <p className="csub-anon-hint">
+              Your name will be hidden and shown as "Anonymous" to other students.
+            </p>
           </div>
         </div>
 
-        {/* ── Submit Button (disabled until proof ready — AC#9) ── */}
+        {/* ── Submit ── */}
         <div className="csub-footer">
           <p className="csub-footer-note">
             {!isProofReady

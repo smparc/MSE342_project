@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
-import CourseSearch from './index';
+import CourseSearch from './CourseSearch_s3_index';
 
 // Mock react-router-dom
 jest.mock('react-router-dom', () => ({
