@@ -134,6 +134,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 .cs-count { color: #666; font-size: 0.85rem; }
 
@@ -303,7 +305,7 @@
 }
 @keyframes csModalIn {
   from { opacity: 0; transform: scale(0.95) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 .cs-modal-close {
   position: absolute;
@@ -396,7 +398,7 @@
   color: #fff;
 }
 
-/* Saved panel */
+/* Saved/Bookmarks panel */
 .cs-saved-panel { max-width: 480px; }
 .cs-saved-row {
   display: flex;
@@ -416,32 +418,20 @@
 }
 
 /* ============================================================
-   Sprint 2 additions
+   Sprint 2 additions — Sort (Story 5)
    ============================================================ */
-
-/* ── Results header row with sort (Story 5) ── */
-.cs-results-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
 
 .cs-sort-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .cs-sort-label {
   font-size: 0.82rem;
   font-weight: 600;
   color: #555;
   white-space: nowrap;
 }
-
 .cs-sort-select {
   padding: 6px 10px;
   border: 1.5px solid #ddd;
@@ -454,7 +444,60 @@
   cursor: pointer;
   min-width: 190px;
 }
+.cs-sort-select:focus { border-color: #1a1a2e; }
 
-.cs-sort-select:focus {
-  border-color: #1a1a2e;
+/* ============================================================
+   Sprint 3 additions — Story 3 (Bookmarks) + Story 4 (Author)
+   ============================================================ */
+
+/* Story 4 — author name on card */
+.cs-author {
+  font-style: italic;
 }
+
+/* Story 4 AC2 — clickable author name in modal */
+.cs-author-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  color: #4338ca;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+.cs-author-link:hover { color: #1a1a2e; }
+
+/* Story 3 AC8 — login prompt modal */
+.cs-login-prompt {
+  max-width: 380px;
+  text-align: center;
+}
+.cs-login-prompt-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.cs-login-prompt-text {
+  color: #666;
+  font-size: 0.92rem;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+.cs-login-prompt-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.cs-login-prompt-secondary {
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  color: #666;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.cs-login-prompt-secondary:hover { border-color: #1a1a2e; color: #1a1a2e; }
