@@ -2,6 +2,10 @@ import React, { useState, useEffect, useCallback, useRef, useContext } from 'rea
 import { useNavigate } from 'react-router-dom';
 import './CourseSearch.css';
 import { FirebaseContext, authFetch } from '../Firebase';
+import { AlternateEmailTwoTone } from '@mui/icons-material';
+
+import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
+import { Snackbar, Alert} from '@mui/material'
 
 const API = process.env.REACT_APP_API_URL || '';
 
@@ -146,6 +150,60 @@ export default function CourseSearch({ currentUser, authUser }) {
       setSavedCourses((prev) => prev.filter((c) => c.course_id !== courseId));
     }
   };
+
+
+  // ADDING "ADD TO PROFILE" BUTTON
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success'})
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return
+    }
+  }
+
+  const addToProfile = async (course) => {
+    if (!effectiveUser) {
+      setSnackbar({ open: true, message: 'Please log in to add courses to your profile', severity: 'warning'})
+      return
+    }
+
+    const courseData = {
+      username: effectiveUser,
+      uw_course_code: course.uw_course_code,
+      uw_course_name: course.uw_course_name,
+      host_course_code: course.host_course_code,
+      host_course_name: course.host_course_name,
+      host_university: course.host_university,
+      country: course.country || '',
+      continent: course.continent || '',
+      term_taken: '',
+      proof_url: ''
+    }
+
+
+    // Zeina - AI used for help with adding to profile from current component
+    try {
+      const res = await authFetch(`${API}/api/courses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(courseData)
+      }, firebase)
+
+      if (res.ok) {
+        setSnackbar({ open: true, message: `Successfully added ${course.host_course_code} to your Profile Course Table!`, severity: 'success'})
+      } else {
+        const data = await res.json()
+        setSnackbar({ open: true, message: 'Failed to add course.', severity: 'error'})
+      }
+
+    }
+    catch (err) {
+      setSnackbar({ open: true, message: 'Error. Please try again.'})
+    }
+  }
 
   const openDetail = async (courseId) => {
     const res  = await fetch(`${API}/api/courses/${courseId}`);
@@ -307,6 +365,17 @@ export default function CourseSearch({ currentUser, authUser }) {
                 >
                   {c.status}
                 </span>
+                {/* PROFILE AGAIN */}
+                <div style={{ display: 'flex', gap: '8px'}}>
+                  <button
+                    className='cs-save-btn'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      addToProfile(c)
+                    }}
+                    title='Add to my Profile'
+                    ><AddBoxOutlinedIcon/></button>
+                
                 {/* Story 3 AC7 — bookmark button shows bookmarked state when browsing */}
                 <button
                   className={`cs-save-btn ${savedIds.has(c.course_id) ? 'saved' : ''}`}
@@ -316,6 +385,7 @@ export default function CourseSearch({ currentUser, authUser }) {
                 >
                   {savedIds.has(c.course_id) ? '★' : '☆'}
                 </button>
+                </div>
               </div>
             </div>
 
@@ -409,6 +479,12 @@ export default function CourseSearch({ currentUser, authUser }) {
             >
               {savedIds.has(selected.course_id) ? '★ Bookmarked' : '☆ Bookmark this Course'}
             </button>
+            <button
+              className='cs-save-btn-lg'
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '8px' }}
+              onClick={() => addToProfile(selected)}>
+                <AddBoxOutlinedIcon />Add to Profile
+              </button>
           </div>
         </div>
       )}
@@ -472,6 +548,16 @@ export default function CourseSearch({ currentUser, authUser }) {
           </div>
         </div>
       )}
+
+      <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }} >
+            <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
     </div>
   );
 }
