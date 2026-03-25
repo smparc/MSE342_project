@@ -26,6 +26,7 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
     includeTags: false,
     excludeConversations: false,
     enabled: open && !!currentUsername,
+    fetchAllWhenEmpty: true,
   });
 
   React.useEffect(() => {
@@ -38,7 +39,8 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
 
   React.useEffect(() => {
     if (!open || !currentUsername) return;
-    const timer = setTimeout(searchUsers, 300);
+    const debounceMs = searchQuery.trim() ? 300 : 0;
+    const timer = setTimeout(searchUsers, debounceMs);
     return () => clearTimeout(timer);
   }, [open, currentUsername, searchQuery, searchUsers]);
 
@@ -94,7 +96,7 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
         <TextField
           fullWidth
           size="small"
-          placeholder="Search for a user..."
+          placeholder="Search by name, username, or program…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
@@ -136,7 +138,9 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
             </Box>
           ) : users.length === 0 ? (
             <Typography color="text.secondary" variant="body2" sx={{ py: 4, textAlign: 'center' }}>
-              {searchQuery.trim() ? 'No users match your search' : 'Type to search for users'}
+              {searchQuery.trim()
+                ? 'No users match your search'
+                : 'No other users found'}
             </Typography>
           ) : (
             <List disablePadding>
