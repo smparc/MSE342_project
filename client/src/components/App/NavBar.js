@@ -33,8 +33,7 @@ const navItems = [
   { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
   { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
   { path: '/calendar', label: 'Calendar', icon: CalendarMonthIcon, testId: 'CalendarIcon' },
-  { path: '/contacts', label: 'Contacts', icon: PersonIcon },
-  { path: '/advisors', label: 'Advisors', icon: PersonIcon },
+  { path: '/contacts', label: 'Support', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },
   // { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
   // { path: '/settings/user-type', label: 'Settings', icon: Settings }

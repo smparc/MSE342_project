@@ -11,7 +11,6 @@ import CourseSubmit from '../CourseSubmit';
 import Messaging from '../Messaging';
 import Timeline from '../Timeline';
 import ContactsList from '../ContactsList';
-import AdvisorsList from '../AdvisorsList';
 import DeleteAccount from '../DeleteAccount';
 import UserTypeSelect from '../SignIn/UserTypeSelect';
 import ExchangeCalendar from '../ExchangeCalendar';
@@ -116,7 +115,6 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                     <Route path="/timeline" element={<Timeline currentUser={currentUser} authUser={authUser} />} />
                     <Route path="/calendar" element={<ExchangeCalendar currentUser={currentUser} />} />
                     <Route path="/contacts" element={<ContactsList />} />
-                    <Route path="/advisors" element={<AdvisorsList />} />
                     <Route
                         path="/settings/delete-account"
                         element={<DeleteAccount currentUser={currentUser} authUser={authUser} />}
