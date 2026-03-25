@@ -289,24 +289,6 @@ export default function CourseSearch({ currentUser, authUser }) {
             className="cs-card"
             onClick={() => openDetail(c.course_id)}
           >
-            <div className="cs-card-top">
-              <span
-                className="cs-status-badge"
-                style={{ '--badge-color': STATUS_COLORS[c.status] || '#888' }}
-              >
-                {c.status}
-              </span>
-              {/* Story 3 AC7 — bookmark button shows bookmarked state when browsing */}
-              <button
-                className={`cs-save-btn ${savedIds.has(c.course_id) ? 'saved' : ''}`}
-                onClick={(e) => { e.stopPropagation(); toggleSave(c.course_id); }}
-                title={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
-                aria-label={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
-              >
-                {savedIds.has(c.course_id) ? '★' : '☆'}
-              </button>
-            </div>
-
             <div className="cs-card-body" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-start' }}>
               <div className="cs-host-course" style={{ flex: '0 1 auto' }}>
                 <span className="cs-code">{c.host_course_code}</span>
@@ -316,6 +298,24 @@ export default function CourseSearch({ currentUser, authUser }) {
               <div className="cs-uw-course" style={{ flex: '0 1 auto' }}>
                 <span className="cs-code cs-uw">{c.uw_course_code}</span>
                 <span className="cs-name">{c.uw_course_name}</span>
+              </div>
+
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span
+                  className="cs-status-badge"
+                  style={{ '--badge-color': STATUS_COLORS[c.status] || '#888' }}
+                >
+                  {c.status}
+                </span>
+                {/* Story 3 AC7 — bookmark button shows bookmarked state when browsing */}
+                <button
+                  className={`cs-save-btn ${savedIds.has(c.course_id) ? 'saved' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); toggleSave(c.course_id); }}
+                  title={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
+                  aria-label={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
+                >
+                  {savedIds.has(c.course_id) ? '★' : '☆'}
+                </button>
               </div>
             </div>
 
