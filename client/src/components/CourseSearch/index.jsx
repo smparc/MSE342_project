@@ -282,7 +282,7 @@ export default function CourseSearch({ currentUser, authUser }) {
       )}
 
       {/* Course cards */}
-      <div className="cs-grid">
+      <div className="cs-grid" style={{ display: 'flex', flexDirection: 'column' }}>
         {courses.map((c) => (
           <div
             key={c.course_id}
