@@ -1,13 +1,13 @@
 // include profile picture, bio, edit profile button
 
 import * as React from 'react'
-import { Grid, Typography, Box, Button, Snackbar, Alert, Chip } from '@mui/material'
+import { Grid, Typography, Box, Button, Snackbar, Alert, Chip, Divider } from '@mui/material'
 import AvatarDisplay from './AvatarDisplay'
 import EditProfileModal from './EditProfileModal'
 import EditTagsModal from './EditTagsModal'
 
 
-const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, uwVerified, firebase, isOwnProfile = true }) => {
+const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, exchangeCountry, setExchangeCountry, exchangeSchool, setExchangeSchool, uwVerified, firebase, isOwnProfiel = true}) => {
 
     const [modalStatus, setModalStatus] = React.useState(false)
     const [tagsModalStatus, setTagsModalStatus] = React.useState(false)
@@ -94,16 +94,56 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                         <Grid item mb={'12px'}>
                                             <Typography fontWeight={400} fontSize={16} sx={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>{bio}</Typography>
                                         </Grid>
-                                        <Grid item>
-                                            <Grid container spacing={1}>
+
+
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+
+
+                        <Grid item xs={12}>
+                            {/* try here */}
+                            <Grid item>
+                                <Grid container spacing={2} direction={'column'}>
+                                    {/* school tags */}
+                                    <Grid item>
+                                        <Grid container spacing={1}>
+                                            <Grid item>
+                                                <Typography fontWeight={400}>UW term:</Typography>
+                                            </Grid>
+                                            <Grid item>
                                                 {uwVerified && <Grid item><Chip label="UW Verified" size="small" sx={{ bgcolor: '#E8F5E9', color: '#2E7D32', border: '1px solid #A5D6A7', fontWeight: '500' }} /></Grid>}
+                                            </Grid>
+                                            <Grid item>
                                                 {faculty && <Grid item><Chip label={faculty} size="small" sx={{ bgcolor: '#FFF9C4', color: '#827717', border: '1px solid #FFF176', fontWeight: '500' }} /></Grid>}
+                                            </Grid>
+                                            <Grid item>
                                                 {program && <Grid item><Chip label={program} size="small" sx={{ bgcolor: '#FCE4EC', color: '#C2185B', border: '1px solid #F8BBD0', fontWeight: '500' }} /></Grid>}
+                                            </Grid>
+                                            <Grid item>
                                                 {gradYear && <Grid item><Chip label={`Class of ${gradYear}`} size="small" sx={{ bgcolor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2', fontWeight: '500' }} /></Grid>}
-                                                {exchangeTerm && <Grid item><Chip label={`${exchangeTerm} Exchange`} size="small" sx={{ bgcolor: '#E3F2FD', color: '#1565C0', border: '1px solid #BBDEFB', fontWeight: '500' }} /></Grid>}
                                             </Grid>
                                         </Grid>
-
+                                    </Grid>
+                                    {/* <Grid item>
+                                        <Divider variant="middle" />
+                                    </Grid> */}
+                                    <Grid item>
+                                        <Grid container spacing={1}>
+                                            <Grid item>
+                                                <Typography fontWeight={400}>Exchange term:</Typography>
+                                            </Grid>
+                                            <Grid item>
+                                                {exchangeTerm && <Grid item><Chip label={`${exchangeTerm} Exchange`} size="small" sx={{ bgcolor: '#E3F2FD', color: '#1565C0', border: '1px solid #BBDEFB', fontWeight: '500' }} /></Grid>}
+                                            </Grid>
+                                            <Grid item>
+                                                {exchangeCountry && <Grid item><Chip label={exchangeCountry} size="small" sx={{ bgcolor: '#FFF9C4', color: '#827717', border: '1px solid #FFF176', fontWeight: '500' }} /></Grid>}
+                                            </Grid>
+                                            <Grid item>
+                                                {exchangeSchool && <Grid item><Chip label={exchangeSchool} size="small" sx={{ bgcolor: '#FCE4EC', color: '#C2185B', border: '1px solid #F8BBD0', fontWeight: '500' }} /></Grid>}
+                                            </Grid>
+                                        </Grid>
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -162,6 +202,10 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                             setGradYear={setGradYear}
                             exchangeTerm={exchangeTerm}
                             setExchangeTerm={setExchangeTerm}
+                            exchangeCountry={exchangeCountry}
+                            setExchangeCountry={setExchangeCountry}
+                            exchangeSchool={exchangeSchool}
+                            setExchangeSchool={setExchangeSchool}
                             displayName={displayName}
                             bio={bio}
                             setProfileChanged={setProfileChanged}
@@ -177,7 +221,10 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                         </Grid>
                     </Grid> */}
                     </Grid>
-                    {/* <Divider variant="middle" /> */}
+                    {/* <Grid item>
+                        <Divider variant="middle" />   
+                    </Grid> */}
+
                 </Grid>
 
             </Grid>

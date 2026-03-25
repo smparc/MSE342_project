@@ -16,7 +16,11 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
 import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
-import { DeleteForever } from '@mui/icons-material';
+import { DeleteForever, Settings } from '@mui/icons-material';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
 
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 240;
@@ -28,10 +32,12 @@ const navItems = [
   { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
   { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
   { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
+  { path: '/calendar', label: 'Calendar', icon: CalendarMonthIcon, testId: 'CalendarIcon' },
   { path: '/contacts', label: 'Contacts', icon: PersonIcon },
   { path: '/advisors', label: 'Advisors', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },
-  { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
+  // { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
+  // { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
 
 const NavBar = ({ currentUser, authUser }) => {
@@ -63,6 +69,23 @@ const NavBar = ({ currentUser, authUser }) => {
       window.removeEventListener('messages-read', onRead);
     };
   }, [username]);
+
+  const [settingsAnchor, setSettingsAnchor] = React.useState(null)
+  const openSettings = Boolean(settingsAnchor)
+
+  const handleSettingsClick = (event) => {
+    setSettingsAnchor(event.currentTarget)
+  }
+
+  const handleSettingsClose = () => {
+    setSettingsAnchor(null)
+  }
+
+  const handleNavigateSettings = (path) => {
+    navigate(path)
+    handleSettingsClose()
+  }
+
 
   const currentPath = location.pathname;
   const isActive = (path) =>
@@ -125,7 +148,9 @@ const NavBar = ({ currentUser, authUser }) => {
           </Typography>
         )}
       </Box>
-      <List disablePadding sx={{ pt: 2, flex: 1 }}>
+      {/* <List disablePadding sx={{ pt: 2, flex: 1 }}> */}
+      {/* AI used to help with centering */}
+      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px'}}>
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
@@ -183,17 +208,20 @@ const NavBar = ({ currentUser, authUser }) => {
 
       <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
-          onClick={handleSignOut}
+          // onClick={handleSignOut}
+          onClick={handleSettingsClick}
           sx={{
             py: 1.5,
             px: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: expanded ? 'flex-start' : 'center',
-            color: 'error.main',
+            // color: 'error.main',
+            color: 'text.primary',
             '&:hover': {
-              backgroundColor: 'error.light',
-              color: 'error.contrastText',
+              backgroundColor: 'action.hover'
+              // backgroundColor: 'error.light',
+              // color: 'error.contrastText',
             },
           }}
         >
@@ -206,17 +234,86 @@ const NavBar = ({ currentUser, authUser }) => {
               color: 'inherit',
             }}
           >
-            <LogoutIcon fontSize="medium" />
+            {/* <LogoutIcon fontSize="medium" /> */}
+            <Settings fontSize="medium" />
           </ListItemIcon>
-          {expanded && (
+          {expanded && (  
             <ListItemText
-              primary={<Typography variant="body1">Sign Out</Typography>}
+              // primary={<Typography variant="body1">Sign Out</Typography>}
+              primary={<Typography variant="body1">More</Typography>}
               primaryTypographyProps={{ noWrap: true }}
               sx={{ py: 0, my: 0 }}
             />
           )}
         </ListItemButton>
       </List>
+      
+      <Menu
+        anchorEl={settingsAnchor}
+        open={openSettings}
+        onClose={handleSettingsClose}
+        onClick={handleSettingsClose}
+        disableScrollLock={true}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            mt: -1,
+            ml: 2,
+            minWidth: 200,
+            borderRadius: 3,
+            '& .MuiMenuItem-root': {
+              py: 1.5,
+              px: 2,
+              borderRadius: 1,
+              mx: 1,
+              my: 0.5,
+            },
+          },
+        }}
+      >
+        <MenuItem onClick={() => handleNavigateSettings('/profile')}>
+          <ListItemIcon>
+            <PersonIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+          </ListItemIcon>
+          <ListItemText>Profile</ListItemText>
+        </MenuItem>
+
+        <MenuItem onClick={() => handleNavigateSettings('/settings/user-type')}>
+          <ListItemIcon>
+            <Settings fontSize="small" sx={{ color: 'text.secondary' }} />
+          </ListItemIcon>
+          <ListItemText>User Settings</ListItemText>
+        </MenuItem>
+
+        
+
+        <Divider sx={{ my: 1, mx: 2 }} />
+
+        <MenuItem onClick={() => { handleSettingsClose(); handleSignOut(); }} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText>Sign Out</ListItemText>
+        </MenuItem>
+
+        <MenuItem onClick={() => handleNavigateSettings('/settings/delete-account')} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteForever fontSize="small" sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText>Delete Account</ListItemText>
+        </MenuItem>
+        
+      </Menu>
+
+
     </Box>
   );
 };

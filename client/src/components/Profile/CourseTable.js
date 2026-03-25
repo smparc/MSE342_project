@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Alert, Snackbar, IconButton } from '@mui/material'
+import { Box, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Alert, Snackbar, IconButton } from '@mui/material'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { FirebaseContext, authFetch } from '../Firebase'
 
@@ -141,13 +141,13 @@ const CourseTable = ({ username, readOnly = false }) => {
     };
 
     return (
-        <>
+        <Box maxWidth='1000px'>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
                 <TableContainer>
                     <Table aria-label="simple table">
                         <TableHead>
                             <TableRow>
-                                <TableCell align={'left'}><strong>UW Code</strong></TableCell>
+                                <TableCell align={'left'} sx={{minWidth: '45px'}}><strong>UW Code</strong></TableCell>
                                 <TableCell align={'left'}><strong>UW Course Name</strong></TableCell>
                                 <TableCell align={'left'}><strong>Host University</strong></TableCell>
                                 <TableCell align={'left'}><strong>Host Code</strong></TableCell>
@@ -163,7 +163,7 @@ const CourseTable = ({ username, readOnly = false }) => {
                                     <TableCell>{row.uw_course_code}</TableCell>
 
                                     <TableCell align={'left'}>{row.uw_course_name}</TableCell>
-                                    <TableCell align={'center'}>{row.host_university}</TableCell>
+                                    <TableCell align={'left'}>{row.host_university}</TableCell>
                                     <TableCell align={'left'}>{row.host_course_code}</TableCell>
                                     <TableCell align={'left'}>{row.host_course_name}</TableCell>
                                     <TableCell align={'center'}>
@@ -289,7 +289,7 @@ const CourseTable = ({ username, readOnly = false }) => {
                     <Alert severity='success'>Course changes saved</Alert>
                 </Snackbar>
             </Paper>
-        </>
+        </Box>
     )
 }
 

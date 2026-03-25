@@ -134,6 +134,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 .cs-count { color: #666; font-size: 0.85rem; }
 
@@ -303,7 +305,7 @@
 }
 @keyframes csModalIn {
   from { opacity: 0; transform: scale(0.95) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 .cs-modal-close {
   position: absolute;
@@ -326,29 +328,36 @@
   margin: 0 0 1.5rem;
 }
 .cs-modal-grid {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-areas: 
+    "host-label .       uw-label"
+    "host-code  divider uw-code"
+    "host-name  divider uw-name"
+    "host-uni   .       ."
+    "host-meta  .       .";
+  gap: 0.2rem 1.5rem;
+  align-items: start;
   margin-bottom: 1.2rem;
 }
-.cs-modal-section { flex: 1; }
-.cs-modal-section label {
+.cs-modal-label {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #888;
   display: block;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
 }
 .cs-modal-code {
   font-size: 1.1rem;
   font-weight: 700;
-  margin: 0 0 0.2rem;
+  margin: 0;
   color: #1a1a2e;
 }
 .cs-modal-code.cs-uw { color: #92400e; }
-.cs-modal-uni { color: #333; font-weight: 500; margin: 0.2rem 0; }
+.cs-modal-name { margin: 0; }
+.cs-modal-uni { color: #333; font-weight: 500; margin: 0.8rem 0 0.2rem; }
 .cs-modal-meta { color: #888; font-size: 0.85rem; margin: 0; }
 .cs-modal-divider { font-size: 1.5rem; color: #ccc; }
 .cs-modal-meta-row {
@@ -396,7 +405,7 @@
   color: #fff;
 }
 
-/* Saved panel */
+/* Saved/Bookmarks panel */
 .cs-saved-panel { max-width: 480px; }
 .cs-saved-row {
   display: flex;
@@ -412,36 +421,38 @@
   .cs-grid { grid-template-columns: 1fr; }
   .cs-card-body { flex-direction: column; }
   .cs-arrow { transform: rotate(90deg); }
-  .cs-modal-grid { flex-direction: column; }
+  .cs-modal-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "host-label"
+      "host-code"
+      "host-name"
+      "host-uni"
+      "host-meta"
+      "divider"
+      "uw-label"
+      "uw-code"
+      "uw-name";
+    gap: 0.2rem;
+  }
+  .cs-modal-divider { transform: rotate(90deg); margin: 0.8rem 0; text-align: center; }
 }
 
 /* ============================================================
-   Sprint 2 additions
+   Sprint 2 additions — Sort (Story 5)
    ============================================================ */
-
-/* ── Results header row with sort (Story 5) ── */
-.cs-results-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
 
 .cs-sort-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .cs-sort-label {
   font-size: 0.82rem;
   font-weight: 600;
   color: #555;
   white-space: nowrap;
 }
-
 .cs-sort-select {
   padding: 6px 10px;
   border: 1.5px solid #ddd;
@@ -454,7 +465,60 @@
   cursor: pointer;
   min-width: 190px;
 }
+.cs-sort-select:focus { border-color: #1a1a2e; }
 
-.cs-sort-select:focus {
-  border-color: #1a1a2e;
+/* ============================================================
+   Sprint 3 additions — Story 3 (Bookmarks) + Story 4 (Author)
+   ============================================================ */
+
+/* Story 4 — author name on card */
+.cs-author {
+  font-style: italic;
 }
+
+/* Story 4 AC2 — clickable author name in modal */
+.cs-author-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  color: #4338ca;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+.cs-author-link:hover { color: #1a1a2e; }
+
+/* Story 3 AC8 — login prompt modal */
+.cs-login-prompt {
+  max-width: 380px;
+  text-align: center;
+}
+.cs-login-prompt-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.cs-login-prompt-text {
+  color: #666;
+  font-size: 0.92rem;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+.cs-login-prompt-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.cs-login-prompt-secondary {
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  color: #666;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.cs-login-prompt-secondary:hover { border-color: #1a1a2e; color: #1a1a2e; }

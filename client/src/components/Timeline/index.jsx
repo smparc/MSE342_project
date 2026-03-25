@@ -71,11 +71,6 @@ export default function Timeline({ currentUser, destination: destProp }) {
     fetchMilestones();
   };
 
-  // Export .ics (AC#8)
-  const exportICS = () => {
-    window.open(`${API}/api/users/${currentUser}/milestones/export`, '_blank');
-  };
-
   // Add milestone
   const validateAdd = () => {
     const e = {};
@@ -152,9 +147,6 @@ export default function Timeline({ currentUser, destination: destProp }) {
           <p className="tl-subtitle">Track all your important application deadlines in one place</p>
         </div>
         <div className="tl-header-actions">
-          <button className="tl-btn tl-btn-outline" onClick={exportICS}>
-            ↓ Export .ics
-          </button>
           <button className="tl-btn tl-btn-primary" onClick={() => setShowAdd(true)}>
             + Add Milestone
           </button>

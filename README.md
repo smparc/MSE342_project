@@ -177,27 +177,47 @@ Created Sprint 1 Branch -->
 
 ---
 
-## 👥 Development Team (Sprint 1)
+
+## 👥 Development Team 
+### (Sprint 1)
 
 | Team Member | Responsibility Area |
 | :--- | :--- |
-| **Zeina** | Profile Management (Courses, Bios, Photos, Tags) |
-| **Matthew** | Course Equivalency (Search, Upload, Filtering) & Master Database|
+@@ -180,10 +189,20 @@ Created Sprint 1 Branch -->
 | **Elly** | Messaging Systems (Direct Messaging, Chat History) |
 | **Cindy** | User search Functionality |
+
+### (Sprint 2)
+
+| Team Member | Responsibility Area |
+| :--- | :--- |
+| **Zeina** | Profile Management (Reviews, Financial Planning) |
+| **Matthew** | Course Equivalency (Sort) & Calendar/Resources (Contacts, Timeline)|
+| **Elly** | Sign In (Authentication, Sign Up, Sign In) |
+| **Cindy** | User search Functionality |
+
+### (Sprint 3)
+
+| Team Member | Responsibility Area |
+| :--- | :--- |
+| **Zeina** |  |
+| **Matthew** | |
+| **Elly** |  |
+| **Cindy** |  |
 
 ---
 
 
 AI declaration:
+
 Zeina - Used for occasional debugging (syntax errors, package/networking errors, etc.)
 * Used for fixing styling on some MUI components (ex. i learned from AI that a particular component comes with default styling)
 * Used to determine that I need to use Multer for posting photos
-* Used for ideation/asissting of features
-* Used to write visually appealing README
-
-Cindy - Used for debugging and design aid
-* Used to determine React states needed for proper implementation of Search function
+@@ -195,3 +214,7 @@ Cindy - Used for debugging and design aid
 * Used for making UI (e.g. flex box size) of some new components (e.g. loading screen) look more cohesive with existing components 
 * Used to make mock data for jest tests 
 * Used to help debug the syntax for the API url expression used in the stringMatching test 
+
+Elly - Used for debugging and UI design
+* Used to align UI elements such as the nav bar and logo
+* Used to update README with Authentication & Access Control information
