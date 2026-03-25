@@ -15,33 +15,43 @@ const STATUS_COLORS = {
   Flagged: '#ef4444',
 };
 
+// Story 4 — resolve display name, handling anonymous and legacy data (AC4, AC5)
+const getAuthorDisplay = (c) => {
+  if (!c) return 'Legacy Data';
+  if (c.is_anonymous) return 'Anonymous';
+  if (!c.username && !c.display_name) return 'Legacy Data';
+  return c.display_name || c.username;
+};
+
 export default function CourseSearch({ currentUser, authUser }) {
-  const navigate = useNavigate();
-  const firebase = useContext(FirebaseContext);
+  const navigate      = useNavigate();
+  const firebase      = useContext(FirebaseContext);
   const effectiveUser = currentUser || authUser?.email?.split('@')[0] || '';
+
   // Search & filter state
-  const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState({ country: '', continent: '', faculty: '', term: '' });
+  const [query, setQuery]           = useState('');
+  const [filters, setFilters]       = useState({ country: '', continent: '', faculty: '', term: '' });
   const [filterMeta, setFilterMeta] = useState({ countries: [], continents: [], terms: [] });
 
   // Sprint 2 — sort state (Story 5)
   const [sort, setSort] = useState('last_updated');
 
   // Results state
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses]       = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState('');
 
   // Detail modal
   const [selected, setSelected] = useState(null);
 
-  // Saved courses for current user
-  const [savedIds, setSavedIds] = useState(new Set());
-
-  // Saved courses panel
-  const [showSaved, setShowSaved] = useState(false);
+  // Story 3 — bookmarks (renamed from shortlist)
+  const [savedIds, setSavedIds]         = useState(new Set());
+  const [showBookmarks, setShowBookmarks] = useState(false);
   const [savedCourses, setSavedCourses] = useState([]);
+
+  // Story 3 AC8 — login prompt when not logged in
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const debounceRef = useRef(null);
 
@@ -53,7 +63,7 @@ export default function CourseSearch({ currentUser, authUser }) {
       .catch(() => {});
   }, []);
 
-  // Load user's saved courses
+  // Load user's bookmarked courses
   useEffect(() => {
     if (!effectiveUser) return;
     fetch(`${API}/api/users/${effectiveUser}/saved-courses`)
@@ -71,17 +81,19 @@ export default function CourseSearch({ currentUser, authUser }) {
       setError('');
       try {
         const params = new URLSearchParams({
-          q: query,
-          country: filters.country,
+          q:         query,
+          country:   filters.country,
           continent: filters.continent,
-          faculty: filters.faculty,
-          term: filters.term,
-          // Sprint 2 — pass sort param to API (Story 5)
+          faculty:   filters.faculty,
+          term:      filters.term,
           sort,
-          page: pageNum,
-          limit: 15,
+          page:      pageNum,
+          limit:     15,
         });
-        const res = await fetch(`${API}/api/courses?${params}`);
+        const res  = await fetch(`${API}/api/courses?${params}`);
+        if (!res.ok) {
+          throw new Error('Server returned an error');
+        }
         const data = await res.json();
         setCourses(data.courses || []);
         setPagination(data.pagination || {});
@@ -101,7 +113,6 @@ export default function CourseSearch({ currentUser, authUser }) {
     return () => clearTimeout(debounceRef.current);
   }, [fetchCourses]);
 
-  // Filter changes should persist across page navigation (AC#7 filter)
   const handleFilterChange = (key, val) => {
     setFilters((prev) => ({ ...prev, [key]: val }));
   };
@@ -111,13 +122,19 @@ export default function CourseSearch({ currentUser, authUser }) {
     setQuery('');
   };
 
+  // Story 3 — bookmark toggle (AC1, AC2, AC4, AC8)
   const toggleSave = async (courseId) => {
-    if (!effectiveUser) return alert('Please log in to save courses.');
-    const res = await authFetch(`${API}/api/users/${effectiveUser}/saved-courses`, {
+    // AC8 — not logged in: show login prompt
+    if (!effectiveUser) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    const res  = await authFetch(`${API}/api/users/${effectiveUser}/saved-courses`, {
       method: 'POST',
-      body: JSON.stringify({ course_id: courseId }),
+      body:   JSON.stringify({ course_id: courseId }),
     }, firebase);
     const data = await res.json();
+    // AC4 — duplicate prevention handled server-side; toggle reflects current state
     setSavedIds((prev) => {
       const next = new Set(prev);
       data.saved ? next.add(courseId) : next.delete(courseId);
@@ -131,7 +148,7 @@ export default function CourseSearch({ currentUser, authUser }) {
   };
 
   const openDetail = async (courseId) => {
-    const res = await fetch(`${API}/api/courses/${courseId}`);
+    const res  = await fetch(`${API}/api/courses/${courseId}`);
     const data = await res.json();
     setSelected(data);
   };
@@ -147,18 +164,19 @@ export default function CourseSearch({ currentUser, authUser }) {
           <p className="cs-subtitle">Search courses matched at partner universities</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-        <button
-          type="button"
-          className="cs-shortlist-btn"
-          onClick={() => navigate('/course-equivalency/submit')}
-        >
-          Add course
-        </button>
-        <button className="cs-shortlist-btn" onClick={() => setShowSaved(true)}>
-          <span className="cs-shortlist-count">{savedIds.size}</span>
-          My Shortlist
-        </button>
-      </div>
+          <button
+            type="button"
+            className="cs-shortlist-btn"
+            onClick={() => navigate('/course-equivalency/submit')}
+          >
+            Add course
+          </button>
+          {/* Story 3 — renamed to "My Bookmarks" */}
+          <button className="cs-shortlist-btn" onClick={() => setShowBookmarks(true)}>
+            <span className="cs-shortlist-count">{savedIds.size}</span>
+            My Bookmarks
+          </button>
+        </div>
       </div>
 
       {/* ── Search bar ── */}
@@ -171,7 +189,7 @@ export default function CourseSearch({ currentUser, authUser }) {
           <input
             className="cs-search-input"
             type="text"
-            placeholder="Search by university, course name, or code…"
+            placeholder="Search by university, course name, code, or student name…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -228,13 +246,11 @@ export default function CourseSearch({ currentUser, authUser }) {
         )}
       </div>
 
-      {/* ── Results header + Sort (Sprint 2 Story 5) ── */}
+      {/* ── Results header + Sort ── */}
       <div className="cs-results-header">
         <span className="cs-count">
           {loading ? 'Loading…' : `${pagination.total || 0} course${pagination.total !== 1 ? 's' : ''} found`}
         </span>
-
-        {/* Sprint 2 — sort dropdown (Story 5) */}
         <div className="cs-sort-row">
           <label htmlFor="cs-sort-select" className="cs-sort-label">Sort by</label>
           <select
@@ -253,7 +269,7 @@ export default function CourseSearch({ currentUser, authUser }) {
 
       {error && <div className="cs-error">{error}</div>}
 
-      {/* No results message (AC#4) */}
+      {/* No results */}
       {!loading && !error && courses.length === 0 && (
         <div className="cs-empty">
           <div className="cs-empty-icon">🔍</div>
@@ -265,52 +281,58 @@ export default function CourseSearch({ currentUser, authUser }) {
         </div>
       )}
 
-      {/* Course cards (AC#7) */}
-      <div className="cs-grid">
+      {/* Course cards */}
+      <div className="cs-grid" style={{ display: 'flex', flexDirection: 'column' }}>
         {courses.map((c) => (
           <div
             key={c.course_id}
             className="cs-card"
             onClick={() => openDetail(c.course_id)}
           >
-            <div className="cs-card-top">
-              <span
-                className="cs-status-badge"
-                style={{ '--badge-color': STATUS_COLORS[c.status] || '#888' }}
-              >
-                {c.status}
-              </span>
-              <button
-                className={`cs-save-btn ${savedIds.has(c.course_id) ? 'saved' : ''}`}
-                onClick={(e) => { e.stopPropagation(); toggleSave(c.course_id); }}
-                title={savedIds.has(c.course_id) ? 'Remove from shortlist' : 'Save to shortlist'}
-              >
-                {savedIds.has(c.course_id) ? '★' : '☆'}
-              </button>
-            </div>
-
-            <div className="cs-card-body">
-              <div className="cs-host-course">
+            <div className="cs-card-body" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-start' }}>
+              <div className="cs-host-course" style={{ flex: '0 1 auto' }}>
                 <span className="cs-code">{c.host_course_code}</span>
                 <span className="cs-name">{c.host_course_name}</span>
               </div>
-              <div className="cs-arrow">→</div>
-              <div className="cs-uw-course">
+              <div className="cs-arrow" style={{ flex: '0 0 auto' }}>→</div>
+              <div className="cs-uw-course" style={{ flex: '0 1 auto' }}>
                 <span className="cs-code cs-uw">{c.uw_course_code}</span>
                 <span className="cs-name">{c.uw_course_name}</span>
+              </div>
+
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span
+                  className="cs-status-badge"
+                  style={{ '--badge-color': STATUS_COLORS[c.status] || '#888' }}
+                >
+                  {c.status}
+                </span>
+                {/* Story 3 AC7 — bookmark button shows bookmarked state when browsing */}
+                <button
+                  className={`cs-save-btn ${savedIds.has(c.course_id) ? 'saved' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); toggleSave(c.course_id); }}
+                  title={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
+                  aria-label={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
+                >
+                  {savedIds.has(c.course_id) ? '★' : '☆'}
+                </button>
               </div>
             </div>
 
             <div className="cs-card-footer">
               <span className="cs-meta-item">🏫 {c.host_university}</span>
               <span className="cs-meta-item">🌍 {c.country}{c.term_taken ? ` · ${c.term_taken}` : ''}</span>
+              {/* Story 4 AC1 — author name visible on card */}
+              <span className="cs-meta-item cs-author">
+                👤 {getAuthorDisplay(c)}
+              </span>
               <span className="cs-meta-item cs-updated">Updated {fmtDate(c.last_updated)}</span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Pagination (AC#6) */}
+      {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="cs-pagination">
           <button
@@ -325,7 +347,7 @@ export default function CourseSearch({ currentUser, authUser }) {
         </div>
       )}
 
-      {/* ── Course Detail Modal (AC#2, AC#9) ── */}
+      {/* ── Course Detail Modal ── */}
       {selected && (
         <div className="cs-modal-overlay" onClick={() => setSelected(null)}>
           <div className="cs-modal" onClick={(e) => e.stopPropagation()}>
@@ -340,9 +362,7 @@ export default function CourseSearch({ currentUser, authUser }) {
                 <p className="cs-modal-uni">{selected.host_university}</p>
                 <p className="cs-modal-meta">{selected.country}{selected.continent ? ` · ${selected.continent}` : ''}</p>
               </div>
-
               <div className="cs-modal-divider">⇄</div>
-
               <div className="cs-modal-section">
                 <label>UW Equivalent</label>
                 <p className="cs-modal-code cs-uw">{selected.uw_course_code}</p>
@@ -352,7 +372,20 @@ export default function CourseSearch({ currentUser, authUser }) {
 
             <div className="cs-modal-meta-row">
               {selected.term_taken && <span>📅 {selected.term_taken}</span>}
-              <span>👤 Submitted by {selected.display_name || selected.username}</span>
+
+              {/* Story 4 AC1 & AC2 — author name, clickable if not anonymous/legacy */}
+              {getAuthorDisplay(selected) === 'Anonymous' || getAuthorDisplay(selected) === 'Legacy Data' ? (
+                <span>👤 {getAuthorDisplay(selected)}</span>
+              ) : (
+                <button
+                  className="cs-author-link"
+                  onClick={() => navigate(`/profile/${selected.username}`)}
+                  title="View profile or message this student"
+                >
+                  👤 {getAuthorDisplay(selected)}
+                </button>
+              )}
+
               <span
                 className="cs-status-badge"
                 style={{ '--badge-color': STATUS_COLORS[selected.status] || '#888' }}
@@ -374,21 +407,22 @@ export default function CourseSearch({ currentUser, authUser }) {
               className={`cs-save-btn-lg ${savedIds.has(selected.course_id) ? 'saved' : ''}`}
               onClick={() => toggleSave(selected.course_id)}
             >
-              {savedIds.has(selected.course_id) ? '★ Saved to Shortlist' : '☆ Save to Shortlist'}
+              {savedIds.has(selected.course_id) ? '★ Bookmarked' : '☆ Bookmark this Course'}
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Saved Courses / Shortlist Panel (AC#10 search) ── */}
-      {showSaved && (
-        <div className="cs-modal-overlay" onClick={() => setShowSaved(false)}>
+      {/* ── My Bookmarks Panel (Story 3 AC3, AC6) ── */}
+      {showBookmarks && (
+        <div className="cs-modal-overlay" onClick={() => setShowBookmarks(false)}>
           <div className="cs-modal cs-saved-panel" onClick={(e) => e.stopPropagation()}>
-            <button className="cs-modal-close" onClick={() => setShowSaved(false)}>✕</button>
-            <h2 className="cs-modal-title">⭐ My Shortlist</h2>
+            <button className="cs-modal-close" onClick={() => setShowBookmarks(false)}>✕</button>
+            <h2 className="cs-modal-title">🔖 My Bookmarks</h2>
+            {/* Story 3 AC6 — empty bookmarks message */}
             {savedCourses.length === 0 ? (
               <div className="cs-empty">
-                <p>No saved courses yet. Click the ☆ icon on any course to add it here.</p>
+                <p>No bookmarks yet. Click the ☆ icon on any course to bookmark it.</p>
               </div>
             ) : (
               savedCourses.map((c) => (
@@ -396,14 +430,45 @@ export default function CourseSearch({ currentUser, authUser }) {
                   <div>
                     <strong>{c.host_course_code} → {c.uw_course_code}</strong>
                     <p>{c.host_university} · {c.country}</p>
+                    {/* Story 3 AC3 — key details in bookmarks */}
+                    {c.term_taken && <p>Term: {c.term_taken}</p>}
                   </div>
                   <button
                     className="cs-save-btn saved"
                     onClick={() => toggleSave(c.course_id)}
+                    title="Remove bookmark"
                   >★</button>
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Story 3 AC8 — Login prompt for non-logged-in users ── */}
+      {showLoginPrompt && (
+        <div className="cs-modal-overlay" onClick={() => setShowLoginPrompt(false)}>
+          <div className="cs-modal cs-login-prompt" onClick={(e) => e.stopPropagation()}>
+            <button className="cs-modal-close" onClick={() => setShowLoginPrompt(false)}>✕</button>
+            <div className="cs-login-prompt-icon">🔖</div>
+            <h2 className="cs-modal-title">Sign in to Bookmark</h2>
+            <p className="cs-login-prompt-text">
+              Create an account or sign in to save courses to your personal bookmarks list.
+            </p>
+            <div className="cs-login-prompt-btns">
+              <button
+                className="cs-shortlist-btn"
+                onClick={() => { setShowLoginPrompt(false); navigate('/login'); }}
+              >
+                Sign In
+              </button>
+              <button
+                className="cs-login-prompt-secondary"
+                onClick={() => setShowLoginPrompt(false)}
+              >
+                Continue Browsing
+              </button>
+            </div>
           </div>
         </div>
       )}

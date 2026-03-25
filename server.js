@@ -535,15 +535,16 @@ app.post('/api/courses', checkAuth, (req, res) => {
         country,
         continent,
         term_taken,
-        proof_url
+        proof_url,
+        is_anonymous = 0  // Story 4 AC4 — anonymous posting
     } = req.body;
 
     const sql = `
         INSERT INTO course_equivalencies 
-        (username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url, is_anonymous) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const params = [username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url];
+    const params = [username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url, is_anonymous ? 1 : 0];
 
     connection.query(sql, params, (error, results) => {
         if (error) {
@@ -637,52 +638,62 @@ app.get('/api/users/:username/saved-courses', (req, res) => {
 
 app.get('/api/courses/meta/filters', (req, res) => {
     // We fetch the unique values currently in your DB to fill the dropdowns
-    const sqlCountries = "SELECT DISTINCT country FROM course_equivalencies WHERE country IS NOT NULL";
-    const sqlContinents = "SELECT DISTINCT continent FROM course_equivalencies WHERE continent IS NOT NULL";
-    const sqlTerms = "SELECT DISTINCT term_taken FROM course_equivalencies WHERE term_taken IS NOT NULL";
+    const sqlCountries = "SELECT DISTINCT country FROM course_equivalencies WHERE country IS NOT NULL AND country != ''";
+    const sqlContinents = "SELECT DISTINCT continent FROM course_equivalencies WHERE continent IS NOT NULL AND continent != ''";
+    const sqlTerms = "SELECT DISTINCT term_taken FROM course_equivalencies WHERE term_taken IS NOT NULL AND term_taken != ''";
 
-    connection.query(`${sqlCountries}; ${sqlContinents}; ${sqlTerms}`, (error, results) => {
-        if (error) {
-            console.error('Filter Fetch Error:', error);
-            // Fallback so the frontend doesn't crash
+    connection.query(sqlCountries, (err1, res1) => {
+        if (err1) {
+            console.error('Filter Fetch Error:', err1);
             return res.json({ countries: [], continents: [], terms: [] });
         }
-
-        // results will be an array of 3 arrays because of the semicolons
-        res.json({
-            countries: results[0].map(r => r.country),
-            continents: results[1].map(r => r.continent),
-            terms: results[2].map(r => r.term_taken)
+        connection.query(sqlContinents, (err2, res2) => {
+            if (err2) return res.json({ countries: [], continents: [], terms: [] });
+            
+            connection.query(sqlTerms, (err3, res3) => {
+                if (err3) return res.json({ countries: [], continents: [], terms: [] });
+                res.json({
+                    countries: res1.map(r => r.country),
+                    continents: res2.map(r => r.continent),
+                    terms: res3.map(r => r.term_taken)
+                });
+            });
         });
     });
 });
 
+// GET /api/courses - Search and filter course equivalencies
+// Story 4: JOIN users for display_name, handle is_anonymous (AC4) and legacy data (AC5)
+// Sprint 2: sort param support (Story 5), JOIN course_reviews for avg_rating
 app.get('/api/courses', (req, res) => {
     const { q, country, continent, faculty, term, sort = 'last_updated', page = 1, limit = 15 } = req.query;
     const offset = (page - 1) * limit;
 
-    // Join course_reviews for avg_rating sort
-    let sql = `SELECT c.*, AVG(r.cleanliness_rating) AS avg_rating
+    let sql = `SELECT c.*,
+                      AVG(r.cleanliness_rating) AS avg_rating,
+                      CASE WHEN c.is_anonymous = 1 THEN NULL ELSE u.display_name END AS display_name
                FROM course_equivalencies c
                LEFT JOIN course_reviews r ON r.course_id = c.course_id
+               LEFT JOIN users u ON u.username = c.username
                WHERE 1=1`;
     const params = [];
 
     if (q) {
-        sql += " AND (c.host_university LIKE ? OR c.host_course_name LIKE ? OR c.host_course_code LIKE ?)";
+        // Story 4 AC3: also search by student name
+        sql += " AND (c.host_university LIKE ? OR c.host_course_name LIKE ? OR c.host_course_code LIKE ? OR u.display_name LIKE ? OR c.username LIKE ?)";
         const search = `%${q}%`;
-        params.push(search, search, search);
+        params.push(search, search, search, search, search);
     }
-    if (country) { sql += " AND c.country = ?"; params.push(country); }
-    if (continent) { sql += " AND c.continent = ?"; params.push(continent); }
-    if (term) { sql += " AND c.term_taken = ?"; params.push(term); }
+    if (country)   { sql += " AND c.country = ?";    params.push(country); }
+    if (continent) { sql += " AND c.continent = ?";  params.push(continent); }
+    if (term)      { sql += " AND c.term_taken = ?"; params.push(term); }
 
     sql += " GROUP BY c.course_id";
 
     // Sort order
     const ORDER = {
-        avg_rating: "avg_rating DESC",
-        university: "c.host_university ASC",
+        avg_rating:   "avg_rating DESC",
+        university:   "c.host_university ASC",
         last_updated: "c.last_updated DESC",
     };
     sql += ` ORDER BY ${ORDER[sort] || ORDER.last_updated}`;
@@ -712,15 +723,15 @@ app.get('/api/courses', (req, res) => {
     });
 });
 
-
-
 // GET /api/courses/:id - Get a single course by ID
+// Story 4: handle is_anonymous (AC4) and missing author as legacy data (AC5)
 app.get('/api/courses/:id', (req, res) => {
     const { id } = req.params;
     const sql = `
-        SELECT c.*, u.display_name 
-        FROM course_equivalencies c 
-        LEFT JOIN users u ON c.username = u.username 
+        SELECT c.*,
+               CASE WHEN c.is_anonymous = 1 THEN NULL ELSE u.display_name END AS display_name
+        FROM course_equivalencies c
+        LEFT JOIN users u ON c.username = u.username
         WHERE c.course_id = ?
     `;
     connection.query(sql, [id], (error, results) => {
@@ -777,7 +788,7 @@ app.get('/api/users/:username/milestones/export', (req, res) => {
     );
 });
 
-// GET /api/users/:username/milestones - supports phase and destination filters (Stories 1 & 2)
+// GET /api/users/:username/milestones - supports type, phase, destination filters (Sprint 2 Stories 1 & 2)
 app.get('/api/users/:username/milestones', (req, res) => {
     const { username } = req.params;
     const { type, phase, destination } = req.query;
@@ -884,7 +895,7 @@ app.delete('/api/milestones/:id', (req, res) => {
     });
 });
 
-// GET /api/contacts - get all study abroad contacts (Story 3)
+// GET /api/contacts - get all study abroad contacts (Sprint 2 Story 3)
 app.get('/api/contacts', (req, res) => {
     const sql = "SELECT * FROM study_abroad_contacts ORDER BY faculty, name";
     connection.query(sql, (error, results) => {
@@ -896,7 +907,7 @@ app.get('/api/contacts', (req, res) => {
     });
 });
 
-// GET /api/advisors - get all academic advisors (Story 4)
+// GET /api/advisors - get all academic advisors (Sprint 2 Story 4)
 app.get('/api/advisors', (req, res) => {
     const sql = "SELECT * FROM academic_advisors ORDER BY faculty, name";
     connection.query(sql, (error, results) => {
@@ -908,7 +919,7 @@ app.get('/api/advisors', (req, res) => {
     });
 });
 
-// DELETE /api/users/:username - delete account with password confirmation (Story 6)
+// DELETE /api/users/:username - delete account with password confirmation (Sprint 2 Story 6)
 app.delete('/api/users/:username', (req, res) => {
     const { username } = req.params;
     const { password } = req.body;
@@ -932,7 +943,7 @@ app.delete('/api/users/:username', (req, res) => {
     });
 });
 
-// PUT /api/users/:username/type - update user type selection (Story 7)
+// PUT /api/users/:username/type - update user type selection (Sprint 2 Story 7)
 app.put('/api/users/:username/type', (req, res) => {
     const { username } = req.params;
     const { user_type } = req.body;
@@ -949,14 +960,14 @@ app.put('/api/users/:username/type', (req, res) => {
     });
 });
 
-// POST /api/auth/signout - sign out (Story 8)
+// POST /api/auth/signout - sign out (Sprint 2 Story 8)
 // Stateless for now — client handles session clearing
 // Future: invalidate server-side session token here
 app.post('/api/auth/signout', (req, res) => {
     res.json({ success: true, message: 'Signed out successfully' });
 });
 
-// GET /api/users/:username/tags - get profile tags for a user (Story 9)
+// GET /api/users/:username/tags - get profile tags for a user (Sprint 2 Story 9)
 app.get('/api/users/:username/tags', (req, res) => {
     const { username } = req.params;
     const sql = "SELECT * FROM profile_tags WHERE username = ? ORDER BY tag_type";
@@ -966,7 +977,7 @@ app.get('/api/users/:username/tags', (req, res) => {
     });
 });
 
-// POST /api/users/:username/tags - upsert tags from profile fields (Story 9)
+// POST /api/users/:username/tags - upsert tags from profile fields (Sprint 2 Story 9)
 app.post('/api/users/:username/tags', (req, res) => {
     const { username } = req.params;
     const { program, grad_year, destination_country, destination_school, exchange_term } = req.body;

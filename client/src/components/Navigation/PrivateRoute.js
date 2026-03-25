@@ -13,6 +13,7 @@ import ContactsList from '../ContactsList';
 import AdvisorsList from '../AdvisorsList';
 import DeleteAccount from '../DeleteAccount';
 import UserTypeSelect from '../UserTypeSelect';
+import ExchangeCalendar from '../ExchangeCalendar';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -111,6 +112,7 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                     <Route path="/profile" element={<Profile currentUser={currentUser} authUser={authUser} />} />
                     {/* Sprint 2 routes */}
                     <Route path="/timeline" element={<Timeline currentUser={currentUser} authUser={authUser} />} />
+                    <Route path="/calendar" element={<ExchangeCalendar currentUser={currentUser} />} />
                     <Route path="/contacts" element={<ContactsList />} />
                     <Route path="/advisors" element={<AdvisorsList />} />
                     <Route
