@@ -14,7 +14,13 @@ const fmtDualTime = (utcStr) => {
 const MILESTONE_TYPES = ['UW Internal', 'Host University'];
 
 // Sprint 2 — phase order for grouping (Story 1)
-const PHASES = ['Research', 'Nomination', 'Host Application'];
+const PHASES = [
+  'Info Session',
+  'Research',
+  'Application',
+  'Course Matching',
+  'Pre-departure Training',
+];
 
 export default function Timeline({ currentUser, destination: destProp }) {
   const [milestones, setMilestones] = useState([]);

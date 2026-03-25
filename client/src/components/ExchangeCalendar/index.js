@@ -4,7 +4,13 @@ import '../Timeline/Timeline.css';
 
 const API = process.env.REACT_APP_API_URL || '';
 
-const PHASES = ['Research', 'Nomination', 'Host Application'];
+const PHASES = [
+  'Info Session',
+  'Research',
+  'Application',
+  'Course Matching',
+  'Pre-departure Training',
+];
 const DAYS   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MILESTONE_TYPES = ['UW Internal', 'Host University'];
 const MONTHS = [
@@ -98,12 +104,16 @@ export default function ExchangeCalendar({ currentUser }) {
     setChecklistLoading(true);
     try {
       const res = await fetch(`${API}/api/users/${currentUser}/milestones`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setChecklist(data.map(m => ({ ...m, key: m.milestone_id })));
+      const allMilestones = await res.json();
+      
+      if (Array.isArray(allMilestones)) {
+        setChecklist(allMilestones.map(m => ({ ...m, key: m.milestone_id })));
       } else {
         setChecklist([]);
       }
+    } catch (e) {
+      console.error("Failed to load checklist", e);
+      setChecklist([]);
     } finally {
       setChecklistLoading(false);
     }
@@ -114,40 +124,12 @@ export default function ExchangeCalendar({ currentUser }) {
     const next = !item.is_completed;
     
     // Optimistic update (AC3 — real-time progress indicator)
-    // Match by key to ensure UI updates instantly even if DB ID is missing
     setChecklist(prev =>
       prev.map(c => c.key === item.key ? { ...c, is_completed: next } : c)
     );
 
-    let targetId = item.milestone_id;
-
-    // If the item doesn't exist in DB yet, create it on the fly
-    if (!targetId && currentUser) {
-      try {
-        const res = await fetch(`${API}/api/users/${currentUser}/milestones`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title:          item.title,
-            deadline_utc:   new Date(Date.now() + 365 * 86400000).toISOString(),
-            milestone_type: 'UW Internal', // Fallback to safe DB ENUM type
-            phase:          item.phase,
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          targetId = data.milestone_id;
-          setChecklist(prev =>
-            prev.map(c => c.key === item.key ? { ...c, milestone_id: targetId } : c)
-          );
-        }
-      } catch (err) {
-        console.error('Failed to seed checklist item', err);
-      }
-    }
-
-    if (targetId) {
-      await fetch(`${API}/api/milestones/${targetId}`, {
+    if (item.milestone_id) {
+      await fetch(`${API}/api/milestones/${item.milestone_id}`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ is_completed: next }),
@@ -169,20 +151,40 @@ export default function ExchangeCalendar({ currentUser }) {
     if (Object.keys(e).length) { setAddErrors(e); return; }
     setAddLoading(true);
     try {
-      await fetch(`${API}/api/users/${currentUser}/milestones`, {
+      // The 'datetime-local' input format is 'YYYY-MM-DDTHH:MM'.
+      // MySQL's DATETIME format is 'YYYY-MM-DD HH:MM:SS'.
+      // The 'T' can cause data truncation warnings on the backend.
+      // We'll reformat it to be safe.
+      const formattedDeadline = addForm.deadline_utc
+        ? addForm.deadline_utc.replace('T', ' ') + ':00'
+        : null;
+
+      const response = await fetch(`${API}/api/users/${currentUser}/milestones`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...addForm,
+          deadline_utc: formattedDeadline,
           prerequisite_id: addForm.prerequisite_id || null,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error('Server responded with an error');
+      }
+
       setShowAdd(false);
       setAddForm({ title: '', deadline_utc: '', milestone_type: 'UW Internal', form_link: '', prerequisite_id: '', phase: 'Research' });
       fetchMilestones();
       loadChecklist();
-    } catch {
-      setAddErrors({ submit: 'Failed to add item' });
+    } catch (error) {
+      console.error("Error adding checklist item:", error);
+      // Provide a more specific error message if possible
+      if (error.message.includes('Server responded')) {
+        setAddErrors({ submit: 'Failed to add item. The server returned an error.' });
+      } else {
+        setAddErrors({ submit: 'Failed to add item. A network error may have occurred.' });
+      }
     } finally {
       setAddLoading(false);
     }
@@ -229,19 +231,30 @@ export default function ExchangeCalendar({ currentUser }) {
     setEditLoading(true);
     try {
       const { milestone_id, ...rest } = editForm;
+
+      const formattedDeadline = rest.deadline_utc
+        ? rest.deadline_utc.replace('T', ' ') + ':00'
+        : null;
+
       await fetch(`${API}/api/milestones/${milestone_id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...rest,
+          deadline_utc: formattedDeadline,
           prerequisite_id: rest.prerequisite_id || null,
         }),
       });
       setShowEdit(false);
       fetchMilestones();
       loadChecklist();
-    } catch {
-      setEditErrors({ submit: 'Failed to edit item' });
+    } catch (error) {
+      console.error("Error editing checklist item:", error);
+      if (error.message.includes('Server responded')) {
+        setEditErrors({ submit: 'Failed to edit item. The server returned an error.' });
+      } else {
+        setEditErrors({ submit: 'Failed to edit item. A network error may have occurred.' });
+      }
     } finally {
       setEditLoading(false);
     }
@@ -525,12 +538,6 @@ export default function ExchangeCalendar({ currentUser }) {
       {tab === 'checklist' && (
         <div className="ec-checklist">
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-            <button className="tl-btn tl-btn-primary" onClick={() => setShowAdd(true)}>
-              + Add Checklist
-            </button>
-          </div>
-
           {/* AC3 — Progress bar */}
           <div className="ec-progress-card">
             <div className="ec-progress-top">
@@ -550,26 +557,40 @@ export default function ExchangeCalendar({ currentUser }) {
             <div className="ec-progress-pct">{progress}%</div>
           </div>
 
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button className="tl-btn tl-btn-primary" onClick={() => setShowAdd(true)}>
+              + Add Checklist
+            </button>
+          </div>
+
+
           {checklistLoading ? (
             <div className="ec-loading">Loading checklist…</div>
           ) : (
-            <div className="tl-list">
-              {checklist.map((item, i) => {
-                const status = getStatusLabel(item);
-                const isExpanded = expandedId === item.key;
-                const isLocked =
-                  item.prerequisite_id &&
-                  !item.prerequisite_completed &&
-                  !item.is_completed;
-
+            <div className="tl-phases">
+              {PHASES.map(phase => {
+                const items = checklist.filter(c => c.phase === phase);
+                if (!items.length) return null;
                 return (
-                  <div
-                    key={item.key}
-                    className={`tl-milestone ${getMilestoneClass(item)} ${isLocked ? 'locked' : ''}`}
-                  >
-                    {i < checklist.length - 1 && (
-                      <div className={`tl-connector ${item.is_completed ? 'done' : ''}`} />
-                    )}
+                  <div key={phase} className="tl-phase-group">
+                    <h3 className="tl-phase-heading">{phase}</h3>
+                    <div className="tl-list">
+                      {items.map((item, i) => {
+                        const status = getStatusLabel(item);
+                        const isExpanded = expandedId === item.key;
+                        const isLocked =
+                          item.prerequisite_id &&
+                          !item.prerequisite_completed &&
+                          !item.is_completed;
+
+                        return (
+                          <div
+                            key={item.key}
+                            className={`tl-milestone ${getMilestoneClass(item)} ${isLocked ? 'locked' : ''}`}
+                          >
+                            {i < items.length - 1 && (
+                              <div className={`tl-connector ${item.is_completed ? 'done' : ''}`} />
+                            )}
 
                             <div className="tl-ms-left">
                               <button
@@ -659,6 +680,10 @@ export default function ExchangeCalendar({ currentUser }) {
                             </div>
                           </div>
                         );
+                      })}
+                    </div>
+                  </div>
+                );
               })}
             </div>
           )}

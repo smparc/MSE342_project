@@ -457,6 +457,8 @@
 .tl-phase-group:nth-child(1) .tl-phase-heading { border-left-color: #6366f1; }
 .tl-phase-group:nth-child(2) .tl-phase-heading { border-left-color: #f59e0b; }
 .tl-phase-group:nth-child(3) .tl-phase-heading { border-left-color: #10b981; }
+.tl-phase-group:nth-child(4) .tl-phase-heading { border-left-color: #06b6d4; } /* Course Matching */
+.tl-phase-group:nth-child(5) .tl-phase-heading { border-left-color: #ec4899; } /* Pre-departure Training */
 
 /* ── Days remaining badge (Story 2) ── */
 .tl-days-remaining {
