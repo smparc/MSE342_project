@@ -91,6 +91,9 @@ export default function CourseSearch({ currentUser, authUser }) {
           limit:     15,
         });
         const res  = await fetch(`${API}/api/courses?${params}`);
+        if (!res.ok) {
+          throw new Error('Server returned an error');
+        }
         const data = await res.json();
         setCourses(data.courses || []);
         setPagination(data.pagination || {});

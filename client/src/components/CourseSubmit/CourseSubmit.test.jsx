@@ -33,8 +33,6 @@ describe('CourseSubmit Component', () => {
 
   test('displays validation errors when submitting empty form', async () => {
     render(<CourseSubmit currentUser="" />);
-    const proofInput = screen.getByPlaceholderText('https://…');
-    fireEvent.change(proofInput, { target: { value: 'https://example.com/proof.pdf' } });
     fireEvent.click(screen.getByText('Submit Course'));
     await waitFor(() => {
       expect(screen.getByText('Username is required')).toBeInTheDocument();
@@ -45,7 +43,6 @@ describe('CourseSubmit Component', () => {
   test('validates UW course code format', async () => {
     render(<CourseSubmit currentUser="testuser" />);
     fireEvent.change(screen.getByPlaceholderText('e.g. MSCI 342'), { target: { value: 'INVALID123' } });
-    fireEvent.change(screen.getByPlaceholderText('https://…'), { target: { value: 'https://example.com/proof.pdf' } });
     fireEvent.click(screen.getByText('Submit Course'));
     await waitFor(() => {
       expect(screen.getByText('Use format like MSCI 342 or CS 341')).toBeInTheDocument();
@@ -59,7 +56,6 @@ describe('CourseSubmit Component', () => {
     fireEvent.change(screen.getByPlaceholderText('e.g. BUS 201'),                       { target: { value: 'COMP 200' } });
     fireEvent.change(screen.getByPlaceholderText('e.g. Introduction to Business'),      { target: { value: 'Algos' } });
     fireEvent.change(screen.getByPlaceholderText('e.g. University of Melbourne'),       { target: { value: 'Host Uni' } });
-    fireEvent.change(screen.getByPlaceholderText('https://…'),                          { target: { value: 'https://example.com/proof' } });
     fireEvent.click(screen.getByText('Submit Course'));
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
@@ -115,7 +111,6 @@ describe('Sprint 3 — Anonymous Posting (Story 4 AC4)', () => {
     fireEvent.change(screen.getByPlaceholderText('e.g. BUS 201'),                  { target: { value: 'COMP 200' } });
     fireEvent.change(screen.getByPlaceholderText('e.g. Introduction to Business'), { target: { value: 'Algos' } });
     fireEvent.change(screen.getByPlaceholderText('e.g. University of Melbourne'),  { target: { value: 'Host Uni' } });
-    fireEvent.change(screen.getByPlaceholderText('https://…'),                     { target: { value: 'https://proof.com' } });
 
     fireEvent.click(screen.getByLabelText(/Post anonymously/i));
     fireEvent.click(screen.getByText('Submit Course'));
@@ -134,7 +129,6 @@ describe('Sprint 3 — Anonymous Posting (Story 4 AC4)', () => {
     fireEvent.change(screen.getByPlaceholderText('e.g. BUS 201'),                  { target: { value: 'COMP 200' } });
     fireEvent.change(screen.getByPlaceholderText('e.g. Introduction to Business'), { target: { value: 'Algos' } });
     fireEvent.change(screen.getByPlaceholderText('e.g. University of Melbourne'),  { target: { value: 'Host Uni' } });
-    fireEvent.change(screen.getByPlaceholderText('https://…'),                     { target: { value: 'https://proof.com' } });
     fireEvent.click(screen.getByText('Submit Course'));
 
     await waitFor(() => {

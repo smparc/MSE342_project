@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import './CourseSubmit.css';
 import { FirebaseContext, authFetch } from '../Firebase';
 
@@ -16,7 +16,6 @@ const INITIAL_FORM = {
   country: '',
   continent: '',
   term_taken: '',
-  proof_url: '',
 };
 
 export default function CourseSubmit({ currentUser, authUser }) {
@@ -34,10 +33,6 @@ export default function CourseSubmit({ currentUser, authUser }) {
   // Story 4 AC4 — anonymous posting option
   const [isAnonymous, setIsAnonymous] = useState(false);
 
-  // File upload
-  const [proofFile, setProofFile] = useState(null);
-  const fileRef = useRef(null);
-
   const validate = () => {
     const e = {};
     if (!form.username.trim()) e.username = 'Username is required';
@@ -48,21 +43,12 @@ export default function CourseSubmit({ currentUser, authUser }) {
     if (!form.host_course_code.trim()) e.host_course_code = 'Host course code is required';
     if (!form.host_course_name.trim()) e.host_course_name = 'Host course name is required';
     if (!form.host_university.trim()) e.host_university = 'Host university is required';
-    if (!form.proof_url.trim() && !proofFile) e.proof_url = 'Proof document is required';
     return e;
   };
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: '' }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setProofFile(file);
-    setForm((prev) => ({ ...prev, proof_url: `uploads/${file.name}` }));
-    setErrors((prev) => ({ ...prev, proof_url: '' }));
   };
 
   const handleSubmit = async () => {
@@ -108,7 +94,6 @@ export default function CourseSubmit({ currentUser, authUser }) {
 
       setSuccess({ message: data.message, status: data.status, course_id: data.course_id });
       setForm({ ...INITIAL_FORM, username: effectiveUser });
-      setProofFile(null);
       setEditId(null);
       setIsAnonymous(false);
     } catch {
@@ -117,8 +102,6 @@ export default function CourseSubmit({ currentUser, authUser }) {
       setSubmitting(false);
     }
   };
-
-  const isProofReady = !!(form.proof_url.trim() || proofFile);
 
   return (
     <div className="csub-wrap">
@@ -266,61 +249,6 @@ export default function CourseSubmit({ currentUser, authUser }) {
           </div>
         </div>
 
-        {/* ── Proof Upload ── */}
-        <div className="csub-section">
-          <h3 className="csub-section-title">
-            Proof of Match <span className="csub-req">*</span>
-          </h3>
-          <p className="csub-proof-hint">
-            Upload a PDF of your grade report, email from faculty advisor, or official transcript.
-          </p>
-          <div
-            className={`csub-upload-area ${proofFile ? 'has-file' : ''} ${errors.proof_url ? 'error' : ''}`}
-            onClick={() => fileRef.current.click()}
-          >
-            {proofFile ? (
-              <div className="csub-file-info">
-                <span className="csub-file-icon">📄</span>
-                <span className="csub-file-name">{proofFile.name}</span>
-                <button
-                  className="csub-file-remove"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setProofFile(null);
-                    setForm((prev) => ({ ...prev, proof_url: '' }));
-                    fileRef.current.value = '';
-                  }}
-                >Remove</button>
-              </div>
-            ) : (
-              <div className="csub-upload-placeholder">
-                <span className="csub-upload-icon">⬆</span>
-                <p>Click to upload PDF or image</p>
-                <small>PDF, PNG, JPG up to 10 MB</small>
-              </div>
-            )}
-          </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
-          <div style={{ marginTop: '0.6rem' }}>
-            <label className="csub-label">Or paste a link to proof</label>
-            <input
-              id="cs-field-proof_url"
-              className={`csub-input ${errors.proof_url ? 'error' : ''}`}
-              placeholder="https://…"
-              value={proofFile ? `uploads/${proofFile.name}` : form.proof_url}
-              onChange={(e) => handleChange('proof_url', e.target.value)}
-              disabled={!!proofFile}
-            />
-          </div>
-          {errors.proof_url && <span className="csub-error-msg">{errors.proof_url}</span>}
-        </div>
-
         {/* ── Submitter info + Anonymous option ── */}
         <div className="csub-section">
           <h3 className="csub-section-title">Your Account</h3>
@@ -359,14 +287,9 @@ export default function CourseSubmit({ currentUser, authUser }) {
 
         {/* ── Submit ── */}
         <div className="csub-footer">
-          <p className="csub-footer-note">
-            {!isProofReady
-              ? '⚠ Please upload proof before submitting'
-              : '✓ Proof provided — ready to submit'}
-          </p>
           <button
             className="csub-submit-btn"
-            disabled={!isProofReady || submitting}
+            disabled={submitting}
             onClick={handleSubmit}
           >
             {submitting ? 'Submitting…' : editId ? 'Update Course' : 'Submit Course'}

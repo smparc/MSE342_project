@@ -667,8 +667,7 @@ app.get('/api/courses', (req, res) => {
 
     let sql = `SELECT c.*,
                       AVG(r.cleanliness_rating) AS avg_rating,
-                      CASE WHEN c.is_anonymous = 1 THEN NULL ELSE u.display_name END AS display_name,
-                      c.is_anonymous
+                      CASE WHEN c.is_anonymous = 1 THEN NULL ELSE u.display_name END AS display_name
                FROM course_equivalencies c
                LEFT JOIN course_reviews r ON r.course_id = c.course_id
                LEFT JOIN users u ON u.username = c.username
@@ -726,8 +725,7 @@ app.get('/api/courses/:id', (req, res) => {
     const { id } = req.params;
     const sql = `
         SELECT c.*,
-               CASE WHEN c.is_anonymous = 1 THEN NULL ELSE u.display_name END AS display_name,
-               c.is_anonymous
+               CASE WHEN c.is_anonymous = 1 THEN NULL ELSE u.display_name END AS display_name
         FROM course_equivalencies c
         LEFT JOIN users u ON c.username = u.username
         WHERE c.course_id = ?
