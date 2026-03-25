@@ -147,7 +147,7 @@ const CourseTable = ({ username }) => {
                     <Table aria-label="simple table">
                         <TableHead>
                             <TableRow>
-                                <TableCell align={'left'}><strong>UW Code</strong></TableCell>
+                                <TableCell align={'left'} sx={{minWidth: '45px'}}><strong>UW Code</strong></TableCell>
                                 <TableCell align={'left'}><strong>UW Course Name</strong></TableCell>
                                 <TableCell align={'left'}><strong>Host University</strong></TableCell>
                                 <TableCell align={'left'}><strong>Host Code</strong></TableCell>
