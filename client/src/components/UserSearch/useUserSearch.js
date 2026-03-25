@@ -12,13 +12,23 @@ export const useUserSearch = ({
   enabled = true,
   facultyFilter = '',
   gradYearFilter = '',
+  /** When true (e.g. Search page), fetch with empty q to show a default user list. */
+  fetchAllWhenEmpty = false,
 }) => {
   const [users, setUsers] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(() => Boolean(fetchAllWhenEmpty && enabled));
   const [error, setError] = React.useState('');
 
   const searchUsers = React.useCallback(async () => {
     if (!enabled) {
+      setUsers([]);
+      setError('');
+      setLoading(false);
+      return;
+    }
+    const hasTextOrFilters =
+      searchQuery.trim() || facultyFilter.trim() || gradYearFilter.trim();
+    if (!fetchAllWhenEmpty && !hasTextOrFilters) {
       setUsers([]);
       setError('');
       setLoading(false);
@@ -60,6 +70,7 @@ export const useUserSearch = ({
     enabled,
     facultyFilter,
     gradYearFilter,
+    fetchAllWhenEmpty,
   ]);
 
   return { users, loading, error, searchUsers };

@@ -289,9 +289,15 @@ app.get('/api/users/search', (req, res) => {
         params.push(exclude, exclude);
     }
     if (q) {
-        sql += " AND (u.username LIKE ? OR u.display_name LIKE ?)";
         const pattern = `%${q}%`;
-        params.push(pattern, pattern);
+        sql += ` AND (
+            u.username LIKE ? OR u.display_name LIKE ? OR u.program LIKE ?
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt
+                WHERE pt.username = u.username AND pt.tag_type = 'program' AND pt.tag_value LIKE ?
+            )
+        )`;
+        params.push(pattern, pattern, pattern, pattern);
     }
     if (filterFaculty) {
         sql += " AND u.faculty LIKE ?";

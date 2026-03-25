@@ -68,15 +68,23 @@ describe('Search', () => {
       renderSearch();
       expect(screen.getByRole('heading', { name: /Search Users/i })).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText(/Search by username or display name/i)
+        screen.getByPlaceholderText(/Search by name, username, or program/i)
       ).toBeInTheDocument();
     });
 
-    it('shows hint when no query or filters are active', () => {
+    it('calls GET /api/users/search on load to list users (no q required)', async () => {
       renderSearch();
-      expect(
-        screen.getByText(/Type a name or username, or use the filters above/i)
-      ).toBeInTheDocument();
+      await waitFor(
+        () => {
+          const call = global.fetch.mock.calls.find(
+            ([url]) => typeof url === 'string' && url.includes('/api/users/search')
+          );
+          expect(call).toBeDefined();
+          expect(call[0]).toMatch(/includeTags=1/);
+          expect(call[0]).not.toMatch(/[?&]q=/);
+        },
+        { timeout: 4000 }
+      );
     });
 
     it('renders filter controls (faculty + class, Course Search style)', () => {
@@ -85,14 +93,6 @@ describe('Search', () => {
       expect(screen.getByLabelText(/Class \(graduation year\)/i)).toBeInTheDocument();
     });
 
-    it('does not call the user search API until there is a query or a filter', async () => {
-      renderSearch();
-      await new Promise((r) => setTimeout(r, 500));
-      const searchCalls = (global.fetch.mock.calls || []).filter(
-        ([url]) => typeof url === 'string' && url.includes('/api/users/search')
-      );
-      expect(searchCalls.length).toBe(0);
-    });
   });
 
   describe('search by text', () => {
@@ -103,7 +103,7 @@ describe('Search', () => {
       });
 
       renderSearch();
-      const input = screen.getByPlaceholderText(/Search by username or display name/i);
+      const input = screen.getByPlaceholderText(/Search by name, username, or program/i);
       fireEvent.change(input, { target: { value: 'john' } });
 
       await waitFor(
@@ -127,7 +127,7 @@ describe('Search', () => {
       });
 
       renderSearch();
-      fireEvent.change(screen.getByPlaceholderText(/Search by username or display name/i), {
+      fireEvent.change(screen.getByPlaceholderText(/Search by name, username, or program/i), {
         target: { value: 'jo' },
       });
 
@@ -144,13 +144,35 @@ describe('Search', () => {
       });
 
       renderSearch();
-      fireEvent.change(screen.getByPlaceholderText(/Search by username or display name/i), {
-        target: { value: 'zzz' },
-      });
 
       await waitFor(() => {
         expect(screen.getByText(/No users match your criteria/i)).toBeInTheDocument();
       });
+    });
+
+    it('sends typed program text as q (server matches username, name, and program)', async () => {
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => mockSearchResult,
+      });
+
+      renderSearch();
+      fireEvent.change(screen.getByPlaceholderText(/Search by name, username, or program/i), {
+        target: { value: 'Biology' },
+      });
+
+      await waitFor(
+        () => {
+          const withQ = global.fetch.mock.calls.filter(
+            ([url]) => typeof url === 'string' && /[?&]q=/.test(url)
+          );
+          expect(withQ.length).toBeGreaterThan(0);
+          const lastUrl = withQ[withQ.length - 1][0];
+          const u = new URL(lastUrl, 'http://localhost');
+          expect(u.searchParams.get('q')).toBe('Biology');
+        },
+        { timeout: 6000 }
+      );
     });
   });
 

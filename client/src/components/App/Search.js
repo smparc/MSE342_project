@@ -20,23 +20,22 @@ const Search = ({ currentUser, authUser }) => {
   });
   const [selectedUser, setSelectedUser] = React.useState(null);
 
-  const hasQueryOrFilters =
-    searchQuery.trim() || filters.faculty || filters.gradYear;
-
   const { users, loading, error, searchUsers } = useUserSearch({
     currentUsername,
     searchQuery,
     includeTags: true,
     excludeConversations: false,
-    enabled: hasQueryOrFilters,
+    enabled: true,
+    fetchAllWhenEmpty: true,
     facultyFilter: filters.faculty,
     gradYearFilter: filters.gradYear,
   });
 
   React.useEffect(() => {
-    const timer = setTimeout(searchUsers, 300);
+    const debounceMs = searchQuery.trim() ? 300 : 0;
+    const timer = setTimeout(searchUsers, debounceMs);
     return () => clearTimeout(timer);
-  }, [searchQuery, searchUsers]);
+  }, [searchQuery, filters.faculty, filters.gradYear, searchUsers]);
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
@@ -57,7 +56,7 @@ const Search = ({ currentUser, authUser }) => {
       <div className="cs-search-row">
         <TextField
           fullWidth
-          placeholder="Search by username or display name..."
+          placeholder="Search by name, username, or program…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
@@ -90,19 +89,13 @@ const Search = ({ currentUser, authUser }) => {
         </Box>
       )}
 
-      {!loading && hasQueryOrFilters && users.length === 0 && (
+      {!loading && users.length === 0 && (
         <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 6 }}>
           No users match your criteria.
         </Typography>
       )}
 
-      {!loading && !hasQueryOrFilters && (
-        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 6 }}>
-          Type a name or username, or use the filters above
-        </Typography>
-      )}
-
-      {!loading && hasQueryOrFilters && users.length > 0 && (
+      {!loading && users.length > 0 && (
         <Grid container spacing={2}>
           {users.map((user) => (
             <Grid item xs={12} key={user.username}>
