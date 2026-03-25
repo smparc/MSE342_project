@@ -1,33 +1,102 @@
 /**
- * Messaging component unit tests (outside-in TDD style).
- * These tests describe the expected behavior of the Messaging feature
- * as if written before implementation.
+ * Messaging component unit tests.
+ * Messaging uses react-router (useLocation, useNavigate), FirebaseContext, and a specific fetch sequence on conversation select.
  */
 
 import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
 import Messaging from './index';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { FirebaseContext } from '../Firebase';
+import appTheme from '../../theme/appTheme';
 
-const renderWithTheme = (ui) => {
-  const theme = createTheme();
-  return render(<ThemeProvider theme={theme}>{ui}</ThemeProvider>);
+jest.mock('../Firebase/firebase', () => ({
+  __esModule: true,
+  default: class MockFirebase {
+    constructor() {
+      this.auth = {};
+      this.googleProvider = {};
+    }
+  },
+}));
+
+const mockFirebase = {
+  auth: {
+    currentUser: {
+      getIdToken: jest.fn().mockResolvedValue('mock-token'),
+    },
+  },
 };
 
+const mockConversationList = [
+  { id: '1', senderName: 'Alice', lastMessage: 'Hi there', lastMessageAt: '2025-01-15T10:00:00Z', unread: 0 },
+  { id: '2', senderName: 'Bob', lastMessage: 'See you', lastMessageAt: '2025-01-14T09:00:00Z', unread: 0 },
+];
+
+const mockMessages = [
+  { id: 'm1', senderId: 'alice', senderName: 'Alice', content: 'Hello!', created_at: '2025-01-15T10:00:00Z' },
+  { id: 'm2', senderId: 'bob', senderName: 'Bob', content: 'Hi back', created_at: '2025-01-15T10:01:00Z' },
+];
+
+/**
+ * Default fetch: messages list, mark-read PUT, GET messages, POST send, extra list refreshes.
+ */
+function setupSuccessfulFetchMocks() {
+  global.fetch = jest.fn((url, options = {}) => {
+    const u = String(url);
+    const method = options.method || 'GET';
+
+    if (u.includes('/api/messages-list')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => mockConversationList,
+      });
+    }
+
+    if (u.includes('/read') && method === 'PUT') {
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    }
+
+    if (u.includes('/api/conversations/') && u.includes('/messages')) {
+      if (method === 'POST') {
+        const body = options.body && typeof options.body === 'string' ? JSON.parse(options.body) : {};
+        return Promise.resolve({
+          ok: true,
+          status: 201,
+          json: async () => ({
+            id: 'm3',
+            senderId: 'elly',
+            content: body.content || 'New message',
+            created_at: '2025-01-15T10:05:00Z',
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => mockMessages,
+      });
+    }
+
+    return Promise.resolve({ ok: false, json: async () => ({ error: 'unmocked', url: u }) });
+  });
+}
+
+function renderMessaging(ui = <Messaging />) {
+  return render(
+    <MemoryRouter>
+      <ThemeProvider theme={appTheme}>
+        <FirebaseContext.Provider value={mockFirebase}>{ui}</FirebaseContext.Provider>
+      </ThemeProvider>
+    </MemoryRouter>
+  );
+}
+
 describe('Messaging', () => {
-  const mockConversationList = [
-    { id: '1', senderName: 'Alice', lastMessage: 'Hi there', lastMessageAt: '2025-01-15T10:00:00Z', unread: 0 },
-    { id: '2', senderName: 'Bob', lastMessage: 'See you', lastMessageAt: '2025-01-14T09:00:00Z', unread: 0 },
-  ];
-
-  const mockMessages = [
-    { id: 'm1', senderId: '1', senderName: 'Alice', content: 'Hello!', created_at: '2025-01-15T10:00:00Z' },
-    { id: 'm2', senderId: '2', senderName: 'Bob', content: 'Hi back', created_at: '2025-01-15T10:01:00Z' },
-  ];
-
   beforeEach(() => {
-    global.fetch = jest.fn();
+    setupSuccessfulFetchMocks();
+    jest.spyOn(window, 'dispatchEvent').mockImplementation(() => true);
   });
 
   afterEach(() => {
@@ -36,24 +105,19 @@ describe('Messaging', () => {
 
   describe('initial load and conversation list', () => {
     it('fetches conversation list on mount', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockConversationList,
-      });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\/messages-list/)
+          expect.stringMatching(/\/api\/messages-list\?username=/)
         );
       });
     });
 
     it('shows error message when conversation list fails to load', async () => {
-      global.fetch.mockRejectedValueOnce(new Error('Network error'));
+      global.fetch = jest.fn(() => Promise.reject(new Error('Network error')));
 
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText(/Messages failed to load. Please try again later./i)).toBeInTheDocument();
@@ -61,12 +125,14 @@ describe('Messaging', () => {
     });
 
     it('shows error message when API returns non-array response', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ error: 'Unauthorized' }),
-      });
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: false,
+          json: async () => ({ error: 'Unauthorized' }),
+        })
+      );
 
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText(/Messages failed to load. Please try again later./i)).toBeInTheDocument();
@@ -74,12 +140,7 @@ describe('Messaging', () => {
     });
 
     it('shows conversation list when API returns conversations', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockConversationList,
-      });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -88,12 +149,7 @@ describe('Messaging', () => {
     });
 
     it('shows "Select a conversation" when no conversation is selected', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockConversationList,
-      });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -105,21 +161,7 @@ describe('Messaging', () => {
 
   describe('selecting a conversation', () => {
     it('fetches messages when a conversation is selected', async () => {
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockMessages,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -128,28 +170,19 @@ describe('Messaging', () => {
       fireEvent.click(screen.getByText('Alice'));
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\/conversations\/1\/messages/)
-        );
+        expect(
+          global.fetch.mock.calls.some(
+            (call) =>
+              typeof call[0] === 'string' &&
+              call[0].includes('/api/conversations/1/messages') &&
+              call[0].includes('username=')
+          )
+        ).toBe(true);
       });
     });
 
     it('shows conversation name and message input when conversation is selected', async () => {
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockMessages,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -165,21 +198,7 @@ describe('Messaging', () => {
     });
 
     it('displays messages in the selected conversation', async () => {
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockMessages,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -196,32 +215,7 @@ describe('Messaging', () => {
 
   describe('sending a message', () => {
     it('calls send API when user submits a message', async () => {
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockMessages,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 201,
-          json: async () => ({
-            id: 'm3',
-            senderId: '2',
-            senderName: 'Me',
-            content: 'New message',
-            created_at: '2025-01-15T10:05:00Z',
-          }),
-        });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -239,7 +233,7 @@ describe('Messaging', () => {
 
       await waitFor(() => {
         const postCalls = global.fetch.mock.calls.filter(
-          (call) => call[1] && call[1].method === 'POST'
+          (call) => call[1] && call[1].method === 'POST' && String(call[0]).includes('/messages')
         );
         expect(postCalls.length).toBeGreaterThanOrEqual(1);
         expect(postCalls[0][0]).toMatch(/\/api\/conversations\/1\/messages/);
@@ -248,21 +242,7 @@ describe('Messaging', () => {
     });
 
     it('does not send when input is empty', async () => {
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockMessages,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConversationList,
-        });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -281,12 +261,7 @@ describe('Messaging', () => {
 
   describe('layout and structure', () => {
     it('renders Messages heading in the conversation list', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockConversationList,
-      });
-
-      renderWithTheme(<Messaging />);
+      renderMessaging();
 
       await waitFor(() => {
         expect(screen.getByText('Messages')).toBeInTheDocument();
