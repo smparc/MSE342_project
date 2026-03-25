@@ -16,6 +16,7 @@ import { FirebaseContext } from '../Firebase';
 import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
 import { DeleteForever, Settings } from '@mui/icons-material';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 240;
@@ -27,6 +28,7 @@ const navItems = [
   { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
   { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
   { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
+  { path: '/calendar', label: 'Calendar', icon: CalendarMonthIcon, testId: 'CalendarIcon' },
   { path: '/contacts', label: 'Contacts', icon: PersonIcon },
   { path: '/advisors', label: 'Advisors', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },

@@ -78,7 +78,7 @@ export default function ExchangeCalendar({ currentUser }) {
   const loadChecklist = async () => {
     setChecklistLoading(true);
     try {
-      const res  = await fetch(`${API}/api/users/${currentUser}/milestones?type=Checklist`);
+      const res  = await fetch(`${API}/api/users/${currentUser}/milestones`);
       const data = await res.json();
       const existing = Array.isArray(data) ? data : [];
 
@@ -92,7 +92,7 @@ export default function ExchangeCalendar({ currentUser }) {
             body: JSON.stringify({
               title:          tmpl.title,
               deadline_utc:   new Date(Date.now() + 365 * 86400000).toISOString(),
-              milestone_type: 'Checklist',
+              milestone_type: 'UW Internal',
               phase:          tmpl.phase,
             }),
           });
@@ -100,7 +100,7 @@ export default function ExchangeCalendar({ currentUser }) {
       }
 
       // Re-fetch after seeding
-      const res2  = await fetch(`${API}/api/users/${currentUser}/milestones?type=Checklist`);
+      const res2  = await fetch(`${API}/api/users/${currentUser}/milestones`);
       const data2 = await res2.json();
       const all   = Array.isArray(data2) ? data2 : [];
 
@@ -118,17 +118,48 @@ export default function ExchangeCalendar({ currentUser }) {
 
   // AC2 & AC4 — toggle checklist item (check / uncheck)
   const toggleChecklistItem = async (item) => {
-    if (!item.milestone_id) return;
     const next = !item.is_completed;
+    
     // Optimistic update (AC3 — real-time progress indicator)
+    // Match by key to ensure UI updates instantly even if DB ID is missing
     setChecklist(prev =>
-      prev.map(c => c.milestone_id === item.milestone_id ? { ...c, is_completed: next } : c)
+      prev.map(c => c.key === item.key ? { ...c, is_completed: next } : c)
     );
-    await fetch(`${API}/api/milestones/${item.milestone_id}`, {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ is_completed: next }),
-    });
+
+    let targetId = item.milestone_id;
+
+    // If the item doesn't exist in DB yet, create it on the fly
+    if (!targetId && currentUser) {
+      try {
+        const res = await fetch(`${API}/api/users/${currentUser}/milestones`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title:          item.title,
+            deadline_utc:   new Date(Date.now() + 365 * 86400000).toISOString(),
+            milestone_type: 'UW Internal', // Fallback to safe DB ENUM type
+            phase:          item.phase,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          targetId = data.milestone_id;
+          setChecklist(prev =>
+            prev.map(c => c.key === item.key ? { ...c, milestone_id: targetId } : c)
+          );
+        }
+      } catch (err) {
+        console.error('Failed to seed checklist item', err);
+      }
+    }
+
+    if (targetId) {
+      await fetch(`${API}/api/milestones/${targetId}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ is_completed: next }),
+      });
+    }
   };
 
   // ── Calendar grid helpers ────────────────────────────────────

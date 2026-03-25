@@ -39,8 +39,8 @@ const setupFetch = (calendarData = mockMilestones) => {
     if (url.includes('type=Checklist')) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve(mockChecklist) });
     }
-    if (url.includes('/milestones') && !url.includes('type=')) {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(calendarData) });
+    if (url.includes('/milestones') && !url.includes('type=') && !url.includes('destination=')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([...calendarData, ...mockChecklist]) });
     }
     if (url.includes('/milestones')) {
       // Filtered fetch — return matching subset
