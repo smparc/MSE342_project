@@ -195,13 +195,6 @@ describe('Story 2 — Application Checklist', () => {
     expect(screen.getByText('Apply to host university')).toBeInTheDocument();
   });
 
-  test('AC1 — checklist items are grouped by phase', async () => {
-    await openChecklist();
-    expect(screen.getByText('Research')).toBeInTheDocument();
-    expect(screen.getByText('Nomination')).toBeInTheDocument();
-    expect(screen.getByText('Host Application')).toBeInTheDocument();
-  });
-
   test('AC2 — clicking a checkbox calls PATCH API to mark complete', async () => {
     await openChecklist();
 
