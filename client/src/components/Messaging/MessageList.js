@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
+import { alpha } from '@mui/material/styles';
 import { formatDayHeader } from './utils';
 
 const MessageList = ({ conversationName, messages, loading }) => {
@@ -100,20 +101,30 @@ const MessageList = ({ conversationName, messages, loading }) => {
                     >
                       <Paper
                         elevation={0}
-                        sx={{
+                        sx={(theme) => ({
                           maxWidth: 564,
-                          px: 1.5, // 12px left/right
-                          py: 1, // 8px top/bottom
-                          backgroundColor: isOwn ? 'rgb(74, 93, 249)' : 'rgb(243, 245, 247)',
-                          color: isOwn ? '#ffffff' : 'text.primary',
+                          px: 1.5,
+                          py: 1,
                           borderRadius: 18,
-                        }}
+                          ...(isOwn
+                            ? {
+                                backgroundColor: theme.palette.tertiary.main,
+                                color: theme.palette.tertiary.contrastText,
+                              }
+                            : {
+                                backgroundColor: theme.palette.background.paper,
+                                color: theme.palette.text.primary,
+                                border: `1px solid ${alpha(theme.palette.tertiary.main, 0.42)}`,
+                                boxShadow: '0 1px 4px rgba(26, 26, 46, 0.12)',
+                              }),
+                        })}
                       >
                         <Typography
                           variant="body1"
                           sx={{
                             fontSize: 15,
                             lineHeight: 1.4,
+                            wordBreak: 'break-word',
                           }}
                         >
                           {msg.text}

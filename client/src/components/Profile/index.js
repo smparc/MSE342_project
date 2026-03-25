@@ -8,7 +8,7 @@ import { FirebaseContext, authFetch } from '../Firebase'
 import UploadReviews from './UploadReviews'
 
 
-const Profile = ({ currentUser, authUser }) => {
+const Profile = ({ currentUser, authUser, viewUsername }) => {
 
     const theme = useTheme()
     const isSmall = useMediaQuery(theme.breakpoints.down('sm'))
@@ -30,16 +30,18 @@ const Profile = ({ currentUser, authUser }) => {
 
     const [uwVerified, setUwVerified] = React.useState(false)
 
-    // Use authenticated user's identifier, fallback to prop or default
+    // Use viewUsername when viewing another user, else current user
     const currentUsername = currentUser || authUser?.email?.split('@')[0] || 'john.doe'
+    const profileUsername = viewUsername || currentUsername
+    const isOwnProfile = !viewUsername || profileUsername === currentUsername
 
     const [tabIndex, setTabIndex] = React.useState(0)
     const [posts, setPosts] = React.useState([])
 
     const fetchUserData = React.useCallback(async () => {
-        if (!currentUsername) return
+        if (!profileUsername) return
         try {
-            const response = await fetch(`/api/user/${currentUsername}`)
+            const response = await fetch(`/api/user/${profileUsername}`)
             if (!response.ok) {
                 console.error('Failed to fetch user data:', response.status)
                 return
@@ -47,7 +49,7 @@ const Profile = ({ currentUser, authUser }) => {
             const data = await response.json()
             setDisplayName(data.display_name || '')
             setBio(data.bio || '')
-            setUsername(data.username || currentUsername)
+            setUsername(data.username || profileUsername)
             setFaculty(data.faculty || '')
             setProgram(data.program || '')
             setGradYear(data.grad_year || '')
@@ -59,12 +61,12 @@ const Profile = ({ currentUser, authUser }) => {
         } catch (error) {
             console.error('Error fetching user data:', error)
         }
-    }, [currentUsername])
+    }, [profileUsername])
 
     const fetchPosts = React.useCallback(async () => {
-        if (!currentUsername) return
+        if (!profileUsername) return
         try {
-            const response = await fetch(`/api/posts/${currentUsername}`)
+            const response = await fetch(`/api/posts/${profileUsername}`)
             if (!response.ok) {
                 console.error('Failed to fetch posts:', response.status)
                 setPosts([])
@@ -76,7 +78,7 @@ const Profile = ({ currentUser, authUser }) => {
             console.error('Error fetching posts:', error)
             setPosts([])
         }
-    }, [currentUsername])
+    }, [profileUsername])
 
     React.useEffect(() => {
         fetchUserData()
@@ -116,6 +118,7 @@ const Profile = ({ currentUser, authUser }) => {
                         setExchangeSchool={setExchangeSchool}
                         uwVerified={uwVerified}
                         firebase={firebase}
+                        isOwnProfile={isOwnProfile}
                     />
                 </Grid>
 
@@ -137,7 +140,9 @@ const Profile = ({ currentUser, authUser }) => {
                     {tabIndex === 0 && (
                         <UploadContent
                             fetchPosts={fetchPosts} posts={posts} cols={cols}
-                            currentUsername={currentUsername} firebase={firebase}
+                            currentUsername={profileUsername}
+                            firebase={firebase}
+                            isOwnProfile={isOwnProfile}
                         />
                     )}
                     {tabIndex === 1 && <CourseTable username={username} />}

@@ -66,7 +66,16 @@ describe('SignIn', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     firebase = createMockFirebase();
-    global.fetch = jest.fn();
+    global.fetch = jest.fn((url) => {
+      const u = String(url);
+      if (u.includes('/api/users/availability')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ emailTaken: false, usernameTaken: false }),
+        });
+      }
+      return Promise.resolve({ ok: false, json: async () => ({ error: 'unmocked URL' }) });
+    });
     Object.defineProperty(window, 'location', { value: { href: '' }, writable: true });
   });
 
@@ -121,7 +130,7 @@ describe('SignIn', () => {
     submitForm(/Next/i);
 
     await waitFor(() => {
-      expect(screen.getByText('Profile Information')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Profile Information/i })).toBeInTheDocument();
     });
   });
 
@@ -140,7 +149,22 @@ describe('SignIn', () => {
   it('displays error when sign up API fails', async () => {
     firebase.doCreateUserWithEmailAndPassword.mockResolvedValueOnce();
     firebase.auth.currentUser.getIdToken.mockResolvedValueOnce('mock-token');
-    global.fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Username already exists' }) });
+    global.fetch.mockImplementation((url, options) => {
+      const u = String(url);
+      if (u.includes('/api/users/availability')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ emailTaken: false, usernameTaken: false }),
+        });
+      }
+      if (options?.method === 'POST' && u.includes('/api/users')) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ error: 'Username already exists' }),
+        });
+      }
+      return Promise.resolve({ ok: false, json: async () => ({ error: 'unmocked' }) });
+    });
 
     renderComponent({ firebase });
     fireEvent.click(screen.getByRole('button', { name: /Don't have an account\? Sign Up/i }));
@@ -149,7 +173,11 @@ describe('SignIn', () => {
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
     submitForm(/Next/i);
 
-    await waitFor(() => screen.getByText('Profile Information'));
+    await waitFor(() => screen.getByRole('heading', { name: /Profile Information/i }));
+
+    submitForm(/Next/i);
+
+    await waitFor(() => screen.getByRole('heading', { name: /Tell us about yourself/i }));
 
     submitForm(/Complete Sign Up/i);
 

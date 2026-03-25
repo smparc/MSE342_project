@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -6,6 +7,7 @@ import { useTheme } from '@mui/material/styles';
 import ConversationList from './ConversationList';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import CreateMessage from './CreateMessage';
 import { formatMessageTimestamp } from './utils';
 import { FirebaseContext, authFetch } from '../Firebase';
 
@@ -20,7 +22,9 @@ const sortConversationsByLastActive = (list) => {
 const Messaging = ({ currentUser, authUser }) => {
   const theme = useTheme();
   const firebase = React.useContext(FirebaseContext);
-  
+  const location = useLocation();
+  const navigate = useNavigate();
+
   // Use authenticated user's identifier
   const CURRENT_USERNAME = currentUser || authUser?.email?.split('@')[0] || 'elly';
   const [conversations, setConversations] = React.useState([]);
@@ -28,6 +32,7 @@ const Messaging = ({ currentUser, authUser }) => {
   const [selectedConversationId, setSelectedConversationId] = React.useState(null);
   const [messagesLoading, setMessagesLoading] = React.useState(false);
   const [listLoadError, setListLoadError] = React.useState(false);
+  const [newMessageModalOpen, setNewMessageModalOpen] = React.useState(false);
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
   const currentMessages = messages[selectedConversationId] || [];
@@ -56,6 +61,13 @@ const Messaging = ({ currentUser, authUser }) => {
     }
     setMessagesLoading(true);
     try {
+      const readRes = await fetch(
+        `/api/conversations/${conversationId}/read?username=${encodeURIComponent(CURRENT_USERNAME)}`,
+        { method: 'PUT' }
+      );
+      if (readRes.ok) {
+        window.dispatchEvent(new CustomEvent('messages-read'));
+      }
       const response = await fetch(
         `/api/conversations/${conversationId}/messages?username=${encodeURIComponent(CURRENT_USERNAME)}`
       );
@@ -85,6 +97,24 @@ const Messaging = ({ currentUser, authUser }) => {
     loadConversationList();
   }, [loadConversationList]);
 
+  const openConversationState = location.state?.openConversationId
+    ? { id: location.state.openConversationId, senderName: location.state.senderName }
+    : null;
+  React.useEffect(() => {
+    if (!openConversationState) return;
+    const { id, senderName } = openConversationState;
+    setConversations((prev) => {
+      const existing = prev.find((c) => c.id === id);
+      if (existing) return prev;
+      return sortConversationsByLastActive([
+        { id, senderName: senderName || 'Unknown', lastMessage: '', lastMessageAt: null, unread: 0 },
+        ...prev,
+      ]);
+    });
+    setSelectedConversationId(id);
+    navigate('/messages', { replace: true, state: {} });
+  }, [openConversationState?.id]);
+
   React.useEffect(() => {
     if (selectedConversationId) {
       loadConversationMessages(selectedConversationId);
@@ -101,6 +131,27 @@ const Messaging = ({ currentUser, authUser }) => {
     setConversations((prev) =>
       prev.map((c) => (c.id === conversationId ? { ...c, unread: 0 } : c))
     );
+  };
+
+  const handleConversationCreated = (newConv) => {
+    const existing = conversations.find((c) => c.id === newConv.id);
+    if (!existing) {
+      setConversations((prev) =>
+        sortConversationsByLastActive([
+          {
+            id: newConv.id,
+            senderName: newConv.senderName,
+            lastMessage: '',
+            lastMessageAt: null,
+            unread: 0,
+          },
+          ...prev,
+        ])
+      );
+    }
+    setSelectedConversationId(newConv.id);
+    setNewMessageModalOpen(false);
+    loadConversationMessages(newConv.id);
   };
 
   const handleSendMessage = async (text) => {
@@ -159,7 +210,7 @@ const Messaging = ({ currentUser, authUser }) => {
           justifyContent: 'center',
           height: '100vh',
           minHeight: 400,
-          backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+          backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.background.default,
           p: 3,
         }}
       >
@@ -178,7 +229,7 @@ const Messaging = ({ currentUser, authUser }) => {
         display: 'flex',
         height: '100vh',
         minHeight: 400,
-        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.background.default,
       }}
     >
       <Paper
@@ -197,6 +248,7 @@ const Messaging = ({ currentUser, authUser }) => {
           conversations={conversations}
           selectedId={selectedConversationId}
           onSelect={handleSelectConversation}
+          onNewMessage={() => setNewMessageModalOpen(true)}
         />
       </Paper>
 
@@ -233,6 +285,14 @@ const Messaging = ({ currentUser, authUser }) => {
           </Box>
         )}
       </Paper>
+      <CreateMessage
+        open={newMessageModalOpen}
+        onClose={() => setNewMessageModalOpen(false)}
+        currentUsername={CURRENT_USERNAME}
+        authFetch={authFetch}
+        firebase={firebase}
+        onConversationCreated={handleConversationCreated}
+      />
     </Box>
   );
 };

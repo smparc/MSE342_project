@@ -158,7 +158,7 @@ app.delete('/api/posts/:id', checkAuth, (req, res) => {
 
 // API to create a new user (for sign up)
 app.post('/api/users', checkAuth, (req, res) => {
-    const { username, email, display_name, faculty, program, grad_year, exchange_term, uw_verified } = req.body;
+    const { username, email, display_name, faculty, program, grad_year, exchange_term, uw_verified, user_type } = req.body;
 
     if (!username || !username.trim()) {
         return res.status(400).json({ error: 'Username is required' });
@@ -176,10 +176,13 @@ app.post('/api/users', checkAuth, (req, res) => {
             return res.status(409).json({ error: 'Username already exists' });
         }
 
+        const validUserTypes = ['current_exchange', 'prospective', 'alumni', 'browsing'];
+        const finalUserType = (user_type && validUserTypes.includes(user_type)) ? user_type : 'browsing';
+
         // Create new user with email and profile info
         const insertSql = `
-            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term, uw_verified) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term, uw_verified, user_type) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const params = [
             username.trim(),
@@ -189,7 +192,8 @@ app.post('/api/users', checkAuth, (req, res) => {
             program || null,
             grad_year || null,
             exchange_term || null,
-            uw_verified || false
+            uw_verified || false,
+            finalUserType
         ];
 
         connection.query(insertSql, params, (error, results) => {
@@ -197,11 +201,19 @@ app.post('/api/users', checkAuth, (req, res) => {
                 console.error('Database error:', error);
                 return res.status(500).json({ error: 'Failed to create user' });
             }
-            res.status(201).json({
-                success: true,
-                message: 'User created successfully',
-                username: username.trim()
-            });
+            const uname = username.trim();
+            connection.query(
+                "INSERT INTO profile_tags (username, tag_type, tag_value) VALUES (?, 'user_type', ?) ON DUPLICATE KEY UPDATE tag_value = ?",
+                [uname, finalUserType, finalUserType],
+                (tagErr) => {
+                    if (tagErr) console.error('Error adding user_type tag:', tagErr);
+                    res.status(201).json({
+                        success: true,
+                        message: 'User created successfully',
+                        username: uname
+                    });
+                }
+            );
         });
     });
 });
@@ -219,6 +231,134 @@ app.get('/api/users/by-email/:email', (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         res.json(results[0]);
+    });
+});
+
+// Sign-up: check email/username not already in DB (public, no auth)
+app.get('/api/users/availability', (req, res) => {
+    const email = (req.query.email || '').trim();
+    const username = (req.query.username || '').trim();
+
+    if (!email && !username) {
+        return res.status(400).json({ error: 'Provide email and/or username' });
+    }
+
+    const sql = `
+        SELECT
+            (SELECT COUNT(*) FROM users WHERE LOWER(TRIM(email)) = LOWER(?)) AS email_count,
+            (SELECT COUNT(*) FROM users WHERE username = ?) AS username_count
+    `;
+    connection.query(sql, [email, username], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        const row = results[0];
+        res.json({
+            emailTaken: email ? Number(row.email_count) > 0 : null,
+            usernameTaken: username ? Number(row.username_count) > 0 : null,
+        });
+    });
+});
+
+// API to search users (for new message, search page - must be before /api/users/:username)
+// Query: q, exclude, excludeConversations (1), includeTags (1),
+//        faculty, program, grad_year, exchange_term (optional filters; AND logic)
+app.get('/api/users/search', (req, res) => {
+    const q = (req.query.q || '').trim();
+    const exclude = (req.query.exclude || '').trim();
+    const excludeConversations = req.query.excludeConversations === '1';
+    const includeTags = req.query.includeTags === '1';
+    const filterFaculty = (req.query.faculty || '').trim();
+    const filterProgram = (req.query.program || '').trim();
+    const filterGradYear = (req.query.grad_year || '').trim();
+    const filterExchangeTerm = (req.query.exchange_term || '').trim();
+
+    let sql = "SELECT u.username, u.display_name, u.bio, u.faculty, u.program, u.grad_year, u.exchange_term, u.uw_verified FROM users AS u WHERE 1=1";
+    const params = [];
+    if (exclude) {
+        sql += " AND u.username != ?";
+        params.push(exclude);
+    }
+    if (excludeConversations && exclude) {
+        sql += ` AND u.username NOT IN (
+            SELECT user2_username FROM conversations WHERE user1_username = ?
+            UNION
+            SELECT user1_username FROM conversations WHERE user2_username = ?
+        )`;
+        params.push(exclude, exclude);
+    }
+    if (q) {
+        const pattern = `%${q}%`;
+        sql += ` AND (
+            u.username LIKE ? OR u.display_name LIKE ? OR u.program LIKE ?
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt
+                WHERE pt.username = u.username AND pt.tag_type = 'program' AND pt.tag_value LIKE ?
+            )
+        )`;
+        params.push(pattern, pattern, pattern, pattern);
+    }
+    if (filterFaculty) {
+        sql += " AND u.faculty LIKE ?";
+        params.push(`%${filterFaculty}%`);
+    }
+    if (filterProgram) {
+        const progPat = `%${filterProgram}%`;
+        sql += ` AND (u.program LIKE ? OR EXISTS (
+            SELECT 1 FROM profile_tags pt WHERE pt.username = u.username AND pt.tag_type = 'program' AND pt.tag_value LIKE ?
+        ))`;
+        params.push(progPat, progPat);
+    }
+    if (filterGradYear) {
+        const gy = parseInt(filterGradYear, 10);
+        if (!Number.isNaN(gy)) {
+            sql += ` AND (u.grad_year = ? OR EXISTS (
+                SELECT 1 FROM profile_tags pt WHERE pt.username = u.username AND pt.tag_type = 'year' AND pt.tag_value = ?
+            ))`;
+            params.push(gy, String(gy));
+        }
+    }
+    if (filterExchangeTerm) {
+        const termPat = `%${filterExchangeTerm}%`;
+        sql += ` AND (u.exchange_term LIKE ? OR EXISTS (
+            SELECT 1 FROM profile_tags pt WHERE pt.username = u.username
+            AND pt.tag_type IN ('term', 'exchange_term') AND pt.tag_value LIKE ?
+        ))`;
+        params.push(termPat, termPat);
+    }
+    sql += " ORDER BY u.display_name ASC LIMIT 50";
+
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (!includeTags || !results.length) {
+            return res.json(results);
+        }
+        const usernames = results.map((r) => r.username);
+        const placeholders = usernames.map(() => '?').join(',');
+        connection.query(
+            `SELECT username, tag_type, tag_value FROM profile_tags WHERE username IN (${placeholders}) ORDER BY username, tag_type`,
+            usernames,
+            (tagErr, tagRows) => {
+                if (tagErr) {
+                    console.error('Database error fetching tags:', tagErr);
+                    return res.json(results);
+                }
+                const tagsByUser = {};
+                for (const row of tagRows) {
+                    if (!tagsByUser[row.username]) tagsByUser[row.username] = [];
+                    tagsByUser[row.username].push({ tag_type: row.tag_type, tag_value: row.tag_value });
+                }
+                const enriched = results.map((r) => ({
+                    ...r,
+                    tags: tagsByUser[r.username] || [],
+                }));
+                res.json(enriched);
+            }
+        );
     });
 });
 
@@ -363,6 +503,107 @@ app.get('/api/posts/:username', (req, res) => {
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// POST /api/conversations - create or get existing conversation
+// Query: username (current user)  Body: { targetUsername }
+// Returns: { id, senderName } (conversation for display in list)
+app.post('/api/conversations', checkAuth, (req, res) => {
+    const username = req.query.username;
+    const { targetUsername } = req.body;
+
+    if (!username || !targetUsername || !String(targetUsername).trim()) {
+        return res.status(400).json({ error: 'username and targetUsername are required' });
+    }
+    const target = String(targetUsername).trim();
+    if (target.toLowerCase() === username.toLowerCase()) {
+        return res.status(400).json({ error: 'Cannot start a conversation with yourself' });
+    }
+
+    const conn = mysql.createConnection(config);
+
+    // Check if user exists
+    conn.query("SELECT username, display_name FROM users WHERE username = ?", [target], (err, users) => {
+        if (err) {
+            console.error('Error checking user:', err);
+            res.status(500).json({ error: 'Failed to create conversation' });
+            conn.end();
+            return;
+        }
+        if (!users || users.length === 0) {
+            res.status(404).json({ error: 'User not found' });
+            conn.end();
+            return;
+        }
+
+        const u1 = username < target ? username : target;
+        const u2 = username < target ? target : username;
+
+        // Find existing conversation (order-independent)
+        const findSql = `
+            SELECT id FROM conversations
+            WHERE (user1_username = ? AND user2_username = ?) OR (user1_username = ? AND user2_username = ?)
+        `;
+        conn.query(findSql, [u1, u2, u2, u1], (findErr, existing) => {
+            if (findErr) {
+                console.error('Error finding conversation:', findErr);
+                res.status(500).json({ error: 'Failed to create conversation' });
+                conn.end();
+                return;
+            }
+            if (existing && existing.length > 0) {
+                const convId = String(existing[0].id);
+                conn.end();
+                return res.status(200).json({
+                    id: convId,
+                    senderName: users[0].display_name || users[0].username,
+                });
+            }
+
+            // Create new conversation
+            const insertSql = "INSERT INTO conversations (user1_username, user2_username) VALUES (?, ?)";
+            conn.query(insertSql, [u1, u2], (insErr, result) => {
+                if (insErr) {
+                    console.error('Error creating conversation:', insErr);
+                    res.status(500).json({ error: 'Failed to create conversation' });
+                    conn.end();
+                    return;
+                }
+                const convId = String(result.insertId);
+                conn.end();
+                res.status(201).json({
+                    id: convId,
+                    senderName: users[0].display_name || users[0].username,
+                });
+            });
+        });
+    });
+});
+
+// GET /api/messages-unread-count - total unread messages for nav badge
+app.get('/api/messages-unread-count', (req, res) => {
+    const username = req.query.username;
+    if (!username) {
+        return res.status(400).json({ error: 'User is not logged in' });
+    }
+    const conn = mysql.createConnection(config);
+    const sql = `
+        SELECT COUNT(*) AS cnt
+        FROM messages m
+        JOIN conversations c ON c.id = m.conversation_id
+        WHERE ((c.user1_username = ? AND m.sender_username = c.user2_username)
+            OR (c.user2_username = ? AND m.sender_username = c.user1_username))
+        AND (m.is_read = 0 OR m.is_read IS NULL)
+    `;
+    conn.query(sql, [username, username], (err, results) => {
+        if (err) {
+            console.error('Error fetching unread count:', err);
+            res.status(500).json({ error: 'Failed to retrieve unread count' });
+        } else {
+            res.json({ count: Number(results[0]?.cnt || 0) });
+        }
+        conn.end();
+    });
+});
+
 // 1) GET /api/messages-list - conversation list (left sidebar)
 // Query param: userId (required) eventually
 // Returns: [{ id, senderName, lastMessage, lastMessageAt, unread }]
@@ -418,6 +659,31 @@ app.get('/api/messages-list', (req, res) => {
             res.json(list);
         }
         connection.end();
+    });
+});
+
+// PUT /api/conversations/:conversationId/read - mark messages as read when user views conversation
+app.put('/api/conversations/:conversationId/read', (req, res) => {
+    const { conversationId } = req.params;
+    const username = req.query.username;
+    if (!username) return res.status(400).json({ error: 'username required' });
+    const conn = mysql.createConnection(config);
+    const sql = `
+        UPDATE messages m
+        JOIN conversations c ON c.id = m.conversation_id
+        SET m.is_read = 1
+        WHERE m.conversation_id = ?
+        AND ((c.user1_username = ? AND m.sender_username = c.user2_username)
+            OR (c.user2_username = ? AND m.sender_username = c.user1_username))
+    `;
+    conn.query(sql, [conversationId, username, username], (err) => {
+        if (err) {
+            console.error('Error marking as read:', err);
+            res.status(500).json({ error: 'Failed to mark as read' });
+        } else {
+            res.json({ success: true });
+        }
+        conn.end();
     });
 });
 
