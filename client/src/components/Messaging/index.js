@@ -53,7 +53,7 @@ const Messaging = ({ currentUser, authUser }) => {
       setConversations([]);
       setListLoadError(true);
     }
-  }, []);
+  }, [CURRENT_USERNAME]);
 
   const loadConversationMessages = React.useCallback(async (conversationId) => {
     if (conversationId == null || conversationId === '') {
@@ -91,7 +91,7 @@ const Messaging = ({ currentUser, authUser }) => {
     } finally {
       setMessagesLoading(false);
     }
-  }, [loadConversationList]);
+  }, [loadConversationList, CURRENT_USERNAME]);
 
   React.useEffect(() => {
     loadConversationList();
@@ -113,7 +113,7 @@ const Messaging = ({ currentUser, authUser }) => {
     });
     setSelectedConversationId(id);
     navigate('/messages', { replace: true, state: {} });
-  }, [openConversationState?.id]);
+  }, [openConversationState?.id, navigate]);
 
   React.useEffect(() => {
     if (selectedConversationId) {

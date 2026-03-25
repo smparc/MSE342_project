@@ -13,7 +13,7 @@ import Timeline from '../Timeline';
 import ContactsList from '../ContactsList';
 import AdvisorsList from '../AdvisorsList';
 import DeleteAccount from '../DeleteAccount';
-import UserTypeSelect from '../UserTypeSelect';
+import UserTypeSelect from '../SignIn/UserTypeSelect';
 import ExchangeCalendar from '../ExchangeCalendar';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';

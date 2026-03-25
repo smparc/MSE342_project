@@ -7,7 +7,7 @@ import EditProfileModal from './EditProfileModal'
 import EditTagsModal from './EditTagsModal'
 
 
-const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, exchangeCountry, setExchangeCountry, exchangeSchool, setExchangeSchool, uwVerified, firebase, isOwnProfiel = true}) => {
+const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, exchangeCountry, setExchangeCountry, exchangeSchool, setExchangeSchool, uwVerified, firebase, isOwnProfile = true}) => {
 
     const [modalStatus, setModalStatus] = React.useState(false)
     const [tagsModalStatus, setTagsModalStatus] = React.useState(false)
