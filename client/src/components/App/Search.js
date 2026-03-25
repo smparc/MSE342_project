@@ -8,6 +8,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import { UserSearchCard, UserProfileModal, SearchFiltersBar, useUserSearch } from '../UserSearch';
 import { FirebaseContext, authFetch } from '../Firebase';
+import '../CourseSearch/CourseSearch.css';
 
 const Search = ({ currentUser, authUser }) => {
   const firebase = React.useContext(FirebaseContext);
@@ -15,18 +16,12 @@ const Search = ({ currentUser, authUser }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [filters, setFilters] = React.useState({
     faculty: '',
-    program: '',
     gradYear: '',
-    exchangeTerm: '',
   });
   const [selectedUser, setSelectedUser] = React.useState(null);
 
   const hasQueryOrFilters =
-    searchQuery.trim() ||
-    filters.faculty ||
-    filters.program.trim() ||
-    filters.gradYear ||
-    filters.exchangeTerm.trim();
+    searchQuery.trim() || filters.faculty || filters.gradYear;
 
   const { users, loading, error, searchUsers } = useUserSearch({
     currentUsername,
@@ -35,9 +30,7 @@ const Search = ({ currentUser, authUser }) => {
     excludeConversations: false,
     enabled: hasQueryOrFilters,
     facultyFilter: filters.faculty,
-    programFilter: filters.program,
     gradYearFilter: filters.gradYear,
-    exchangeTermFilter: filters.exchangeTerm,
   });
 
   React.useEffect(() => {
@@ -51,39 +44,38 @@ const Search = ({ currentUser, authUser }) => {
 
   return (
     <Box
+      className="cs-wrap"
       sx={{
-        p: 3,
-        pb: 10,
-        maxWidth: 900,
+        pb: 6,
+        maxWidth: 1100,
         margin: '0 auto',
       }}
     >
       <Typography variant="h6" sx={{ mb: 2 }}>
         Search Users
       </Typography>
-      <TextField
-        fullWidth
-        placeholder="Search by username or display name..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        variant="outlined"
-        size="small"
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" color="action" />
-            </InputAdornment>
-          ),
-        }}
-        sx={{ mb: 2 }}
-      />
+      <div className="cs-search-row">
+        <TextField
+          fullWidth
+          placeholder="Search by username or display name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          size="small"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </div>
 
       <SearchFiltersBar
         filters={filters}
         onChange={setFilters}
-        onClear={() =>
-          setFilters({ faculty: '', program: '', gradYear: '', exchangeTerm: '' })
-        }
+        onClear={() => setFilters({ faculty: '', gradYear: '' })}
       />
 
       {error && (

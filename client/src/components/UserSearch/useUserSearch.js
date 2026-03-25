@@ -11,9 +11,7 @@ export const useUserSearch = ({
   excludeConversations = false,
   enabled = true,
   facultyFilter = '',
-  programFilter = '',
   gradYearFilter = '',
-  exchangeTermFilter = '',
 }) => {
   const [users, setUsers] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
@@ -35,9 +33,7 @@ export const useUserSearch = ({
       if (includeTags) params.set('includeTags', '1');
       if (excludeConversations) params.set('excludeConversations', '1');
       if (facultyFilter.trim()) params.set('faculty', facultyFilter.trim());
-      if (programFilter.trim()) params.set('program', programFilter.trim());
       if (gradYearFilter.trim()) params.set('grad_year', gradYearFilter.trim());
-      if (exchangeTermFilter.trim()) params.set('exchange_term', exchangeTermFilter.trim());
 
       const url = `/api/users/search?${params.toString()}`;
       const response = await fetch(url);
@@ -63,9 +59,7 @@ export const useUserSearch = ({
     excludeConversations,
     enabled,
     facultyFilter,
-    programFilter,
     gradYearFilter,
-    exchangeTermFilter,
   ]);
 
   return { users, loading, error, searchUsers };

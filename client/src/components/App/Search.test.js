@@ -4,7 +4,7 @@
 
 import '@testing-library/jest-dom';
 import React from 'react';
-import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Search from './Search';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -79,13 +79,10 @@ describe('Search', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders filter controls', () => {
+    it('renders filter controls (faculty + class, Course Search style)', () => {
       renderSearch();
-      expect(screen.getByText(/Filter by profile & tags/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^Faculty$/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^Program$/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Class \(grad year\)/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^Exchange term$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Class \(graduation year\)/i)).toBeInTheDocument();
     });
 
     it('does not call the user search API until there is a query or a filter', async () => {
@@ -165,10 +162,9 @@ describe('Search', () => {
       });
 
       renderSearch();
-      const facultySelect = screen.getByLabelText(/^Faculty$/i);
-      fireEvent.mouseDown(within(facultySelect.parentElement).getByRole('combobox'));
-      const listbox = await screen.findByRole('listbox');
-      fireEvent.click(within(listbox).getByText('Engineering'));
+      fireEvent.change(screen.getByLabelText(/^Faculty$/i), {
+        target: { value: 'Engineering' },
+      });
 
       await waitFor(
         () => {
@@ -182,15 +178,16 @@ describe('Search', () => {
       );
     });
 
-    it('calls GET /api/users/search with program when program filter is filled', async () => {
+    it('calls GET /api/users/search with grad_year when class is selected', async () => {
       global.fetch.mockResolvedValue({
         ok: true,
         json: async () => mockSearchResult,
       });
 
       renderSearch();
-      const programInput = screen.getByLabelText(/^Program$/i);
-      fireEvent.change(programInput, { target: { value: 'Computer' } });
+      fireEvent.change(screen.getByLabelText(/Class \(graduation year\)/i), {
+        target: { value: '2026' },
+      });
 
       await waitFor(
         () => {
@@ -198,7 +195,7 @@ describe('Search', () => {
             ([url]) => typeof url === 'string' && url.includes('/api/users/search')
           );
           expect(searchUrl).toBeDefined();
-          expect(searchUrl[0]).toMatch(/[?&]program=Computer/);
+          expect(searchUrl[0]).toMatch(/[?&]grad_year=2026/);
         },
         { timeout: 4000 }
       );
