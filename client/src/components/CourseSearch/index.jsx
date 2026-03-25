@@ -307,13 +307,13 @@ export default function CourseSearch({ currentUser, authUser }) {
               </button>
             </div>
 
-            <div className="cs-card-body">
-              <div className="cs-host-course">
+            <div className="cs-card-body" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-start' }}>
+              <div className="cs-host-course" style={{ flex: '0 1 auto' }}>
                 <span className="cs-code">{c.host_course_code}</span>
                 <span className="cs-name">{c.host_course_name}</span>
               </div>
-              <div className="cs-arrow">→</div>
-              <div className="cs-uw-course">
+              <div className="cs-arrow" style={{ flex: '0 0 auto' }}>→</div>
+              <div className="cs-uw-course" style={{ flex: '0 1 auto' }}>
                 <span className="cs-code cs-uw">{c.uw_course_code}</span>
                 <span className="cs-name">{c.uw_course_name}</span>
               </div>
