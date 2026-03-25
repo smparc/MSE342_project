@@ -234,6 +234,33 @@ app.get('/api/users/by-email/:email', (req, res) => {
     });
 });
 
+// Sign-up: check email/username not already in DB (public, no auth)
+app.get('/api/users/availability', (req, res) => {
+    const email = (req.query.email || '').trim();
+    const username = (req.query.username || '').trim();
+
+    if (!email && !username) {
+        return res.status(400).json({ error: 'Provide email and/or username' });
+    }
+
+    const sql = `
+        SELECT
+            (SELECT COUNT(*) FROM users WHERE LOWER(TRIM(email)) = LOWER(?)) AS email_count,
+            (SELECT COUNT(*) FROM users WHERE username = ?) AS username_count
+    `;
+    connection.query(sql, [email, username], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        const row = results[0];
+        res.json({
+            emailTaken: email ? Number(row.email_count) > 0 : null,
+            usernameTaken: username ? Number(row.username_count) > 0 : null,
+        });
+    });
+});
+
 // API to search users (for new message, search page - must be before /api/users/:username)
 // Query: q (search term), exclude (current username, optional), excludeConversations (1), includeTags (1)
 app.get('/api/users/search', (req, res) => {

@@ -70,11 +70,40 @@ const SignIn = ({ firebase }) => {
         return true;
     };
 
-    // Step 1 -> Step 2 (profile info)
-    const handleNextToProfile = () => {
+    // Step 1 -> Step 2 (profile info): ensure email and username are not already in DB
+    const handleNextToProfile = async (event) => {
+        event.preventDefault();
         setError(null);
         if (!validateStep1()) return;
-        setStep(2);
+
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({
+                email: email.trim(),
+                username: username.trim(),
+            });
+            const res = await fetch(`/api/users/availability?${params}`);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || 'Could not verify availability');
+            }
+            const parts = [];
+            if (data.emailTaken) {
+                parts.push('This email is already registered');
+            }
+            if (data.usernameTaken) {
+                parts.push('This username is already taken');
+            }
+            if (parts.length > 0) {
+                setError({ message: parts.join('. ') });
+                return;
+            }
+            setStep(2);
+        } catch (err) {
+            setError({ message: err.message || 'Something went wrong. Please try again' });
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Step 2 -> Step 3 (user type)
