@@ -17,6 +17,9 @@ import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
 import { DeleteForever, Settings } from '@mui/icons-material';
 
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 240;
 
@@ -30,8 +33,8 @@ const navItems = [
   { path: '/contacts', label: 'Contacts', icon: PersonIcon },
   { path: '/advisors', label: 'Advisors', icon: PersonIcon },
   { path: '/profile', label: 'Profile', icon: PersonIcon },
-  { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
-  { path: '/settings/user-type', label: 'Settings', icon: Settings }
+  // { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
+  // { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
 
 const NavBar = () => {
@@ -39,6 +42,23 @@ const NavBar = () => {
   const location = useLocation();
   const firebase = React.useContext(FirebaseContext);
   const [expanded, setExpanded] = React.useState(false);
+
+  const [settingsAnchor, setSettingsAnchor] = React.useState(null)
+  const openSettings = Boolean(settingsAnchor)
+
+  const handleSettingsClick = (event) => {
+    setSettingsAnchor(event.currentTarget)
+  }
+
+  const handleSettingsClose = () => {
+    setSettingsAnchor(null)
+  }
+
+  const handleNavigateSettings = (path) => {
+    navigate(path)
+    handleSettingsClose()
+  }
+
 
   const currentPath = location.pathname;
   const isActive = (path) =>
@@ -148,17 +168,20 @@ const NavBar = () => {
 
       <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
-          onClick={handleSignOut}
+          // onClick={handleSignOut}
+          onClick={handleSettingsClick}
           sx={{
             py: 1.5,
             px: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: expanded ? 'flex-start' : 'center',
-            color: 'error.main',
+            // color: 'error.main',
+            color: 'text.primary',
             '&:hover': {
-              backgroundColor: 'error.light',
-              color: 'error.contrastText',
+              backgroundColor: 'action.hover'
+              // backgroundColor: 'error.light',
+              // color: 'error.contrastText',
             },
           }}
         >
@@ -171,17 +194,83 @@ const NavBar = () => {
               color: 'inherit',
             }}
           >
-            <LogoutIcon fontSize="medium" />
+            {/* <LogoutIcon fontSize="medium" /> */}
+            <Settings fontSize="medium" />
           </ListItemIcon>
-          {expanded && (
+          {expanded && (  
             <ListItemText
-              primary={<Typography variant="body1">Sign Out</Typography>}
+              // primary={<Typography variant="body1">Sign Out</Typography>}
+              primary={<Typography variant="body1">More</Typography>}
               primaryTypographyProps={{ noWrap: true }}
               sx={{ py: 0, my: 0 }}
             />
           )}
         </ListItemButton>
       </List>
+      
+      <Menu
+        anchorEl={settingsAnchor}
+        open={openSettings}
+        onClose={handleSettingsClose}
+        onClick={handleSettingsClose}
+        disableScrollLock={true}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            mt: -1,
+            ml: 2,
+            minWidth: 200,
+            borderRadius: 3,
+            '& .MuiMenuItem-root': {
+              py: 1.5,
+              px: 2,
+              borderRadius: 1,
+              mx: 1,
+              my: 0.5,
+            },
+          },
+        }}
+      >
+        <MenuItem onClick={() => handleNavigateSettings('/profile')}>
+          <ListItemIcon>
+            <PersonIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+          </ListItemIcon>
+          <ListItemText>Profile</ListItemText>
+        </MenuItem>
+
+        <MenuItem onClick={() => handleNavigateSettings('/settings/user-type')}>
+          <ListItemIcon>
+            <Settings fontSize="small" sx={{ color: 'text.secondary' }} />
+          </ListItemIcon>
+          <ListItemText>User Settings</ListItemText>
+        </MenuItem>
+
+        <MenuItem onClick={() => handleNavigateSettings('/settings/delete-account')} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteForever fontSize="small" sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText>Delete Account</ListItemText>
+        </MenuItem>
+
+        <Divider sx={{ my: 1, mx: 2 }} />
+
+        <MenuItem onClick={() => { handleSettingsClose(); handleSignOut(); }} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText>Sign Out</ListItemText>
+        </MenuItem>
+      </Menu>
+
+
     </Box>
   );
 };

@@ -121,6 +121,7 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                         path="/settings/user-type"
                         element={<UserTypeSelect currentUser={currentUser} authUser={authUser} />}
                     />
+
                 </Routes>
             </MainLayout>
         </>
