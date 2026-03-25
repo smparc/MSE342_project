@@ -199,15 +199,59 @@ export default function ExchangeCalendar({ currentUser }) {
   const totalCount     = checklist.length;
   const progress       = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
 
+  // Export .ics
+  const exportICS = () => {
+    if (!milestones || milestones.length === 0) return;
+
+    let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//WatExchange//Calendar//EN\n";
+
+    milestones.forEach((m) => {
+      if (!m.deadline_utc) return;
+      const d = new Date(m.deadline_utc);
+      
+      const formatICSDate = (date) => {
+        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      };
+
+      ics += "BEGIN:VEVENT\n";
+      ics += `UID:${m.milestone_id || Date.now()}-${Date.now()}@watexchange\n`;
+      ics += `DTSTAMP:${formatICSDate(new Date())}\n`;
+      ics += `DTSTART:${formatICSDate(d)}\n`;
+      ics += `DTEND:${formatICSDate(d)}\n`;
+      ics += `SUMMARY:${m.title}\n`;
+      ics += `DESCRIPTION:${m.milestone_type} Deadline${m.form_link ? '\\nLink: ' + m.form_link : ''}\n`;
+      ics += "END:VEVENT\n";
+    });
+
+    ics += "END:VCALENDAR";
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Exchange_Milestones.ics';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="ec-wrap">
 
       {/* ── Header ── */}
-      <div className="ec-header">
+      <div className="ec-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 className="ec-title">Exchange Calendar</h1>
           <p className="ec-subtitle">Track your application deadlines and checklist in one place</p>
         </div>
+        <button
+          className="ec-tab"
+          style={{ height: 'fit-content', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
+          onClick={exportICS}
+        >
+          ↓ Export .ics
+        </button>
       </div>
 
       {/* ── Tabs ── */}
