@@ -6,21 +6,38 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
-import { UserSearchCard, UserProfileModal, useUserSearch } from '../UserSearch';
+import { UserSearchCard, UserProfileModal, SearchFiltersBar, useUserSearch } from '../UserSearch';
 import { FirebaseContext, authFetch } from '../Firebase';
 
 const Search = ({ currentUser, authUser }) => {
   const firebase = React.useContext(FirebaseContext);
   const currentUsername = currentUser || authUser?.email?.split('@')[0] || '';
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [filters, setFilters] = React.useState({
+    faculty: '',
+    program: '',
+    gradYear: '',
+    exchangeTerm: '',
+  });
   const [selectedUser, setSelectedUser] = React.useState(null);
+
+  const hasQueryOrFilters =
+    searchQuery.trim() ||
+    filters.faculty ||
+    filters.program.trim() ||
+    filters.gradYear ||
+    filters.exchangeTerm.trim();
 
   const { users, loading, error, searchUsers } = useUserSearch({
     currentUsername,
     searchQuery,
     includeTags: true,
     excludeConversations: false,
-    enabled: true,
+    enabled: hasQueryOrFilters,
+    facultyFilter: filters.faculty,
+    programFilter: filters.program,
+    gradYearFilter: filters.gradYear,
+    exchangeTermFilter: filters.exchangeTerm,
   });
 
   React.useEffect(() => {
@@ -58,7 +75,15 @@ const Search = ({ currentUser, authUser }) => {
             </InputAdornment>
           ),
         }}
-        sx={{ mb: 3 }}
+        sx={{ mb: 2 }}
+      />
+
+      <SearchFiltersBar
+        filters={filters}
+        onChange={setFilters}
+        onClear={() =>
+          setFilters({ faculty: '', program: '', gradYear: '', exchangeTerm: '' })
+        }
       />
 
       {error && (
@@ -73,19 +98,19 @@ const Search = ({ currentUser, authUser }) => {
         </Box>
       )}
 
-      {!loading && searchQuery.trim() && users.length === 0 && (
+      {!loading && hasQueryOrFilters && users.length === 0 && (
         <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 6 }}>
-          No users match &quot;{searchQuery}&quot;
+          No users match your criteria.
         </Typography>
       )}
 
-      {!loading && !searchQuery.trim() && (
+      {!loading && !hasQueryOrFilters && (
         <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 6 }}>
-          Type to search for users
+          Type a name or username, or use the filters above
         </Typography>
       )}
 
-      {!loading && users.length > 0 && (
+      {!loading && hasQueryOrFilters && users.length > 0 && (
         <Grid container spacing={2}>
           {users.map((user) => (
             <Grid item xs={12} key={user.username}>

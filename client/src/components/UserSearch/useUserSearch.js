@@ -10,13 +10,22 @@ export const useUserSearch = ({
   includeTags = false,
   excludeConversations = false,
   enabled = true,
+  facultyFilter = '',
+  programFilter = '',
+  gradYearFilter = '',
+  exchangeTermFilter = '',
 }) => {
   const [users, setUsers] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
 
   const searchUsers = React.useCallback(async () => {
-    if (!enabled) return;
+    if (!enabled) {
+      setUsers([]);
+      setError('');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -25,6 +34,10 @@ export const useUserSearch = ({
       if (searchQuery.trim()) params.set('q', searchQuery.trim());
       if (includeTags) params.set('includeTags', '1');
       if (excludeConversations) params.set('excludeConversations', '1');
+      if (facultyFilter.trim()) params.set('faculty', facultyFilter.trim());
+      if (programFilter.trim()) params.set('program', programFilter.trim());
+      if (gradYearFilter.trim()) params.set('grad_year', gradYearFilter.trim());
+      if (exchangeTermFilter.trim()) params.set('exchange_term', exchangeTermFilter.trim());
 
       const url = `/api/users/search?${params.toString()}`;
       const response = await fetch(url);
@@ -43,7 +56,17 @@ export const useUserSearch = ({
     } finally {
       setLoading(false);
     }
-  }, [currentUsername, searchQuery, includeTags, excludeConversations, enabled]);
+  }, [
+    currentUsername,
+    searchQuery,
+    includeTags,
+    excludeConversations,
+    enabled,
+    facultyFilter,
+    programFilter,
+    gradYearFilter,
+    exchangeTermFilter,
+  ]);
 
   return { users, loading, error, searchUsers };
 };

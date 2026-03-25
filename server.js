@@ -262,21 +262,26 @@ app.get('/api/users/availability', (req, res) => {
 });
 
 // API to search users (for new message, search page - must be before /api/users/:username)
-// Query: q (search term), exclude (current username, optional), excludeConversations (1), includeTags (1)
+// Query: q, exclude, excludeConversations (1), includeTags (1),
+//        faculty, program, grad_year, exchange_term (optional filters; AND logic)
 app.get('/api/users/search', (req, res) => {
     const q = (req.query.q || '').trim();
     const exclude = (req.query.exclude || '').trim();
     const excludeConversations = req.query.excludeConversations === '1';
     const includeTags = req.query.includeTags === '1';
+    const filterFaculty = (req.query.faculty || '').trim();
+    const filterProgram = (req.query.program || '').trim();
+    const filterGradYear = (req.query.grad_year || '').trim();
+    const filterExchangeTerm = (req.query.exchange_term || '').trim();
 
-    let sql = "SELECT username, display_name, bio, faculty, program, grad_year, exchange_term, uw_verified FROM users WHERE 1=1";
+    let sql = "SELECT u.username, u.display_name, u.bio, u.faculty, u.program, u.grad_year, u.exchange_term, u.uw_verified FROM users AS u WHERE 1=1";
     const params = [];
     if (exclude) {
-        sql += " AND username != ?";
+        sql += " AND u.username != ?";
         params.push(exclude);
     }
     if (excludeConversations && exclude) {
-        sql += ` AND username NOT IN (
+        sql += ` AND u.username NOT IN (
             SELECT user2_username FROM conversations WHERE user1_username = ?
             UNION
             SELECT user1_username FROM conversations WHERE user2_username = ?
@@ -284,11 +289,39 @@ app.get('/api/users/search', (req, res) => {
         params.push(exclude, exclude);
     }
     if (q) {
-        sql += " AND (username LIKE ? OR display_name LIKE ?)";
+        sql += " AND (u.username LIKE ? OR u.display_name LIKE ?)";
         const pattern = `%${q}%`;
         params.push(pattern, pattern);
     }
-    sql += " ORDER BY display_name ASC LIMIT 50";
+    if (filterFaculty) {
+        sql += " AND u.faculty LIKE ?";
+        params.push(`%${filterFaculty}%`);
+    }
+    if (filterProgram) {
+        const progPat = `%${filterProgram}%`;
+        sql += ` AND (u.program LIKE ? OR EXISTS (
+            SELECT 1 FROM profile_tags pt WHERE pt.username = u.username AND pt.tag_type = 'program' AND pt.tag_value LIKE ?
+        ))`;
+        params.push(progPat, progPat);
+    }
+    if (filterGradYear) {
+        const gy = parseInt(filterGradYear, 10);
+        if (!Number.isNaN(gy)) {
+            sql += ` AND (u.grad_year = ? OR EXISTS (
+                SELECT 1 FROM profile_tags pt WHERE pt.username = u.username AND pt.tag_type = 'year' AND pt.tag_value = ?
+            ))`;
+            params.push(gy, String(gy));
+        }
+    }
+    if (filterExchangeTerm) {
+        const termPat = `%${filterExchangeTerm}%`;
+        sql += ` AND (u.exchange_term LIKE ? OR EXISTS (
+            SELECT 1 FROM profile_tags pt WHERE pt.username = u.username
+            AND pt.tag_type IN ('term', 'exchange_term') AND pt.tag_value LIKE ?
+        ))`;
+        params.push(termPat, termPat);
+    }
+    sql += " ORDER BY u.display_name ASC LIMIT 50";
 
     connection.query(sql, params, (error, results) => {
         if (error) {
