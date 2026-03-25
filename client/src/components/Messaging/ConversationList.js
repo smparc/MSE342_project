@@ -10,7 +10,7 @@ import Badge from '@mui/material/Badge';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
-import CreateIcon from '@mui/icons-material/Create';
+import AddCommentIcon from '@mui/icons-material/AddComment';
 import { formatMessageTimestamp } from './utils';
 
 const ConversationList = ({ conversations, selectedId, onSelect, onNewMessage }) => {
@@ -47,7 +47,7 @@ const ConversationList = ({ conversations, selectedId, onSelect, onNewMessage })
           color="primary"
           sx={{ ml: 0.5 }}
         >
-          <CreateIcon />
+          <AddCommentIcon />
         </IconButton>
       </Box>
       <Box sx={{ px: 1.5, py: 1, borderBottom: 1, borderColor: 'divider' }}>
@@ -67,7 +67,14 @@ const ConversationList = ({ conversations, selectedId, onSelect, onNewMessage })
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
-              backgroundColor: 'action.hover',
+              backgroundColor: 'tertiary.light',
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'tertiary.main',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'tertiary.main',
+                borderWidth: 2,
+              },
             },
           }}
         />

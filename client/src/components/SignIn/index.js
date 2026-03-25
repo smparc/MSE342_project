@@ -10,6 +10,7 @@ import Grid from '@mui/material/Grid';
 import Alert from '@mui/material/Alert';
 import { withFirebase } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import UserTypeSelect from './UserTypeSelect';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket';
 
@@ -31,6 +32,7 @@ const SignIn = ({ firebase }) => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const theme = useTheme();
 
     // Convert Firebase error codes to user-friendly messages
     const getErrorMessage = (error) => {
@@ -456,7 +458,7 @@ const SignIn = ({ firebase }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 45%, #3d3d6b 100%)`,
                 py: 4,
                 position: 'relative',
             }}

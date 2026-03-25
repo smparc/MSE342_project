@@ -106,7 +106,23 @@ const CreateMessage = ({ open, onClose, currentUsername, authFetch, firebase, on
               </InputAdornment>
             ),
           }}
-          sx={{ mb: 2, mt: 1 }}
+          sx={{
+            mb: 2,
+            mt: 1,
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: 'tertiary.light',
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'tertiary.main',
+              },
+              '&.Mui-focused': {
+                backgroundColor: 'tertiary.light',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'tertiary.main',
+                borderWidth: 2,
+              },
+            },
+          }}
         />
         {(searchError || conversationError) && (
           <Typography color="error" variant="body2" sx={{ mb: 2 }}>

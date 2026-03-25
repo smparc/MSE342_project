@@ -210,7 +210,7 @@ const Messaging = ({ currentUser, authUser }) => {
           justifyContent: 'center',
           height: '100vh',
           minHeight: 400,
-          backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+          backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.background.default,
           p: 3,
         }}
       >
@@ -229,7 +229,7 @@ const Messaging = ({ currentUser, authUser }) => {
         display: 'flex',
         height: '100vh',
         minHeight: 400,
-        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.background.default,
       }}
     >
       <Paper

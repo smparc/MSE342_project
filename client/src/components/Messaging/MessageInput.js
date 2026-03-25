@@ -45,8 +45,18 @@ const MessageInput = ({ onSend }) => {
           size="small"
           sx={{
             '& .MuiOutlinedInput-root': {
-              backgroundColor: 'background.default',
+              backgroundColor: 'tertiary.light',
               borderRadius: 18,
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'tertiary.main',
+              },
+              '&.Mui-focused': {
+                backgroundColor: 'tertiary.light',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'tertiary.main',
+                borderWidth: 2,
+              },
             },
           }}
         />
@@ -54,7 +64,15 @@ const MessageInput = ({ onSend }) => {
           type="submit"
           variant="contained"
           disabled={!message.trim()}
-          sx={{ flexShrink: 0, minWidth: 80, height: 40, borderRadius: 18 }}
+          sx={{
+            flexShrink: 0,
+            minWidth: 80,
+            height: 40,
+            borderRadius: 18,
+            bgcolor: 'tertiary.main',
+            color: 'tertiary.contrastText',
+            '&:hover': { bgcolor: 'tertiary.dark' },
+          }}
         >
           Send
         </Button>
