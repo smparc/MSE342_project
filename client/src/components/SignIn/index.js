@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -8,6 +8,12 @@ import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Alert from '@mui/material/Alert';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Autocomplete from '@mui/material/Autocomplete';
+import { FACULTIES, getProgramsForFaculty } from '../../data/facultyPrograms';
 import { withFirebase } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -33,6 +39,8 @@ const SignIn = ({ firebase }) => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const theme = useTheme();
+
+    const programOptions = useMemo(() => getProgramsForFaculty(faculty), [faculty]);
 
     // Convert Firebase error codes to user-friendly messages
     const getErrorMessage = (error) => {
@@ -318,27 +326,70 @@ const SignIn = ({ firebase }) => {
             <form noValidate onSubmit={handleNextToUserType}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
-                        <TextField
-                            variant="outlined"
-                            fullWidth
-                            id="faculty"
-                            label="Faculty"
-                            name="faculty"
-                            placeholder="e.g. Engineering"
-                            value={faculty}
-                            onChange={(e) => setFaculty(e.target.value)}
-                        />
+                        <FormControl fullWidth>
+                            <InputLabel id="signin-faculty-label">Faculty</InputLabel>
+                            <Select
+                                labelId="signin-faculty-label"
+                                id="faculty"
+                                name="faculty"
+                                label="Faculty"
+                                value={faculty}
+                                onChange={(e) => {
+                                    setFaculty(e.target.value);
+                                    setProgram('');
+                                }}
+                            >
+                                <MenuItem value="">
+                                    <em>Optional — select faculty</em>
+                                </MenuItem>
+                                {FACULTIES.map((f) => (
+                                    <MenuItem key={f} value={f}>
+                                        {f}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <TextField
-                            variant="outlined"
-                            fullWidth
-                            id="program"
-                            label="Program"
-                            name="program"
-                            placeholder="e.g. MSCI"
+                        <Autocomplete
+                            key={faculty || 'no-faculty'}
+                            freeSolo
+                            disabled={!faculty}
+                            options={programOptions}
                             value={program}
-                            onChange={(e) => setProgram(e.target.value)}
+                            onChange={(_, newValue) => setProgram(newValue ?? '')}
+                            inputValue={program}
+                            onInputChange={(_, newInput, reason) => {
+                                if (reason === 'input' || reason === 'clear') {
+                                    setProgram(newInput);
+                                }
+                            }}
+                            filterOptions={(opts, state) => {
+                                const q = state.inputValue.trim().toLowerCase();
+                                if (!q) return opts;
+                                return opts.filter((o) =>
+                                    o.toLowerCase().includes(q)
+                                );
+                            }}
+                            noOptionsText={
+                                faculty
+                                    ? 'No programs match — keep typing or enter your own'
+                                    : 'Select a faculty first'
+                            }
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Program"
+                                    name="program"
+                                    id="program"
+                                    placeholder={faculty ? 'Search or type a program' : ''}
+                                    helperText={
+                                        faculty
+                                            ? 'Type to filter the list; you can enter a program not listed'
+                                            : ''
+                                    }
+                                />
+                            )}
                         />
                     </Grid>
                     <Grid item xs={12} sm={6}>

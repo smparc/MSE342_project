@@ -16,7 +16,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
 import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
-import { DeleteForever, Settings } from '@mui/icons-material';
+import { DeleteForever } from '@mui/icons-material';
 
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 240;
@@ -117,7 +117,7 @@ const NavBar = ({ currentUser, authUser }) => {
             display: 'flex',
           }}
         >
-          <AirplaneTicketIcon fontSize="medium" sx={{ color: 'primary.main' }} />
+          <AirplaneTicketIcon fontSize="medium" sx={{ color: 'text.primary' }} />
         </Box>
         {expanded && (
           <Typography variant="h6" fontWeight={700} noWrap sx={{ color: 'text.primary' }}>
@@ -144,6 +144,9 @@ const NavBar = ({ currentUser, authUser }) => {
                 justifyContent: expanded ? 'flex-start' : 'center',
                 '&.Mui-selected': {
                   backgroundColor: 'action.selected',
+                  '& .MuiListItemIcon-root': {
+                    color: 'text.primary',
+                  },
                 },
               }}
             >
@@ -153,11 +156,12 @@ const NavBar = ({ currentUser, authUser }) => {
                   justifyContent: 'center',
                   alignItems: 'center',
                   display: 'flex',
+                  color: 'text.primary',
                 }}
               >
                 {showUnreadBadge ? (
                   <Badge badgeContent={unreadCount > 99 ? '99+' : unreadCount} color="error">
-                    <Icon fontSize="medium" />
+                    <Icon fontSize="medium" sx={{ color: 'inherit' }} />
                   </Badge>
                 ) : (
                   <Icon fontSize="medium" />
