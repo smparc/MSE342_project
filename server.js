@@ -242,9 +242,9 @@ app.get('/api/user/:username', (req, res) => {
 // API to update a user (protected)
 app.put('/api/user/:username', checkAuth, (req, res) => {
     const username = req.params.username;
-    const { display_name, bio, faculty, program, grad_year, exchange_term } = req.body;
-    const sql = "UPDATE users SET display_name = ?, bio = ?, faculty = ?, program = ?, grad_year = ?, exchange_term = ? WHERE username = ?";
-    connection.query(sql, [display_name, bio, faculty, program, grad_year, exchange_term, username], (error, results) => {
+    const { display_name, bio, faculty, program, grad_year, exchange_term, destination_country, destination_school } = req.body;
+    const sql = "UPDATE users SET display_name = ?, bio = ?, faculty = ?, program = ?, grad_year = ?, exchange_term = ?, destination_country =?, destination_school =? WHERE username = ?";
+    connection.query(sql, [display_name, bio, faculty, program, grad_year, exchange_term, destination_country, destination_school, username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);

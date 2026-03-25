@@ -14,16 +14,23 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
     const handleSubmit = async (event) => {
         event.preventDefault()
 
-        if (!tempName.trim() || !tempBio.trim()) {
+        // if (!tempName.trim() || !tempBio.trim()) {
+        //     setError(true)
+        //     setTempName(displayName)
+        //     setTempBio(bio)
+        //     return
+        // }
+        // remove requirement for a value in bio (delete bio story)
+        if (!tempName.trim()) {
             setError(true)
             setTempName(displayName)
-            setTempBio(bio)
+            // setTempBio(bio)
             return
         }
         setError(false)
 
         try {
-            // Get ID token for authentication
+            // get ID token for authentication
             let headers = { 'Content-Type': 'application/json' }
             if (firebase && firebase.auth.currentUser) {
                 const token = await firebase.auth.currentUser.getIdToken()
@@ -35,9 +42,9 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
                 headers,
                 body: JSON.stringify({
                     display_name: tempName,
-                    bio: tempBio,
-                    faculty: faculty,
-                    program: program,
+                    bio: tempBio.trim(),
+                    faculty: faculty.trim(),
+                    program: program.trim(),
                     grad_year: gradYear === '' ? null : gradYear,
                     exchange_term: exchangeTerm
                 }),
@@ -91,7 +98,8 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
                             </Grid>
                             <Grid item width='100%'>
                                 <TextField fullWidth
-                                    required
+                                    // remove bio requirement
+                                    // required
                                     multiline
                                     margin='dense'
                                     minRows={2}
@@ -106,7 +114,7 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
                         </Grid>
                     </form>
                     <Grid item>
-                        {error && <Alert severity='error'>All entries must have a value. Please try again.</Alert>}
+                        {error && <Alert severity='error'>Display name must have a value. Please try again.</Alert>}
                     </Grid>
                 </DialogContent>
                 <DialogActions>

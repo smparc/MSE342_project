@@ -24,6 +24,10 @@ const Profile = ({ currentUser, authUser }) => {
     const [program, setProgram] = React.useState('')
     const [gradYear, setGradYear] = React.useState('')
     const [exchangeTerm, setExchangeTerm] = React.useState('')
+    const [exchangeCountry, setExchangeCountry] = React.useState('')
+    const [exchangeSchool, setExchangeSchool] = React.useState('')
+
+
     const [uwVerified, setUwVerified] = React.useState(false)
 
     // Use authenticated user's identifier, fallback to prop or default
@@ -48,6 +52,9 @@ const Profile = ({ currentUser, authUser }) => {
             setProgram(data.program || '')
             setGradYear(data.grad_year || '')
             setExchangeTerm(data.exchange_term || '')
+            // add exchange country and exchange term
+            setExchangeCountry(data.destination_country)
+            setExchangeSchool(data.destination_school)
             setUwVerified(!!data.uw_verified)
         } catch (error) {
             console.error('Error fetching user data:', error)
@@ -103,6 +110,10 @@ const Profile = ({ currentUser, authUser }) => {
                         setGradYear={setGradYear}
                         exchangeTerm={exchangeTerm}
                         setExchangeTerm={setExchangeTerm}
+                        exchangeCountry={exchangeCountry}
+                        setExchangeCountry={setExchangeCountry}
+                        exchangeSchool={exchangeSchool}
+                        setExchangeSchool={setExchangeSchool}
                         uwVerified={uwVerified}
                         firebase={firebase}
                     />
