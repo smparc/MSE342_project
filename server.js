@@ -638,22 +638,26 @@ app.get('/api/users/:username/saved-courses', (req, res) => {
 
 app.get('/api/courses/meta/filters', (req, res) => {
     // We fetch the unique values currently in your DB to fill the dropdowns
-    const sqlCountries = "SELECT DISTINCT country FROM course_equivalencies WHERE country IS NOT NULL";
-    const sqlContinents = "SELECT DISTINCT continent FROM course_equivalencies WHERE continent IS NOT NULL";
-    const sqlTerms = "SELECT DISTINCT term_taken FROM course_equivalencies WHERE term_taken IS NOT NULL";
+    const sqlCountries = "SELECT DISTINCT country FROM course_equivalencies WHERE country IS NOT NULL AND country != ''";
+    const sqlContinents = "SELECT DISTINCT continent FROM course_equivalencies WHERE continent IS NOT NULL AND continent != ''";
+    const sqlTerms = "SELECT DISTINCT term_taken FROM course_equivalencies WHERE term_taken IS NOT NULL AND term_taken != ''";
 
-    connection.query(`${sqlCountries}; ${sqlContinents}; ${sqlTerms}`, (error, results) => {
-        if (error) {
-            console.error('Filter Fetch Error:', error);
-            // Fallback so the frontend doesn't crash
+    connection.query(sqlCountries, (err1, res1) => {
+        if (err1) {
+            console.error('Filter Fetch Error:', err1);
             return res.json({ countries: [], continents: [], terms: [] });
         }
-
-        // results will be an array of 3 arrays because of the semicolons
-        res.json({
-            countries: results[0].map(r => r.country),
-            continents: results[1].map(r => r.continent),
-            terms: results[2].map(r => r.term_taken)
+        connection.query(sqlContinents, (err2, res2) => {
+            if (err2) return res.json({ countries: [], continents: [], terms: [] });
+            
+            connection.query(sqlTerms, (err3, res3) => {
+                if (err3) return res.json({ countries: [], continents: [], terms: [] });
+                res.json({
+                    countries: res1.map(r => r.country),
+                    continents: res2.map(r => r.continent),
+                    terms: res3.map(r => r.term_taken)
+                });
+            });
         });
     });
 });
