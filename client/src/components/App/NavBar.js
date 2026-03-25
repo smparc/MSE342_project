@@ -121,7 +121,9 @@ const NavBar = () => {
           </Typography>
         )}
       </Box>
-      <List disablePadding sx={{ pt: 2, flex: 1 }}>
+      {/* <List disablePadding sx={{ pt: 2, flex: 1 }}> */}
+      {/* AI used to help with centering */}
+      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px'}}>
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
@@ -253,12 +255,7 @@ const NavBar = () => {
           <ListItemText>User Settings</ListItemText>
         </MenuItem>
 
-        <MenuItem onClick={() => handleNavigateSettings('/settings/delete-account')} sx={{ color: 'error.main' }}>
-          <ListItemIcon>
-            <DeleteForever fontSize="small" sx={{ color: 'error.main' }} />
-          </ListItemIcon>
-          <ListItemText>Delete Account</ListItemText>
-        </MenuItem>
+        
 
         <Divider sx={{ my: 1, mx: 2 }} />
 
@@ -268,6 +265,14 @@ const NavBar = () => {
           </ListItemIcon>
           <ListItemText>Sign Out</ListItemText>
         </MenuItem>
+
+        <MenuItem onClick={() => handleNavigateSettings('/settings/delete-account')} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteForever fontSize="small" sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText>Delete Account</ListItemText>
+        </MenuItem>
+        
       </Menu>
 
 

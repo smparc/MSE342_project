@@ -163,7 +163,7 @@ const CourseTable = ({ username }) => {
                                     <TableCell>{row.uw_course_code}</TableCell>
 
                                     <TableCell align={'left'}>{row.uw_course_name}</TableCell>
-                                    <TableCell align={'center'}>{row.host_university}</TableCell>
+                                    <TableCell align={'left'}>{row.host_university}</TableCell>
                                     <TableCell align={'left'}>{row.host_course_code}</TableCell>
                                     <TableCell align={'left'}>{row.host_course_name}</TableCell>
                                     <TableCell align={'center'}>
