@@ -8,9 +8,12 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Badge from '@mui/material/Badge';
-import ChatIcon from '@mui/icons-material/Chat';
+// import ChatIcon from '@mui/icons-material/Chat';
+// import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import TextsmsOutlinedIcon from '@mui/icons-material/TextsmsOutlined';
 import SearchIcon from '@mui/icons-material/Search';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+// import MenuBookIcon from '@mui/icons-material/MenuBook';
+import FolderSpecialOutlinedIcon from '@mui/icons-material/FolderSpecialOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -32,9 +35,9 @@ const NAV_WIDTH_EXPANDED = 240;
 // <Route path="/advisors" element={<AdvisorsList />} />
 
 const navItems = [
-  { path: '/messages', label: 'Messages', icon: ChatIcon, testId: 'ChatIcon' },
+  { path: '/messages', label: 'Messages', icon: TextsmsOutlinedIcon, testId: 'TextsmsOutlinedIcon' },
   { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
-  { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
+  { path: '/course-equivalency', label: 'Course Equivalency', icon: FolderSpecialOutlinedIcon, testId: 'FolderSpecialOutlinedIcon' },
   { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
   { path: '/calendar', label: 'Calendar', icon: CalendarMonthOutlinedIcon, testId: 'CalendarIcon' },
   { path: '/contacts', label: 'Contacts', icon: ContactPageOutlinedIcon },
@@ -154,7 +157,7 @@ const NavBar = ({ currentUser, authUser }) => {
       </Box>
       {/* <List disablePadding sx={{ pt: 2, flex: 1 }}> */}
       {/* AI used to help with centering */}
-      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '15px' }}>
+      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '20px' }}>
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
@@ -190,10 +193,10 @@ const NavBar = ({ currentUser, authUser }) => {
               >
                 {showUnreadBadge ? (
                   <Badge badgeContent={unreadCount > 99 ? '99+' : unreadCount} color="error">
-                    <Icon fontSize="medium" sx={{ color: 'inherit' }} />
+                    <Icon sx={{ color: 'inherit', fontSize: '28px' }} />
                   </Badge>
                 ) : (
-                  <Icon fontSize="medium" />
+                  <Icon sx={{ fontSize: '28px'}} />
                 )}
               </ListItemIcon>
               {expanded && (
@@ -241,7 +244,7 @@ const NavBar = ({ currentUser, authUser }) => {
             }}
           >
             {/* <LogoutIcon fontSize="medium" /> */}
-            <AccountCircleOutlinedIcon fontSize="medium" />
+            <AccountCircleOutlinedIcon sx={{fontSize: '28px'}} />
           </ListItemIcon>
           {expanded && (  
             <ListItemText
@@ -284,7 +287,7 @@ const NavBar = ({ currentUser, authUser }) => {
             }}
           >
             {/* <LogoutIcon fontSize="medium" /> */}
-            <Settings fontSize="medium" />
+            <Settings sx={{fontSize: '28px'}} />
           </ListItemIcon>
           {expanded && (  
             <ListItemText
@@ -330,7 +333,7 @@ const NavBar = ({ currentUser, authUser }) => {
       >
         <MenuItem onClick={() => handleNavigateSettings('/profile')}>
           <ListItemIcon>
-            <AccountCircleOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+            <AccountCircleOutlinedIcon fontSize="small" sx={{ color: 'text.secondary'}} />
           </ListItemIcon>
           <ListItemText>Profile</ListItemText>
         </MenuItem>
