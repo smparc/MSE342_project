@@ -1,7 +1,7 @@
 import * as React from 'react'
 // import ProfileHeader from './ProfileHeader'
 import { Box, Tabs, Tab } from '@mui/material'
-import { GridView, MenuBook, Star } from '@mui/icons-material'
+import { GridView, FolderSpecialOutlined, Star } from '@mui/icons-material'
 
 const SectionTab = ({ tabIndex, setTabIndex }) => {
 
@@ -22,7 +22,7 @@ const SectionTab = ({ tabIndex, setTabIndex }) => {
                 sx={{ '& .Mui-selected': { filter: 'invert(50%) brightness(20%)' } }}
             >
                 <Tab disableRipple sx={{ marginX: '75px' }} icon={<GridView />} aria-label="grid" />
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<MenuBook />} aria-label="books" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<FolderSpecialOutlined />} aria-label="books" />
                 <Tab disableRipple sx={{ marginX: '75px' }} icon={<Star />} aria-label="star" />
             </Tabs>
 
