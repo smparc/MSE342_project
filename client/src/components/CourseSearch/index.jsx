@@ -160,6 +160,7 @@ export default function CourseSearch({ currentUser, authUser }) {
     if (reason === 'clickaway') {
       return
     }
+    setSnackbar(prev => ({...prev, open: false}))
   }
 
   const addToProfile = async (course) => {
@@ -553,7 +554,7 @@ export default function CourseSearch({ currentUser, authUser }) {
           open={snackbar.open}
           autoHideDuration={3000}
           onClose={handleSnackbarClose}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }} >
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }} >
             <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>
               {snackbar.message}
             </Alert>

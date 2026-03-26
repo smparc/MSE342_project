@@ -1,6 +1,6 @@
 import * as React from 'react'
 // import ProfileHeader from './ProfileHeader'
-import { Box, Tabs, Tab } from '@mui/material'
+import { Tabs, Tab } from '@mui/material'
 import { GridView, FolderSpecialOutlined, Star } from '@mui/icons-material'
 
 const SectionTab = ({ tabIndex, setTabIndex }) => {
