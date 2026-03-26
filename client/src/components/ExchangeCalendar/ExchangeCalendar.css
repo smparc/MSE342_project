@@ -83,6 +83,10 @@
   cursor: pointer;
 }
 .ec-select:focus { border-color: #1a1a2e; }
+.ec-select option {
+  background: #fff;
+  color: #1a1a2e;
+}
 .ec-input {
   padding: 7px 10px;
   border: 1.5px solid #ddd;
@@ -407,6 +411,27 @@
   border-radius: 999px;
   border: 1px solid #86efac;
   flex-shrink: 0;
+}
+
+/* ── Fix: force native select dropdowns to render in light mode.
+   Without this, if a parent or :root sets color-scheme: dark (common
+   in Timeline.css or global styles), the OS-rendered option list
+   will appear as a solid black box. ── */
+select,
+.ec-select,
+.tl-input,
+.tl-modal select {
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #1a1a2e;
+}
+
+select option,
+.ec-select option,
+.tl-input option,
+.tl-modal select option {
+  background-color: #ffffff;
+  color: #1a1a2e;
 }
 
 @media (max-width: 640px) {

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './ContactsList.css';
 
+import AdvisorsList from '../AdvisorsList';
+
 const API = process.env.REACT_APP_API_URL || '';
 
 const ContactsList = () => {
   const [contacts, setContacts] = useState([]);
   const [search, setSearch]     = useState('');
   const [loading, setLoading]   = useState(true);
+  const [activeTab, setActiveTab] = useState('Contacts');
 
   useEffect(() => {
     fetch(`${API}/api/contacts`)
@@ -28,12 +31,29 @@ const ContactsList = () => {
   return (
     <div className="cl-container">
       <div className="cl-header">
-        <h1 className="cl-title">Study Abroad Contacts</h1>
+        <h1 className="cl-title">Directory & Support</h1>
         <p className="cl-subtitle">
-          Reach out to the right person for your exchange program questions.
+          Find your academic advisors and study abroad contacts.
         </p>
       </div>
 
+      <div className="cl-tabs" style={{ display: 'flex', gap: '24px', marginBottom: '28px', borderBottom: '2px solid #e8e8f0' }}>
+        <button 
+          style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '1.05rem', fontWeight: '600', cursor: 'pointer', padding: '8px 4px', color: activeTab === 'Contacts' ? '#4338ca' : '#888', borderBottom: activeTab === 'Contacts' ? '2px solid #4338ca' : 'none', marginBottom: '-2px', transition: 'color 0.2s' }}
+          onClick={() => setActiveTab('Contacts')}
+        >
+          Study Abroad Contacts
+        </button>
+        <button 
+          style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '1.05rem', fontWeight: '600', cursor: 'pointer', padding: '8px 4px', color: activeTab === 'Advisors' ? '#4338ca' : '#888', borderBottom: activeTab === 'Advisors' ? '2px solid #4338ca' : 'none', marginBottom: '-2px', transition: 'color 0.2s' }}
+          onClick={() => setActiveTab('Advisors')}
+        >
+          Academic Advisors
+        </button>
+      </div>
+
+      {activeTab === 'Contacts' ? (
+        <>
       <div className="cl-search-row">
         <input
           className="cl-search"
@@ -83,6 +103,10 @@ const ContactsList = () => {
           </div>
         ))}
       </div>
+        </>
+      ) : (
+        <AdvisorsList />
+      )}
     </div>
   );
 };

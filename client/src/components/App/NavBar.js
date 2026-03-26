@@ -37,12 +37,14 @@ const NAV_WIDTH_EXPANDED = 240;
 const navItems = [
   { path: '/messages', label: 'Messages', icon: TextsmsOutlinedIcon, testId: 'TextsmsOutlinedIcon' },
   { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
-  { path: '/course-equivalency', label: 'Course Equivalency', icon: FolderSpecialOutlinedIcon, testId: 'FolderSpecialOutlinedIcon' },
-  { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
-  { path: '/calendar', label: 'Calendar', icon: CalendarMonthOutlinedIcon, testId: 'CalendarIcon' },
-  { path: '/contacts', label: 'Contacts', icon: ContactPageOutlinedIcon },
-  { path: '/advisors', label: 'Advisors', icon: ContactPageOutlinedIcon },
+
   // { path: '/profile', label: 'Profile', icon: PersonIcon },
+
+  { path: '/course-equivalency', label: 'Course Equivalency', icon: FolderSpecialOutlinedIcon, testId: 'MenuBookIcon' },
+  { path: '/calendar', label: 'Calendar', icon: CalendarMonthOutlinedIcon, testId: 'CalendarIcon' },
+  { path: '/contacts', label: 'Support', icon: ContactPageOutlinedIcon },
+//   { path: '/profile', label: 'Profile', icon: PersonIcon },
+
   // { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
   // { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];

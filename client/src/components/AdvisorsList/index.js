@@ -30,14 +30,7 @@ const AdvisorsList = () => {
   });
 
   return (
-    <div className="al-container">
-      <div className="al-header">
-        <h1 className="al-title">Academic Advisors</h1>
-        <p className="al-subtitle">
-          Find your faculty's exchange coordinator for course approval and academic guidance.
-        </p>
-      </div>
-
+    <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <div className="al-filters">
         <input
           className="al-search"
