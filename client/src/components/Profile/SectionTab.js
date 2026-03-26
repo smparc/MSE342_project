@@ -21,9 +21,9 @@ const SectionTab = ({ tabIndex, setTabIndex }) => {
                 TabIndicatorProps={{ sx: { background: 'black' } }}
                 sx={{ '& .Mui-selected': { filter: 'invert(50%) brightness(20%)' } }}
             >
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<GridView />} aria-label="grid" />
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<FolderSpecialOutlined />} aria-label="books" />
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<Star />} aria-label="star" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<GridView sx={{fontSize: '26px'}} />} aria-label="grid" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<FolderSpecialOutlined sx={{fontSize: '28px'}} />} aria-label="books" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<Star sx={{fontSize: '26px'}} />} aria-label="star" />
             </Tabs>
 
         </>

@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import './CourseSearch.css';
 import { FirebaseContext, authFetch } from '../Firebase';
 import { AlternateEmailTwoTone } from '@mui/icons-material';
+import ArrowRightAltSharpIcon from '@mui/icons-material/ArrowRightAltSharp';
 
 import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
-import { Snackbar, Alert} from '@mui/material'
+import { Snackbar, Alert } from '@mui/material'
 
 const API = process.env.REACT_APP_API_URL || '';
 
@@ -28,29 +29,29 @@ const getAuthorDisplay = (c) => {
 };
 
 export default function CourseSearch({ currentUser, authUser }) {
-  const navigate      = useNavigate();
-  const firebase      = useContext(FirebaseContext);
+  const navigate = useNavigate();
+  const firebase = useContext(FirebaseContext);
   const effectiveUser = currentUser || authUser?.email?.split('@')[0] || '';
 
   // Search & filter state
-  const [query, setQuery]           = useState('');
-  const [filters, setFilters]       = useState({ country: '', continent: '', faculty: '', term: '' });
+  const [query, setQuery] = useState('');
+  const [filters, setFilters] = useState({ country: '', continent: '', faculty: '', term: '' });
   const [filterMeta, setFilterMeta] = useState({ countries: [], continents: [], terms: [] });
 
   // Sprint 2 — sort state (Story 5)
   const [sort, setSort] = useState('last_updated');
 
   // Results state
-  const [courses, setCourses]       = useState([]);
+  const [courses, setCourses] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Detail modal
   const [selected, setSelected] = useState(null);
 
   // Story 3 — bookmarks (renamed from shortlist)
-  const [savedIds, setSavedIds]         = useState(new Set());
+  const [savedIds, setSavedIds] = useState(new Set());
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [savedCourses, setSavedCourses] = useState([]);
 
@@ -64,7 +65,7 @@ export default function CourseSearch({ currentUser, authUser }) {
     fetch(`${API}/api/courses/meta/filters`)
       .then((r) => r.json())
       .then(setFilterMeta)
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Load user's bookmarked courses
@@ -76,7 +77,7 @@ export default function CourseSearch({ currentUser, authUser }) {
         setSavedCourses(data);
         setSavedIds(new Set(data.map((c) => c.course_id)));
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [effectiveUser]);
 
   const fetchCourses = useCallback(
@@ -85,16 +86,16 @@ export default function CourseSearch({ currentUser, authUser }) {
       setError('');
       try {
         const params = new URLSearchParams({
-          q:         query,
-          country:   filters.country,
+          q: query,
+          country: filters.country,
           continent: filters.continent,
-          faculty:   filters.faculty,
-          term:      filters.term,
+          faculty: filters.faculty,
+          term: filters.term,
           sort,
-          page:      pageNum,
-          limit:     15,
+          page: pageNum,
+          limit: 15,
         });
-        const res  = await fetch(`${API}/api/courses?${params}`);
+        const res = await fetch(`${API}/api/courses?${params}`);
         if (!res.ok) {
           throw new Error('Server returned an error');
         }
@@ -133,9 +134,9 @@ export default function CourseSearch({ currentUser, authUser }) {
       setShowLoginPrompt(true);
       return;
     }
-    const res  = await authFetch(`${API}/api/users/${effectiveUser}/saved-courses`, {
+    const res = await authFetch(`${API}/api/users/${effectiveUser}/saved-courses`, {
       method: 'POST',
-      body:   JSON.stringify({ course_id: courseId }),
+      body: JSON.stringify({ course_id: courseId }),
     }, firebase);
     const data = await res.json();
     // AC4 — duplicate prevention handled server-side; toggle reflects current state
@@ -154,18 +155,18 @@ export default function CourseSearch({ currentUser, authUser }) {
 
   // ADDING "ADD TO PROFILE" BUTTON
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success'})
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === 'clickaway') {
       return
     }
-    setSnackbar(prev => ({...prev, open: false}))
+    setSnackbar(prev => ({ ...prev, open: false }))
   }
 
   const addToProfile = async (course) => {
     if (!effectiveUser) {
-      setSnackbar({ open: true, message: 'Please log in to add courses to your profile', severity: 'warning'})
+      setSnackbar({ open: true, message: 'Please log in to add courses to your profile', severity: 'warning' })
       return
     }
 
@@ -194,20 +195,20 @@ export default function CourseSearch({ currentUser, authUser }) {
       }, firebase)
 
       if (res.ok) {
-        setSnackbar({ open: true, message: `Successfully added ${course.host_course_code} to your Profile Course Table!`, severity: 'success'})
+        setSnackbar({ open: true, message: `Successfully added ${course.host_course_code} to your Profile Course Table!`, severity: 'success' })
       } else {
         const data = await res.json()
-        setSnackbar({ open: true, message: 'Failed to add course.', severity: 'error'})
+        setSnackbar({ open: true, message: 'Failed to add course.', severity: 'error' })
       }
 
     }
     catch (err) {
-      setSnackbar({ open: true, message: 'Error. Please try again.'})
+      setSnackbar({ open: true, message: 'Error. Please try again.' })
     }
   }
 
   const openDetail = async (courseId) => {
-    const res  = await fetch(`${API}/api/courses/${courseId}`);
+    const res = await fetch(`${API}/api/courses/${courseId}`);
     const data = await res.json();
     setSelected(data);
   };
@@ -348,18 +349,28 @@ export default function CourseSearch({ currentUser, authUser }) {
             className="cs-card"
             onClick={() => openDetail(c.course_id)}
           >
-            <div className="cs-card-body" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-start' }}>
-              <div className="cs-host-course" style={{ flex: '0 1 auto' }}>
-                <span className="cs-code">{c.host_course_code}</span>
-                <span className="cs-name">{c.host_course_name}</span>
-              </div>
-              <div className="cs-arrow" style={{ flex: '0 0 auto' }}>→</div>
-              <div className="cs-uw-course" style={{ flex: '0 1 auto' }}>
-                <span className="cs-code cs-uw">{c.uw_course_code}</span>
-                <span className="cs-name">{c.uw_course_name}</span>
-              </div>
+            {/* <div className="cs-card-body" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-start' }}>
+              <div className="cs-host-course" style={{ flex: '0 1 auto' }}> */}
+            <div className="cs-card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'space-between', gap: '1rem', width: '100%' }}>
 
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ width: '70%', display: 'flex', alignItems: 'center' }}>
+                <div className="cs-host-course" style={{ flex: 4, minWidth: 0}}>
+                  <span className="cs-code">{c.host_course_code}</span>
+                  <span className="cs-name">{c.host_course_name}</span>
+                </div>
+                {/* <div className="cs-arrow" style={{ flex: '0 0 auto' }}>→</div>
+              <div className="cs-uw-course" style={{ flex: '0 1 auto' }}> */}
+                <div className="cs-arrow" style={{ flex: 1, display: 'flex', color: '#888', fontSize: '20px', alignItems: 'center', marginTop: '4px', justifyContent: 'flex-start', marginRight: '20px' }}><ArrowRightAltSharpIcon /></div>
+
+
+                <div className="cs-uw-course" style={{ flex: 4, minWidth: 0  }}>
+                  <span className="cs-code cs-uw">{c.uw_course_code}</span>
+                  <span className="cs-name">{c.uw_course_name}</span>
+                </div>
+                </div>
+
+              {/* <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}> */}
+              <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span
                   className="cs-status-badge"
                   style={{ '--badge-color': STATUS_COLORS[c.status] || '#888' }}
@@ -367,7 +378,7 @@ export default function CourseSearch({ currentUser, authUser }) {
                   {c.status}
                 </span>
                 {/* PROFILE AGAIN */}
-                <div style={{ display: 'flex', gap: '8px'}}>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     className='cs-save-btn'
                     onClick={(e) => {
@@ -375,24 +386,25 @@ export default function CourseSearch({ currentUser, authUser }) {
                       addToProfile(c)
                     }}
                     title='Add to my Profile'
-                    ><AddBoxOutlinedIcon/></button>
-                
-                {/* Story 3 AC7 — bookmark button shows bookmarked state when browsing */}
-                <button
-                  className={`cs-save-btn ${savedIds.has(c.course_id) ? 'saved' : ''}`}
-                  onClick={(e) => { e.stopPropagation(); toggleSave(c.course_id); }}
-                  title={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
-                  aria-label={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
-                >
-                  {savedIds.has(c.course_id) ? '★' : '☆'}
-                </button>
+                  ><AddBoxOutlinedIcon /></button>
+
+                  {/* Story 3 AC7 — bookmark button shows bookmarked state when browsing */}
+                  <button
+                    className={`cs-save-btn ${savedIds.has(c.course_id) ? 'saved' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); toggleSave(c.course_id); }}
+                    title={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
+                    aria-label={savedIds.has(c.course_id) ? 'Remove bookmark' : 'Bookmark this course'}
+                  >
+                    {savedIds.has(c.course_id) ? '★' : '☆'}
+                  </button>
                 </div>
               </div>
+              {/* </div> */}
             </div>
 
             <div className="cs-card-footer">
-              <span className="cs-meta-item">🏫 {c.host_university}</span>
-              <span className="cs-meta-item">🌍 {c.country}{c.term_taken ? ` · ${c.term_taken}` : ''}</span>
+              <span className="cs-meta-item" style={{ marginRight: '12px' }}>🏫 {c.host_university}</span>
+              <span className="cs-meta-item" style={{ marginRight: '12px' }}>🌍 {c.country}{c.term_taken ? ` · ${c.term_taken}` : ''}</span>
               {/* Story 4 AC1 — author name visible on card */}
               <span className="cs-meta-item cs-author">
                 👤 {getAuthorDisplay(c)}
@@ -484,8 +496,8 @@ export default function CourseSearch({ currentUser, authUser }) {
               className='cs-save-btn-lg'
               style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '8px' }}
               onClick={() => addToProfile(selected)}>
-                <AddBoxOutlinedIcon />Add to Profile
-              </button>
+              <AddBoxOutlinedIcon />Add to Profile
+            </button>
           </div>
         </div>
       )}
@@ -551,14 +563,14 @@ export default function CourseSearch({ currentUser, authUser }) {
       )}
 
       <Snackbar
-          open={snackbar.open}
-          autoHideDuration={3000}
-          onClose={handleSnackbarClose}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }} >
-            <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>
-              {snackbar.message}
-            </Alert>
-          </Snackbar>
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }} >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
