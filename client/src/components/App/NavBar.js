@@ -21,6 +21,7 @@ import { FirebaseContext } from '../Firebase';
 import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
 import { DeleteForever, Settings } from '@mui/icons-material';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonth';
 import ContactPageOutlinedIcon from '@mui/icons-material/ContactPageOutlined';
 
@@ -182,15 +183,18 @@ const NavBar = ({ currentUser, authUser }) => {
                     color: 'text.primary',
                   },
                 },
+                // Z - AI help in guiding me to put font size here
+                '& .MuiSvgIcon-root' : {fontSize: '32px'},
+                stroke: 'white', strokeWidth: 0.6
               }}
             >
-              <ListItemIcon
+              <ListItemIcon fontSize='large'
                 sx={{
                   minWidth: expanded ? 56 : 0,
                   justifyContent: 'center',
                   alignItems: 'center',
                   display: 'flex',
-                  color: 'text.primary',
+                  color: 'text.primary'
                 }}
               >
                 {showUnreadBadge ? (
@@ -246,7 +250,7 @@ const NavBar = ({ currentUser, authUser }) => {
             }}
           >
             {/* <LogoutIcon fontSize="medium" /> */}
-            <AccountCircleOutlinedIcon sx={{fontSize: '28px'}} />
+            <AccountCircleOutlinedIcon sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.6}} />
           </ListItemIcon>
           {expanded && (  
             <ListItemText
@@ -289,7 +293,8 @@ const NavBar = ({ currentUser, authUser }) => {
             }}
           >
             {/* <LogoutIcon fontSize="medium" /> */}
-            <Settings sx={{fontSize: '28px'}} />
+            <Settings sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.6}} />
+            {/* <SettingsOutlinedIcon sx={{fontSize: '28px'}} /> */}
           </ListItemIcon>
           {expanded && (  
             <ListItemText
