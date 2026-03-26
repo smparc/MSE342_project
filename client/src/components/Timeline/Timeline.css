@@ -344,8 +344,9 @@
 .tl-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(3px);
+  /* Removed backdrop-filter: blur — it creates a compositing layer that causes
+     native <select> dropdowns to render with a black background in Chrome/Safari */
+  background: rgba(0, 0, 0, 0.55);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -362,6 +363,9 @@
   max-height: 90vh;
   overflow-y: auto;
   animation: tlModalIn 0.2s ease;
+  /* Ensure the modal itself establishes a light color-scheme so native
+     form controls (select, input) render with white backgrounds */
+  color-scheme: light;
 }
 @keyframes tlModalIn {
   from { opacity: 0; transform: translateY(10px) scale(0.97); }
@@ -407,6 +411,8 @@
   font-size: 0.9rem;
   font-family: 'DM Sans', sans-serif;
   background: #fafafa;
+  color: #1a1a2e;
+  color-scheme: light;
   transition: border-color 0.2s;
 }
 .tl-input:focus { outline: none; border-color: #1a1a2e; background: #fff; }
@@ -457,8 +463,8 @@
 .tl-phase-group:nth-child(1) .tl-phase-heading { border-left-color: #6366f1; }
 .tl-phase-group:nth-child(2) .tl-phase-heading { border-left-color: #f59e0b; }
 .tl-phase-group:nth-child(3) .tl-phase-heading { border-left-color: #10b981; }
-.tl-phase-group:nth-child(4) .tl-phase-heading { border-left-color: #06b6d4; } /* Course Matching */
-.tl-phase-group:nth-child(5) .tl-phase-heading { border-left-color: #ec4899; } /* Pre-departure Training */
+.tl-phase-group:nth-child(4) .tl-phase-heading { border-left-color: #06b6d4; }
+.tl-phase-group:nth-child(5) .tl-phase-heading { border-left-color: #ec4899; }
 
 /* ── Days remaining badge (Story 2) ── */
 .tl-days-remaining {
@@ -536,6 +542,7 @@
   font-family: 'DM Sans', sans-serif;
   background: #fff;
   color: #1a1a2e;
+  color-scheme: light;
   outline: none;
   cursor: pointer;
 }
