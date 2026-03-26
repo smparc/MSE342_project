@@ -37,7 +37,10 @@ const getStatusLabel = (m) => {
   if (m.is_overdue) return { text: 'Overdue', cls: 'sl-overdue' };
   if (m.is_approaching_48h) return { text: '< 48 hrs', cls: 'sl-urgent' };
   if (m.is_approaching_7d) return { text: 'Due soon', cls: 'sl-soon' };
-  return { text: m.milestone_type || 'Checklist', cls: m.milestone_type === 'UW Internal' ? 'sl-uw' : 'sl-host' };
+  // The milestone_type is already shown as a badge, so showing it again as a status is redundant.
+  // This change prevents the duplicate status from appearing on the right of the card title
+  // by returning an empty string for the status text when a milestone_type exists.
+  return { text: m.milestone_type ? '' : 'Checklist', cls: m.milestone_type === 'UW Internal' ? 'sl-uw' : 'sl-host' };
 };
 
 export default function ExchangeCalendar({ currentUser }) {
@@ -123,9 +126,19 @@ export default function ExchangeCalendar({ currentUser }) {
   const toggleChecklistItem = async (item) => {
     const next = !item.is_completed;
     
-    // Optimistic update (AC3 — real-time progress indicator)
+    // Optimistic update (AC3 — real-time progress indicator).
+    // When an item is toggled, we also need to update the `prerequisite_completed`
+    // status of any items that depend on it to unlock them.
     setChecklist(prev =>
-      prev.map(c => c.key === item.key ? { ...c, is_completed: next } : c)
+      prev.map(c => {
+        if (c.key === item.key) {
+          return { ...c, is_completed: next };
+        }
+        if (c.prerequisite_id === item.milestone_id) {
+          return { ...c, prerequisite_completed: next };
+        }
+        return c;
+      })
     );
 
     if (item.milestone_id) {
