@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert, MenuItem } from '@mui/material';
 
+import { FACULTIES, getProgramsForFaculty } from '../../data/facultyPrograms'
+
 const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, exchangeCountry, setExchangeCountry, exchangeSchool, setExchangeSchool, displayName, bio, setProfileChanged, firebase }) => {
 
     const [tempFaculty, setTempFaculty] = React.useState(faculty)
@@ -10,6 +12,8 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
     const [tempExchangeCountry, setTempExchangeCountry] = React.useState(exchangeCountry)
     const [tempExchangeSchool, setTempExchangeSchool] = React.useState(exchangeSchool)
     const [error, setError] = React.useState(false)
+
+    const TERMS = ['3A', '3B', '4A', '4B']
 
     React.useEffect(() => {
         setTempFaculty(faculty)
@@ -92,13 +96,14 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
                                     id='edit-faculty-field'
                                     label="Faculty"
                                     value={tempFaculty || ''}
-                                    onChange={(event) => setTempFaculty(event.target.value)}>
-                                        <MenuItem value={'Art'}>Art</MenuItem>
-                                        <MenuItem value={'Engineering'}>Engineering</MenuItem>
-                                        <MenuItem value={'Environment'}>Environment</MenuItem>
-                                        <MenuItem value={'Health'}>Health</MenuItem>
-                                        <MenuItem value={'Mathematics'}>Mathematics</MenuItem>
-                                        <MenuItem value={'Science'}>Science</MenuItem>
+                                    onChange={(event) => {
+                                        setTempFaculty(event.target.value)
+                                        setTempProgram('')
+                                    }}>
+                                        {FACULTIES.map(faculty => (
+                                            <MenuItem key={faculty} value={faculty}>{faculty}</MenuItem>
+                                        ))}
+
                                 </TextField>
                                         
                                 {/* <FormControl fullWidth>
@@ -121,12 +126,17 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
                             </Grid>
                             <Grid item width='100%'>
                                 <TextField fullWidth
+                                    select
                                     required
                                     margin='normal'
                                     id='edit-program-field'
                                     label="Program"
                                     value={tempProgram}
-                                    onChange={(event) => setTempProgram(event.target.value)} />
+                                    onChange={(event) => setTempProgram(event.target.value)}>
+                                        {getProgramsForFaculty(tempFaculty).map(program => (
+                                            <MenuItem key={program} value={program}>{program}</MenuItem>
+                                        ))}
+                                    </TextField>
                             </Grid>
                             <Grid item width='100%'>
                                 <TextField fullWidth
@@ -140,12 +150,17 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
                             </Grid>
                             <Grid item width='100%'>
                                 <TextField fullWidth
+                                    select
                                     required
                                     margin='normal'
                                     id='edit-exchange-term-field'
                                     label="Exchange Term"
                                     value={tempExchangeTerm}
-                                    onChange={(event) => setTempExchangeTerm(event.target.value)} />
+                                    onChange={(event) => setTempExchangeTerm(event.target.value)}>
+                                        {TERMS.map(term => (
+                                            <MenuItem key={term} value={term}>{term}</MenuItem>
+                                        ))}
+                                    </TextField>
                             </Grid>
 
                             <Grid item width='100%'>

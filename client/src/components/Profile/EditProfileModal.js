@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert } from '@mui/material';
+import { BikeScooterRounded } from '@mui/icons-material';
 
 
 // skipping dialog content text for now
@@ -10,6 +11,14 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
     const [tempName, setTempName] = React.useState(displayName)
     const [tempBio, setTempBio] = React.useState(bio)
     const [error, setError] = React.useState(false)
+
+    React.useEffect(() => {
+        if (open) {
+            setTempName(displayName)
+            setTempBio(bio)
+            setError(false)
+        }
+    }, [open, displayName, bio])
 
     const handleSubmit = async (event) => {
         event.preventDefault()

@@ -7,7 +7,7 @@ import EditProfileModal from './EditProfileModal'
 import EditTagsModal from './EditTagsModal'
 
 
-const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, exchangeCountry, setExchangeCountry, exchangeSchool, setExchangeSchool, uwVerified, firebase, isOwnProfile = true}) => {
+const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, exchangeCountry, setExchangeCountry, exchangeSchool, setExchangeSchool, uwVerified, firebase }) => {
 
     const [modalStatus, setModalStatus] = React.useState(false)
     const [tagsModalStatus, setTagsModalStatus] = React.useState(false)
@@ -40,7 +40,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
             {/* later move container to index and add this profile header as an item */}
             {/* profile card */}
             <Grid container justifyContent={'center'}>
-                <Grid item xs={12} sm={10} md={8} lg={7} minWidth={'680px'} maxWidth={'800px'}
+                <Grid item xs={12} sm={10} md={8} lg={7} sx={{lg: {maxWidth: '735px'}}} minWidth={'680px'} maxWidth={'800px'}
                 >
                     <Grid container
                         columnGap={'40px'}
@@ -147,12 +147,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                     </Grid>
                                 </Grid>
                             </Grid>
-                        </Grid>
-
-
-                        {isOwnProfile && (
-                        <Grid item xs={12}>
-                            <Grid container columnGap={'10px'}>
+                            <Grid container columnGap={'10px'} mt={'30px'}>
                                 <Grid item xs>
                                     <Button fullWidth variant='contained'
                                         id="edit-profile-button"
@@ -187,8 +182,6 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                 </Grid>
                             </Grid>
                         </Grid>
-                        )}
-                        {isOwnProfile && <>
                         <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} faculty={faculty} program={program} gradYear={gradYear} exchangeTerm={exchangeTerm} profileChanged={profileChanged} setProfileChanged={setProfileChanged} firebase={firebase} />
                         <EditTagsModal
                             open={tagsModalStatus}
@@ -211,7 +204,6 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                             setProfileChanged={setProfileChanged}
                             firebase={firebase}
                         />
-                        </>}
 
                         {/* <Grid item xs={12}>
                         <Grid container justifyContent={'space-between'} alignItems={'center'}>

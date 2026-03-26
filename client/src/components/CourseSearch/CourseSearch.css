@@ -30,9 +30,11 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #1a1a2e;
-  color: #fff;
-  border: none;
+  /* background: #1a1a2e;
+  color: #fff; */
+  background: #fff;
+  color: #1a1a2e;
+  border: 1px solid black;
   padding: 0.6rem 1.2rem;
   border-radius: 8px;
   cursor: pointer;
@@ -42,7 +44,7 @@
   white-space: nowrap;
   transition: background 0.2s;
 }
-.cs-shortlist-btn:hover { background: #2d2d52; }
+.cs-shortlist-btn:hover { background: #2d2d52; color: #fff; }
 .cs-shortlist-count {
   background: #f0b429;
   color: #1a1a2e;

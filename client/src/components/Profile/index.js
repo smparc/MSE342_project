@@ -1,10 +1,10 @@
 import * as React from 'react'
 import ProfileHeader from './ProfileHeader'
-import { Grid, Divider, Typography, Alert, Snackbar, Button, ImageList, ImageListItem, useMediaQuery, useTheme } from '@mui/material'
+import { Grid, Divider, useMediaQuery, useTheme } from '@mui/material'
 import SectionTab from './SectionTab'
 import UploadContent from './UploadContent'
 import CourseTable from './CourseTable'
-import { FirebaseContext, authFetch } from '../Firebase'
+import { FirebaseContext } from '../Firebase'
 import UploadReviews from './UploadReviews'
 
 

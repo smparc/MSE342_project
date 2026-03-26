@@ -8,19 +8,27 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Badge from '@mui/material/Badge';
-import ChatIcon from '@mui/icons-material/Chat';
+// import ChatIcon from '@mui/icons-material/Chat';
+// import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import TextsmsOutlinedIcon from '@mui/icons-material/TextsmsOutlined';
 import SearchIcon from '@mui/icons-material/Search';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+// import MenuBookIcon from '@mui/icons-material/MenuBook';
+import FolderSpecialOutlinedIcon from '@mui/icons-material/FolderSpecialOutlined';
 import PersonIcon from '@mui/icons-material/Person';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
 import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
 import { DeleteForever, Settings } from '@mui/icons-material';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonth';
+import ContactPageOutlinedIcon from '@mui/icons-material/ContactPageOutlined';
 
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+
+
 
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 240;
@@ -28,12 +36,16 @@ const NAV_WIDTH_EXPANDED = 240;
 // <Route path="/advisors" element={<AdvisorsList />} />
 
 const navItems = [
-  { path: '/messages', label: 'Messages', icon: ChatIcon, testId: 'ChatIcon' },
+  { path: '/messages', label: 'Messages', icon: TextsmsOutlinedIcon, testId: 'TextsmsOutlinedIcon' },
   { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
-  { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
-  { path: '/calendar', label: 'Calendar', icon: CalendarMonthIcon, testId: 'CalendarIcon' },
-  { path: '/contacts', label: 'Support', icon: PersonIcon },
-  { path: '/profile', label: 'Profile', icon: PersonIcon },
+
+  // { path: '/profile', label: 'Profile', icon: PersonIcon },
+
+  { path: '/course-equivalency', label: 'Course Equivalency', icon: FolderSpecialOutlinedIcon, testId: 'MenuBookIcon' },
+  { path: '/calendar', label: 'Calendar', icon: CalendarMonthOutlinedIcon, testId: 'CalendarIcon' },
+  { path: '/contacts', label: 'Support', icon: ContactPageOutlinedIcon },
+//   { path: '/profile', label: 'Profile', icon: PersonIcon },
+
   // { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
   // { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
@@ -148,7 +160,7 @@ const NavBar = ({ currentUser, authUser }) => {
       </Box>
       {/* <List disablePadding sx={{ pt: 2, flex: 1 }}> */}
       {/* AI used to help with centering */}
-      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px'}}>
+      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '20px' }}>
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
@@ -171,23 +183,26 @@ const NavBar = ({ currentUser, authUser }) => {
                     color: 'text.primary',
                   },
                 },
+                // Z - AI help in guiding me to put font size here
+                '& .MuiSvgIcon-root' : {fontSize: '32px'},
+                stroke: 'white', strokeWidth: 0.6
               }}
             >
-              <ListItemIcon
+              <ListItemIcon fontSize='large'
                 sx={{
                   minWidth: expanded ? 56 : 0,
                   justifyContent: 'center',
                   alignItems: 'center',
                   display: 'flex',
-                  color: 'text.primary',
+                  color: 'text.primary'
                 }}
               >
                 {showUnreadBadge ? (
                   <Badge badgeContent={unreadCount > 99 ? '99+' : unreadCount} color="error">
-                    <Icon fontSize="medium" sx={{ color: 'inherit' }} />
+                    <Icon sx={{ color: 'inherit', fontSize: '28px' }} />
                   </Badge>
                 ) : (
-                  <Icon fontSize="medium" />
+                  <Icon sx={{ fontSize: '28px'}} />
                 )}
               </ListItemIcon>
               {expanded && (
@@ -202,7 +217,52 @@ const NavBar = ({ currentUser, authUser }) => {
         })}
       </List>
 
+      {/* Divider between 2 big units */}
+      {/* TODO: move profile below and change it to avatar */}
       <Divider />
+
+        <List disablePadding sx={{ pb: 2 }}>
+        <ListItemButton
+          // onClick={handleSignOut}
+          onClick={() => navigate('/profile')}
+          sx={{
+            py: 1.5,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: expanded ? 'flex-start' : 'center',
+            // color: 'error.main',
+            color: 'text.primary',
+            '&:hover': {
+              backgroundColor: 'action.hover'
+              // backgroundColor: 'error.light',
+              // color: 'error.contrastText',
+            },
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: expanded ? 56 : 0,
+              justifyContent: 'center',
+              alignItems: 'center',
+              display: 'flex',
+              color: 'inherit',
+            }}
+          >
+            {/* <LogoutIcon fontSize="medium" /> */}
+            <AccountCircleOutlinedIcon sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.6}} />
+          </ListItemIcon>
+          {expanded && (  
+            <ListItemText
+              // primary={<Typography variant="body1">Sign Out</Typography>}
+              primary={<Typography variant="body1">Profile</Typography>}
+              primaryTypographyProps={{ noWrap: true }}
+              sx={{ py: 0, my: 0 }}
+            />
+          )}
+        </ListItemButton>
+      </List>
+
 
       <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
@@ -233,7 +293,8 @@ const NavBar = ({ currentUser, authUser }) => {
             }}
           >
             {/* <LogoutIcon fontSize="medium" /> */}
-            <Settings fontSize="medium" />
+            <Settings sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.6}} />
+            {/* <SettingsOutlinedIcon sx={{fontSize: '28px'}} /> */}
           </ListItemIcon>
           {expanded && (  
             <ListItemText
@@ -279,7 +340,7 @@ const NavBar = ({ currentUser, authUser }) => {
       >
         <MenuItem onClick={() => handleNavigateSettings('/profile')}>
           <ListItemIcon>
-            <PersonIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+            <AccountCircleOutlinedIcon fontSize="small" sx={{ color: 'text.secondary'}} />
           </ListItemIcon>
           <ListItemText>Profile</ListItemText>
         </MenuItem>
@@ -291,7 +352,7 @@ const NavBar = ({ currentUser, authUser }) => {
           <ListItemText>User Settings</ListItemText>
         </MenuItem>
 
-        
+
 
         <Divider sx={{ my: 1, mx: 2 }} />
 
@@ -308,7 +369,7 @@ const NavBar = ({ currentUser, authUser }) => {
           </ListItemIcon>
           <ListItemText>Delete Account</ListItemText>
         </MenuItem>
-        
+
       </Menu>
 
 
