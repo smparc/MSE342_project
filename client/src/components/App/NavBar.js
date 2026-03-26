@@ -32,10 +32,10 @@ const navItems = [
   { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
   { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
   { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
-  { path: '/calendar', label: 'Calendar', icon: CalendarMonthIcon, testId: 'CalendarIcon' },
-  { path: '/contacts', label: 'Contacts', icon: PersonIcon },
-  { path: '/advisors', label: 'Advisors', icon: PersonIcon },
-  { path: '/profile', label: 'Profile', icon: PersonIcon },
+  { path: '/calendar', label: 'Calendar', icon: CalendarMonthOutlinedIcon, testId: 'CalendarIcon' },
+  { path: '/contacts', label: 'Contacts', icon: ContactPageOutlinedIcon },
+  { path: '/advisors', label: 'Advisors', icon: ContactPageOutlinedIcon },
+  // { path: '/profile', label: 'Profile', icon: PersonIcon },
   // { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
   // { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
@@ -150,7 +150,7 @@ const NavBar = ({ currentUser, authUser }) => {
       </Box>
       {/* <List disablePadding sx={{ pt: 2, flex: 1 }}> */}
       {/* AI used to help with centering */}
-      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px'}}>
+      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '15px' }}>
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
@@ -204,7 +204,52 @@ const NavBar = ({ currentUser, authUser }) => {
         })}
       </List>
 
+      {/* Divider between 2 big units */}
+      {/* TODO: move profile below and change it to avatar */}
       <Divider />
+
+        <List disablePadding sx={{ pb: 2 }}>
+        <ListItemButton
+          // onClick={handleSignOut}
+          onClick={() => navigate('/profile')}
+          sx={{
+            py: 1.5,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: expanded ? 'flex-start' : 'center',
+            // color: 'error.main',
+            color: 'text.primary',
+            '&:hover': {
+              backgroundColor: 'action.hover'
+              // backgroundColor: 'error.light',
+              // color: 'error.contrastText',
+            },
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: expanded ? 56 : 0,
+              justifyContent: 'center',
+              alignItems: 'center',
+              display: 'flex',
+              color: 'inherit',
+            }}
+          >
+            {/* <LogoutIcon fontSize="medium" /> */}
+            <AccountCircleOutlinedIcon fontSize="medium" />
+          </ListItemIcon>
+          {expanded && (  
+            <ListItemText
+              // primary={<Typography variant="body1">Sign Out</Typography>}
+              primary={<Typography variant="body1">Profile</Typography>}
+              primaryTypographyProps={{ noWrap: true }}
+              sx={{ py: 0, my: 0 }}
+            />
+          )}
+        </ListItemButton>
+      </List>
+
 
       <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
@@ -281,7 +326,7 @@ const NavBar = ({ currentUser, authUser }) => {
       >
         <MenuItem onClick={() => handleNavigateSettings('/profile')}>
           <ListItemIcon>
-            <PersonIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+            <AccountCircleOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
           </ListItemIcon>
           <ListItemText>Profile</ListItemText>
         </MenuItem>
@@ -293,7 +338,7 @@ const NavBar = ({ currentUser, authUser }) => {
           <ListItemText>User Settings</ListItemText>
         </MenuItem>
 
-        
+
 
         <Divider sx={{ my: 1, mx: 2 }} />
 
@@ -310,7 +355,7 @@ const NavBar = ({ currentUser, authUser }) => {
           </ListItemIcon>
           <ListItemText>Delete Account</ListItemText>
         </MenuItem>
-        
+
       </Menu>
 
 
