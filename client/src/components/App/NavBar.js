@@ -183,6 +183,7 @@ const NavBar = ({ currentUser, authUser }) => {
                     color: 'text.primary',
                   },
                 },
+                // Z - AI help in guiding me to put font size here
                 '& .MuiSvgIcon-root' : {fontSize: '32px'},
                 stroke: 'white', strokeWidth: 0.6
               }}
