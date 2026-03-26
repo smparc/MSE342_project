@@ -37,9 +37,6 @@ const getStatusLabel = (m) => {
   if (m.is_overdue) return { text: 'Overdue', cls: 'sl-overdue' };
   if (m.is_approaching_48h) return { text: '< 48 hrs', cls: 'sl-urgent' };
   if (m.is_approaching_7d) return { text: 'Due soon', cls: 'sl-soon' };
-  // The milestone_type is already shown as a badge, so showing it again as a status is redundant.
-  // This change prevents the duplicate status from appearing on the right of the card title
-  // by returning an empty string for the status text when a milestone_type exists.
   return { text: m.milestone_type ? '' : 'Checklist', cls: m.milestone_type === 'UW Internal' ? 'sl-uw' : 'sl-host' };
 };
 
@@ -126,9 +123,6 @@ export default function ExchangeCalendar({ currentUser }) {
   const toggleChecklistItem = async (item) => {
     const next = !item.is_completed;
     
-    // Optimistic update (AC3 — real-time progress indicator).
-    // When an item is toggled, we also need to update the `prerequisite_completed`
-    // status of any items that depend on it to unlock them.
     setChecklist(prev =>
       prev.map(c => {
         if (c.key === item.key) {
@@ -164,10 +158,6 @@ export default function ExchangeCalendar({ currentUser }) {
     if (Object.keys(e).length) { setAddErrors(e); return; }
     setAddLoading(true);
     try {
-      // The 'datetime-local' input format is 'YYYY-MM-DDTHH:MM'.
-      // MySQL's DATETIME format is 'YYYY-MM-DD HH:MM:SS'.
-      // The 'T' can cause data truncation warnings on the backend.
-      // We'll reformat it to be safe.
       const formattedDeadline = addForm.deadline_utc
         ? addForm.deadline_utc.replace('T', ' ') + ':00'
         : null;
@@ -192,7 +182,6 @@ export default function ExchangeCalendar({ currentUser }) {
       loadChecklist();
     } catch (error) {
       console.error("Error adding checklist item:", error);
-      // Provide a more specific error message if possible
       if (error.message.includes('Server responded')) {
         setAddErrors({ submit: 'Failed to add item. The server returned an error.' });
       } else {
@@ -207,7 +196,6 @@ export default function ExchangeCalendar({ currentUser }) {
   const handleEditClick = (e, item) => {
     e.stopPropagation();
     
-    // Safely format the date into YYYY-MM-DDThh:mm for the HTML input element
     let dateStr = '';
     if (item.deadline_utc) {
       try {
@@ -291,7 +279,6 @@ export default function ExchangeCalendar({ currentUser }) {
   const firstDay    = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // Group milestones by "YYYY-MM-DD"
   const byDate = milestones.reduce((acc, m) => {
     if (!m.deadline_utc) return acc;
     const d   = new Date(m.deadline_utc);
@@ -304,13 +291,11 @@ export default function ExchangeCalendar({ currentUser }) {
 
   const hasActiveFilters = !!(programFilter || destFilter);
 
-  // Build cell array: null = empty pad before month starts
   const cells = [
     ...Array(firstDay).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
 
-  // Selected day's milestones
   const selectedKey = selectedDay
     ? `${year}-${String(month+1).padStart(2,'0')}-${String(selectedDay).padStart(2,'0')}`
     : null;
@@ -372,7 +357,7 @@ export default function ExchangeCalendar({ currentUser }) {
           style={{ height: 'fit-content', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
           onClick={exportICS}
         >
-          ↓ Export .ics
+          Export .ics
         </button>
       </div>
 
@@ -392,12 +377,9 @@ export default function ExchangeCalendar({ currentUser }) {
         </button>
       </div>
 
-      {/* ════════════════════════════════════════════════
-          CALENDAR TAB  (Story 1)
-          ════════════════════════════════════════════════ */}
+      {/* CALENDAR TAB */}
       {tab === 'calendar' && (
         <>
-          {/* Story 1 — Program / Destination filters */}
           <div className="ec-filters">
             <div className="ec-filter-field">
               <label htmlFor="ec-program-select">Program / Type</label>
@@ -427,7 +409,6 @@ export default function ExchangeCalendar({ currentUser }) {
               />
             </div>
 
-            {/* AC4 — Clear Filters */}
             {hasActiveFilters && (
               <button
                 className="ec-clear-filters"
@@ -438,15 +419,13 @@ export default function ExchangeCalendar({ currentUser }) {
             )}
           </div>
 
-          {/* AC5 — Empty state when filters match nothing */}
           {!loading && hasActiveFilters && milestones.length === 0 && (
             <div className="ec-empty">
-              <div className="ec-empty-icon">📭</div>
+              <div className="ec-empty-icon"></div>
               <p>No relevant deadlines found for these filters</p>
             </div>
           )}
 
-          {/* Month navigation */}
           <div className="ec-month-nav">
             <button
               className="ec-nav-btn"
@@ -465,12 +444,10 @@ export default function ExchangeCalendar({ currentUser }) {
             <div className="ec-loading">Loading milestones…</div>
           ) : (
             <div className="ec-calendar-wrap">
-              {/* Day-of-week headers */}
               <div className="ec-day-headers">
                 {DAYS.map(d => <div key={d} className="ec-day-header">{d}</div>)}
               </div>
 
-              {/* Calendar grid */}
               <div className="ec-grid">
                 {cells.map((day, idx) => {
                   if (!day) return <div key={`pad-${idx}`} className="ec-cell ec-cell--empty" />;
@@ -511,7 +488,6 @@ export default function ExchangeCalendar({ currentUser }) {
             </div>
           )}
 
-          {/* Selected day detail panel */}
           {selectedDay && (
             <div className="ec-day-panel">
               <h3 className="ec-day-panel-title">
@@ -534,7 +510,6 @@ export default function ExchangeCalendar({ currentUser }) {
             </div>
           )}
 
-          {/* Legend */}
           <div className="ec-legend">
             <span className="ec-legend-item"><span className="ec-dot ms-urgent"/>Due in 48h</span>
             <span className="ec-legend-item"><span className="ec-dot ms-soon"/>Due in 7 days</span>
@@ -545,13 +520,10 @@ export default function ExchangeCalendar({ currentUser }) {
         </>
       )}
 
-      {/* ════════════════════════════════════════════════
-          CHECKLIST TAB  (Story 2)
-          ════════════════════════════════════════════════ */}
+      {/* CHECKLIST TAB */}
       {tab === 'checklist' && (
         <div className="ec-checklist">
 
-          {/* AC3 — Progress bar */}
           <div className="ec-progress-card">
             <div className="ec-progress-top">
               <span className="ec-progress-label">Application Progress</span>
@@ -575,7 +547,6 @@ export default function ExchangeCalendar({ currentUser }) {
               + Add Checklist
             </button>
           </div>
-
 
           {checklistLoading ? (
             <div className="ec-loading">Loading checklist…</div>
@@ -611,7 +582,7 @@ export default function ExchangeCalendar({ currentUser }) {
                                 onClick={() => !isLocked && toggleChecklistItem(item)}
                                 title={isLocked ? `Complete "${item.prerequisite_title}" first` : 'Mark complete'}
                               >
-                                {item.is_completed ? '✓' : isLocked ? '🔒' : ''}
+                                {item.is_completed ? '✓' : ''}
                               </button>
                             </div>
 
@@ -623,7 +594,7 @@ export default function ExchangeCalendar({ currentUser }) {
                                 </div>
 
                                 <div className="tl-ms-meta">
-                                  {item.deadline_utc && <span className="tl-ms-date">📅 {fmtDualTime(item.deadline_utc)} EST</span>}
+                                  {item.deadline_utc && <span className="tl-ms-date">{fmtDualTime(item.deadline_utc)} EST</span>}
                                   {item.milestone_type && (
                                     <span className={`tl-type-badge ${item.milestone_type === 'UW Internal' ? 'uw' : 'host'}`}>
                                       {item.milestone_type}
@@ -638,7 +609,7 @@ export default function ExchangeCalendar({ currentUser }) {
 
                                 {item.prerequisite_id && (
                                   <div className="tl-prereq">
-                                    {isLocked ? '🔒' : '✓'} Requires: <em>{item.prerequisite_title}</em>
+                                    {isLocked ? 'Locked —' : '✓'} Requires: <em>{item.prerequisite_title}</em>
                                   </div>
                                 )}
                               </div>
@@ -647,17 +618,17 @@ export default function ExchangeCalendar({ currentUser }) {
                                 <div className="tl-ms-detail">
                                   {item.form_link && (
                                     <a href={item.form_link} target="_blank" rel="noreferrer" className="tl-form-link" onClick={e => e.stopPropagation()}>
-                                      → Open Required Form / Portal
+                                      Open Required Form / Portal
                                     </a>
                                   )}
 
                                   {item.is_completed && item.buffer_days !== null && item.buffer_days !== undefined && (
                                     <div className="tl-buffer">
                                       {item.buffer_days > 0
-                                        ? `🎯 Buffer Status: ${item.buffer_days} days ahead of deadline`
+                                        ? `Buffer Status: ${item.buffer_days} days ahead of deadline`
                                         : item.buffer_days === 0
-                                        ? '⏱ Completed exactly on deadline'
-                                        : `⚠ Completed ${Math.abs(item.buffer_days)} days after deadline`}
+                                        ? 'Completed exactly on deadline'
+                                        : `Completed ${Math.abs(item.buffer_days)} days after deadline`}
                                     </div>
                                   )}
 
