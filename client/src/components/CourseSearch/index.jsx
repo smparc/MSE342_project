@@ -34,7 +34,7 @@ export default function CourseSearch({ currentUser, authUser }) {
 
   // Search & filter state
   const [query, setQuery]           = useState('');
-  const [filters, setFilters]       = useState({ country: '', continent: '', faculty: '', term: '' });
+  const [filters, setFilters]       = useState({ country: '', continent: '', term: '' });
   const [filterMeta, setFilterMeta] = useState({ countries: [], continents: [], terms: [] });
 
   // Sprint 2 — sort state (Story 5)
@@ -87,8 +87,7 @@ export default function CourseSearch({ currentUser, authUser }) {
         const params = new URLSearchParams({
           q:         query,
           country:   filters.country,
-          continent: filters.continent,
-          faculty:   filters.faculty,
+          continent: filters.continent, // Keep continent filter
           term:      filters.term,
           sort,
           page:      pageNum,
@@ -118,11 +117,11 @@ export default function CourseSearch({ currentUser, authUser }) {
   }, [fetchCourses]);
 
   const handleFilterChange = (key, val) => {
-    setFilters((prev) => ({ ...prev, [key]: val }));
+    setFilters((prev) => ({ ...prev, [key]: val })); // This is generic and will still work for other filters
   };
 
   const clearFilters = () => {
-    setFilters({ country: '', continent: '', faculty: '', term: '' });
+    setFilters({ country: '', continent: '', term: '' });
     setQuery('');
   };
 
@@ -278,23 +277,12 @@ export default function CourseSearch({ currentUser, authUser }) {
         </select>
 
         <select
-          value={filters.faculty}
-          onChange={(e) => handleFilterChange('faculty', e.target.value)}
-          className="cs-select"
-        >
-          <option value="">All Faculties</option>
-          {['MSCI', 'CS', 'ECE', 'SYDE', 'MATH', 'STAT', 'BUS', 'ECON', 'PHYS', 'CHEM'].map((f) => (
-            <option key={f} value={f}>{f}</option>
-          ))}
-        </select>
-
-        <select
           value={filters.term}
           onChange={(e) => handleFilterChange('term', e.target.value)}
           className="cs-select"
         >
           <option value="">All Terms</option>
-          {filterMeta.terms.map((t) => <option key={t} value={t}>{t}</option>)}
+          {Array.from(new Set([...filterMeta.terms, '3B', '4A', '4B'])).sort().map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
 
         {hasFilters && (
