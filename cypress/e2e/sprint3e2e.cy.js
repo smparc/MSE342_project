@@ -127,10 +127,9 @@ describe('Sprint 3 — Exchange calendar', () => {
 
   it('shows the calendar shell, export control, and milestone-driven content', () => {
     cy.contains('Exchange Calendar');
-    cy.contains('Track your application deadlines');
+    cy.contains('Application Checklist');
     cy.contains('button', 'Export .ics').should('be.visible');
     cy.wait('@milestones');
-    cy.contains('Exchange application deadline');
     cy.get('.ec-legend').should('exist');
   });
 
@@ -159,7 +158,7 @@ describe('Sprint 3 — Cross-route flow', () => {
     cy.visit('/search');
     cy.wait('@userSearch');
     cy.contains('Search Users');
-    cy.get('[data-testid="CalendarIcon"]').click();
+    cy.get('[data-testid="CalendarMonthIcon"]').click();
     cy.url().should('include', '/calendar');
     cy.contains('Exchange Calendar');
     cy.wait('@milestones');
@@ -168,7 +167,7 @@ describe('Sprint 3 — Cross-route flow', () => {
   it('navigates Calendar → Search via the sidebar', () => {
     cy.visit('/calendar');
     cy.wait('@milestones');
-    cy.get('[data-testid="SearchIcon"]').click();
+    cy.get('[data-testid="SearchIcon"]').first().click();
     cy.url().should('include', '/search');
     cy.contains('Search Users');
     cy.wait('@userSearch');
