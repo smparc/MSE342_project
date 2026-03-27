@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert, MenuItem, IconButton, Typography, Stack, Box } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/Close'
 
 import { FACULTIES, getProgramsForFaculty } from '../../data/facultyPrograms'
 
