@@ -145,7 +145,7 @@ const Profile = ({ currentUser, authUser, viewUsername }) => {
                             isOwnProfile={isOwnProfile}
                         />
                     )}
-                    {tabIndex === 1 && <CourseTable username={username} />}
+                    {tabIndex === 1 && <CourseTable username={username} exchangeSchool={exchangeSchool}/>}
                     {tabIndex === 2 && <UploadReviews username={username} />}
                 </Grid>
             </Grid>

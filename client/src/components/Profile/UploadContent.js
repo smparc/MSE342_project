@@ -129,7 +129,7 @@ const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase, isO
             {isOwnProfile && (!posts || posts.length === 0) && (
                 <>
                     <Grid item>
-                        <PhotoCamera sx={{ fontSize: '62px', color: '#6e6e6e' }} />
+                        <PhotoCamera sx={{ fontSize: '62px', color: '#6e6e6e', marginTop: '50px' }} />
                     </Grid>
                     <Grid item>
                         <Typography fontSize={'30px'} fontWeight={800} textAlign={'center'}>Share Photos</Typography>

@@ -127,7 +127,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                         WATERLOO
                                         <Box sx={{ flex: 1, height: '1px', bgcolor: '#efefef' }} />
                                     </Typography>
-                                    <Stack direction="row" flexWrap="wrap" gap={1}>
+                                    <Stack direction="row" flexWrap="wrap" gap={2}>
                                         {uwVerified && <Chip icon={<VerifiedIcon style={{ fontSize: 16, color: '#2E7D32' }} />} label="UW Verified" size="small" sx={{ bgcolor: '#edf7ed', color: '#1e4620', fontWeight: '600', border: '1px solid #c8e6c9' }} />}
                                         {faculty && <Chip label={faculty} size="small" sx={{ bgcolor: '#fffde7', color: '#5d4037', fontWeight: '600', border: '1px solid #fff59d' }} />}
                                         {program && <Chip label={program} size="small" sx={{ bgcolor: '#fce4ec', color: '#880e4f', fontWeight: '600', border: '1px solid #f8bbd0' }} />}
@@ -169,10 +169,11 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                     variant='contained'
                                     id="edit-profile-button"
                                     sx={{
-                                        bgcolor: '#efefef',
-                                        height: '36px',
+                                        bgcolor: 'rgb(244, 244, 244)',
+                                        height: '38px',
                                         textTransform: 'none',
                                         color: '#000',
+                                        border: '1px solid #efefef',
                                         ":hover": { bgcolor: '#efefef' },
                                         fontWeight: '600',
                                         fontSize: '15px',
@@ -187,10 +188,11 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                     variant='contained'
                                     id="edit-tags-button"
                                     sx={{
-                                        bgcolor: '#efefef',
+                                        bgcolor: 'rgb(244, 244, 244)',
                                         height: '38px',
                                         textTransform: 'none',
                                         color: '#000',
+                                        border: '1px solid #efefef',
                                         ":hover": { bgcolor: '#efefef' },
                                         fontWeight: '600',
                                         fontSize: '15px',
