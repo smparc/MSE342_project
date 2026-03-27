@@ -6,16 +6,24 @@ import { FirebaseContext } from '../Firebase';
 const API = process.env.REACT_APP_API_URL || '';
 
 // step: 'idle' → 'confirm' → 'password' → 'farewell'
-const DeleteAccount = ({ currentUser, onDeleted }) => {
+const DeleteAccount = ({ currentUser, onDeleted, onClose, isFromNav }) => {
   const firebase = React.useContext(FirebaseContext);
   const navigate = useNavigate();
-  const [step, setStep] = useState('idle');
+  const [step, setStep] = useState(isFromNav ? 'confirm' : 'idle')
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleDeleteClick = () => setStep('confirm');
-  const handleNo = () => { setStep('idle'); setError(''); };
+  // const handleNo = () => { setStep('idle'); setError(''); };
+  const handleNo = () => { 
+    setError(''); 
+    if (onClose) {
+      onClose(); // This tells NavBar to unmount this component
+    } else {
+      setStep('idle'); 
+    }
+  };
   const handleYes = () => setStep('password');
 
   const handleConfirm = async () => {
@@ -42,7 +50,9 @@ const DeleteAccount = ({ currentUser, onDeleted }) => {
       setTimeout(() => {
         if (onDeleted) onDeleted();
         firebase.doSignOut().then(() => {
-          navigate('/');
+          // navigate('/');
+          window.location.href = '/'
+          // window.location.href = '/profile'
         });
       }, 2500);
     } catch {
