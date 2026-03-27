@@ -281,7 +281,7 @@ const Messaging = ({ currentUser, authUser }) => {
               color: 'text.secondary',
             }}
           >
-            Select a conversation to start messaging
+            Select a conversation to start messaging.
           </Box>
         )}
       </Paper>

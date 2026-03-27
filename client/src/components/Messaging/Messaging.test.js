@@ -155,7 +155,7 @@ describe('Messaging', () => {
         expect(screen.getByText('Alice')).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/Select a conversation to start messaging/i)).toBeInTheDocument();
+      expect(screen.getByText(/Select a conversation to start messaging./i)).toBeInTheDocument();
     });
   });
 
