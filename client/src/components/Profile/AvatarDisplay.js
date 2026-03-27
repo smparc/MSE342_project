@@ -1,5 +1,4 @@
 import Avatar from '@mui/material/Avatar';
-// import {Grid} from '@mui/material'
 
 const AvatarDisplay = ({ name }) => {
     function stringToColor(string) {

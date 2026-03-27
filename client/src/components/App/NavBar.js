@@ -8,49 +8,30 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Badge from '@mui/material/Badge';
-// import ChatIcon from '@mui/icons-material/Chat';
-// import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import TextsmsOutlinedIcon from '@mui/icons-material/TextsmsOutlined';
 import SearchIcon from '@mui/icons-material/Search';
-// import MenuBookIcon from '@mui/icons-material/MenuBook';
 import FolderSpecialOutlinedIcon from '@mui/icons-material/FolderSpecialOutlined';
-// import PersonIcon from '@mui/icons-material/Person';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
-// import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
-import { DeleteForever, Settings } from '@mui/icons-material';
-// import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import { DeleteForever} from '@mui/icons-material';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonth';
 import ContactPageOutlinedIcon from '@mui/icons-material/ContactPageOutlined';
-
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
-
 import DeleteAccount from '../DeleteAccount';
-
-
 
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 240;
 
-// <Route path="/advisors" element={<AdvisorsList />} />
-
 const navItems = [
   { path: '/messages', label: 'Messages', icon: TextsmsOutlinedIcon, testId: 'TextsmsOutlinedIcon' },
   { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
-
-  // { path: '/profile', label: 'Profile', icon: PersonIcon },
-
   { path: '/course-equivalency', label: 'Course Equivalency', icon: FolderSpecialOutlinedIcon, testId: 'MenuBookIcon' },
   { path: '/calendar', label: 'Calendar', icon: CalendarMonthOutlinedIcon, testId: 'CalendarIcon' },
   { path: '/contacts', label: 'Support', icon: ContactPageOutlinedIcon },
-//   { path: '/profile', label: 'Profile', icon: PersonIcon },
-
-  // { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
-  // { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
 
 const NavBar = ({ currentUser, authUser }) => {
@@ -223,7 +204,6 @@ const NavBar = ({ currentUser, authUser }) => {
       </List>
 
       {/* Divider between 2 big units */}
-      {/* TODO: move profile below and change it to avatar */}
       <Divider />
 
         <List disablePadding sx={{ pb: 2 }}>
@@ -353,15 +333,6 @@ const NavBar = ({ currentUser, authUser }) => {
           </ListItemIcon>
           <ListItemText>Profile</ListItemText>
         </MenuItem>
-
-        {/* <MenuItem onClick={() => handleNavigateSettings('/settings/user-type')}>
-          <ListItemIcon>
-            <Settings fontSize="small" sx={{ color: 'text.secondary' }} />
-          </ListItemIcon>
-          <ListItemText>User Settings</ListItemText>
-        </MenuItem> */}
-
-
 
         <Divider sx={{ my: 1, mx: 2 }} />
 

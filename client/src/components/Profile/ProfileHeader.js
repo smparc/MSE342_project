@@ -1,8 +1,7 @@
 // // include profile picture, bio, edit profile button
 
-
 import * as React from 'react'
-import { Grid, Typography, Box, Button, Snackbar, Alert, Chip, Divider, Stack } from '@mui/material'
+import { Grid, Typography, Box, Button, Snackbar, Alert, Chip, Stack } from '@mui/material'
 import VerifiedIcon from '@mui/icons-material/Verified'
 import AvatarDisplay from './AvatarDisplay'
 import EditProfileModal from './EditProfileModal'
