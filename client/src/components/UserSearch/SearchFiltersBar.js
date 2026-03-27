@@ -11,44 +11,17 @@ const emptyFilters = {
   faculty: '',
   gradYear: '',
   exchangeTerm: '',
-  exchangeCountry: [],
-  exchangeSchool: '',
 };
 
 /**
  * User search filters — same visual pattern as Course Search (.cs-filters / .cs-select).
  */
 const SearchFiltersBar = ({ filters, onChange, onClear }) => {
-  const [countryOptions, setCountryOptions] = React.useState([]);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    fetch('/api/users/search/exchange-countries')
-      .then((r) => (r.ok ? r.json() : { countries: [] }))
-      .then((data) => {
-        if (!cancelled && Array.isArray(data.countries)) {
-          setCountryOptions(data.countries);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setCountryOptions([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const hasAny = Boolean(
-    filters.faculty ||
-      filters.gradYear ||
-      filters.exchangeTerm ||
-      (Array.isArray(filters.exchangeCountry) && filters.exchangeCountry.length) ||
-      filters.exchangeSchool
+    filters.faculty || filters.gradYear || filters.exchangeTerm
   );
 
   const set = (patch) => onChange({ ...filters, ...patch });
-
-  const selectedCountries = Array.isArray(filters.exchangeCountry) ? filters.exchangeCountry : [];
 
   return (
     <div className="cs-filters" style={{ marginTop: 0 }}>
@@ -93,33 +66,6 @@ const SearchFiltersBar = ({ filters, onChange, onClear }) => {
           </option>
         ))}
       </select>
-
-      <select
-        multiple
-        className="cs-select cs-select--multiselect"
-        value={selectedCountries}
-        onChange={(e) => {
-          const selected = Array.from(e.target.selectedOptions, (o) => o.value);
-          set({ exchangeCountry: selected });
-        }}
-        aria-label="Exchange country"
-        size={Math.min(6, Math.max(3, countryOptions.length || 1))}
-      >
-        {countryOptions.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-
-      <input
-        type="text"
-        className="cs-filter-input"
-        value={filters.exchangeSchool}
-        onChange={(e) => set({ exchangeSchool: e.target.value })}
-        placeholder="Exchange school"
-        aria-label="Exchange school"
-      />
 
       {hasAny && (
         <button type="button" className="cs-clear-filters" onClick={onClear}>

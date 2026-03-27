@@ -261,30 +261,8 @@ app.get('/api/users/availability', (req, res) => {
     });
 });
 
-// Distinct countries for user search multiselect (users.destination_country, profile_tags country, course_equivalencies.country)
-app.get('/api/users/search/exchange-countries', (req, res) => {
-    const sql = `
-        SELECT DISTINCT c FROM (
-            SELECT destination_country AS c FROM users WHERE destination_country IS NOT NULL AND destination_country != ''
-            UNION
-            SELECT tag_value AS c FROM profile_tags WHERE tag_type = 'country' AND tag_value IS NOT NULL AND tag_value != ''
-            UNION
-            SELECT country AS c FROM course_equivalencies WHERE country IS NOT NULL AND country != ''
-        ) AS t
-        ORDER BY c ASC
-    `;
-    connection.query(sql, [], (error, results) => {
-        if (error) {
-            console.error('Database error:', error);
-            return res.status(500).json({ error: 'Database error' });
-        }
-        const countries = (results || []).map((row) => row.c).filter(Boolean);
-        res.json({ countries });
-    });
-});
-
 // API to search users (for new message, search page - must be before /api/users/:username)
-// Query: q, exclude, excludeConversations (1), includeTags (1),
+// Query: q (matches username, display_name, program, destination_country, destination_school, program/country/school tags), exclude, excludeConversations (1), includeTags (1),
 //        faculty, program, grad_year, exchange_term, exchange_country (repeat for OR match), exchange_school (optional filters; AND logic)
 app.get('/api/users/search', (req, res) => {
     const q = (req.query.q || '').trim();
@@ -319,12 +297,21 @@ app.get('/api/users/search', (req, res) => {
         const pattern = `%${q}%`;
         sql += ` AND (
             u.username LIKE ? OR u.display_name LIKE ? OR u.program LIKE ?
+            OR u.destination_country LIKE ? OR u.destination_school LIKE ?
             OR EXISTS (
                 SELECT 1 FROM profile_tags pt
                 WHERE pt.username = u.username AND pt.tag_type = 'program' AND pt.tag_value LIKE ?
             )
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt
+                WHERE pt.username = u.username AND pt.tag_type = 'country' AND pt.tag_value LIKE ?
+            )
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt
+                WHERE pt.username = u.username AND pt.tag_type = 'school' AND pt.tag_value LIKE ?
+            )
         )`;
-        params.push(pattern, pattern, pattern, pattern);
+        params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
     }
     if (filterFaculty) {
         sql += " AND u.faculty LIKE ?";

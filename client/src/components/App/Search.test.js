@@ -37,16 +37,9 @@ const renderSearch = (props = {}) =>
     </MemoryRouter>
   );
 
-/** Fetch mock: countries list + search JSON (array). Search URL must not match exchange-countries. */
 function mockFetchForSearch(searchJson) {
   return jest.fn((url) => {
     const s = typeof url === 'string' ? url : '';
-    if (s.includes('/api/users/search/exchange-countries')) {
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({ countries: ['Germany', 'Japan', 'France'] }),
-      });
-    }
     if (s.includes('/api/users/search')) {
       return Promise.resolve({
         ok: true,
@@ -88,7 +81,7 @@ describe('Search', () => {
       renderSearch();
       expect(screen.getByRole('heading', { name: /Search Users/i })).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText(/Search by name, username, or program/i)
+        screen.getByPlaceholderText(/Search by name, username, program, exchange country, or exchange university/i)
       ).toBeInTheDocument();
     });
 
@@ -97,10 +90,7 @@ describe('Search', () => {
       await waitFor(
         () => {
           const call = global.fetch.mock.calls.find(
-            ([url]) =>
-              typeof url === 'string' &&
-              url.includes('/api/users/search') &&
-              !url.includes('exchange-countries')
+            ([url]) => typeof url === 'string' && url.includes('/api/users/search')
           );
           expect(call).toBeDefined();
           expect(call[0]).toMatch(/includeTags=1/);
@@ -110,13 +100,11 @@ describe('Search', () => {
       );
     });
 
-    it('renders filter controls (faculty, class, exchange fields, Course Search style)', () => {
+    it('renders filter controls (faculty, class, exchange term)', () => {
       renderSearch();
       expect(screen.getByLabelText(/^Faculty$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Class \(graduation year\)/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^Exchange term$/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^Exchange country$/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^Exchange school$/i)).toBeInTheDocument();
     });
   });
 
@@ -125,7 +113,9 @@ describe('Search', () => {
       global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
-      const input = screen.getByPlaceholderText(/Search by name, username, or program/i);
+      const input = screen.getByPlaceholderText(
+        /Search by name, username, program, exchange country, or exchange university/i
+      );
       fireEvent.change(input, { target: { value: 'john' } });
 
       await waitFor(
@@ -134,7 +124,6 @@ describe('Search', () => {
             ([url]) =>
               typeof url === 'string' &&
               url.includes('/api/users/search') &&
-              !url.includes('exchange-countries') &&
               /[?&]q=john/.test(url)
           );
           expect(searchCall).toBeDefined();
@@ -147,9 +136,12 @@ describe('Search', () => {
       global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
-      fireEvent.change(screen.getByPlaceholderText(/Search by name, username, or program/i), {
-        target: { value: 'jo' },
-      });
+      fireEvent.change(
+        screen.getByPlaceholderText(/Search by name, username, program, exchange country, or exchange university/i),
+        {
+          target: { value: 'jo' },
+        }
+      );
 
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -167,22 +159,21 @@ describe('Search', () => {
       });
     });
 
-    it('sends typed program text as q (server matches username, name, and program)', async () => {
+    it('sends typed program text as q (server matches username, name, program, and exchange fields)', async () => {
       global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
-      fireEvent.change(screen.getByPlaceholderText(/Search by name, username, or program/i), {
-        target: { value: 'Biology' },
-      });
+      fireEvent.change(
+        screen.getByPlaceholderText(/Search by name, username, program, exchange country, or exchange university/i),
+        {
+          target: { value: 'Biology' },
+        }
+      );
 
       await waitFor(
         () => {
           const withQ = global.fetch.mock.calls.filter(
-            ([url]) =>
-              typeof url === 'string' &&
-              url.includes('/api/users/search') &&
-              !url.includes('exchange-countries') &&
-              /[?&]q=/.test(url)
+            ([url]) => typeof url === 'string' && /[?&]q=/.test(url)
           );
           expect(withQ.length).toBeGreaterThan(0);
           const lastUrl = withQ[withQ.length - 1][0];
@@ -206,10 +197,7 @@ describe('Search', () => {
       await waitFor(
         () => {
           const searchUrl = global.fetch.mock.calls.find(
-            ([url]) =>
-              typeof url === 'string' &&
-              url.includes('/api/users/search') &&
-              !url.includes('exchange-countries')
+            ([url]) => typeof url === 'string' && url.includes('/api/users/search')
           );
           expect(searchUrl).toBeDefined();
           expect(searchUrl[0]).toMatch(/[?&]faculty=Engineering/);
@@ -229,10 +217,7 @@ describe('Search', () => {
       await waitFor(
         () => {
           const searchUrl = global.fetch.mock.calls.find(
-            ([url]) =>
-              typeof url === 'string' &&
-              url.includes('/api/users/search') &&
-              !url.includes('exchange-countries')
+            ([url]) => typeof url === 'string' && url.includes('/api/users/search')
           );
           expect(searchUrl).toBeDefined();
           expect(searchUrl[0]).toMatch(/[?&]grad_year=2026/);
@@ -241,58 +226,23 @@ describe('Search', () => {
       );
     });
 
-    it('calls GET /api/users/search with exchange_term, exchange_country, exchange_school when set', async () => {
-      global.fetch = jest.fn((url) => {
-        const s = typeof url === 'string' ? url : '';
-        if (s.includes('/api/users/search/exchange-countries')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({ countries: ['Germany', 'France'] }),
-          });
-        }
-        if (s.includes('/api/users/search')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => mockSearchResult,
-          });
-        }
-        return Promise.resolve({
-          ok: true,
-          json: async () => [],
-        });
-      });
+    it('calls GET /api/users/search with exchange_term when exchange term is selected', async () => {
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'Germany' })).toBeInTheDocument();
-      });
-      const countrySelect = screen.getByLabelText(/^Exchange country$/i);
-      const germanyOpt = screen.getByRole('option', { name: 'Germany' });
-      germanyOpt.selected = true;
-      fireEvent.change(countrySelect);
       fireEvent.change(screen.getByLabelText(/^Exchange term$/i), {
         target: { value: '3A' },
-      });
-      fireEvent.change(screen.getByLabelText(/^Exchange school$/i), {
-        target: { value: 'TUM' },
       });
 
       await waitFor(
         () => {
           const urls = global.fetch.mock.calls
             .map(([u]) => u)
-            .filter(
-              (u) =>
-                typeof u === 'string' &&
-                u.includes('/api/users/search') &&
-                !u.includes('exchange-countries')
-            );
+            .filter((u) => typeof u === 'string' && u.includes('/api/users/search'));
           expect(urls.length).toBeGreaterThan(0);
           const lastUrl = urls[urls.length - 1];
           const u = new URL(lastUrl, 'http://localhost');
           expect(u.searchParams.get('exchange_term')).toBe('3A');
-          expect(u.searchParams.getAll('exchange_country')).toEqual(['Germany']);
-          expect(u.searchParams.get('exchange_school')).toBe('TUM');
         },
         { timeout: 4000 }
       );

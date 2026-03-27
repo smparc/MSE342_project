@@ -33,23 +33,13 @@ const Search = ({ currentUser, authUser }) => {
     facultyFilter: filters.faculty,
     gradYearFilter: filters.gradYear,
     exchangeTermFilter: filters.exchangeTerm,
-    exchangeCountryFilter: filters.exchangeCountry,
-    exchangeSchoolFilter: filters.exchangeSchool,
   });
 
   React.useEffect(() => {
     const debounceMs = searchQuery.trim() ? 300 : 0;
     const timer = setTimeout(searchUsers, debounceMs);
     return () => clearTimeout(timer);
-  }, [
-    searchQuery,
-    filters.faculty,
-    filters.gradYear,
-    filters.exchangeTerm,
-    filters.exchangeCountry,
-    filters.exchangeSchool,
-    searchUsers,
-  ]);
+  }, [searchQuery, filters.faculty, filters.gradYear, filters.exchangeTerm, searchUsers]);
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
@@ -70,7 +60,7 @@ const Search = ({ currentUser, authUser }) => {
       <div className="cs-search-row">
         <TextField
           fullWidth
-          placeholder="Search by name, username, or program…"
+          placeholder="Search by name, username, program, exchange country, or exchange university…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"

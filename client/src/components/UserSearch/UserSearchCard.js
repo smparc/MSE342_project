@@ -107,8 +107,6 @@ const UserSearchCard = ({ user, onClick }) => {
     />
   ));
 
-  const showDivider = group1.length > 0 && group2.length > 0;
-
   return (
     <Paper
       elevation={0}
@@ -175,19 +173,6 @@ const UserSearchCard = ({ user, onClick }) => {
                 />
               )}
               {group1}
-              {showDivider && (
-                <Box
-                  aria-hidden
-                  sx={{
-                    width: 1,
-                    alignSelf: 'stretch',
-                    minHeight: 22,
-                    bgcolor: 'divider',
-                    mx: 0.25,
-                    flexShrink: 0,
-                  }}
-                />
-              )}
               {group2}
               {extraChips}
             </Stack>
