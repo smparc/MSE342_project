@@ -158,7 +158,7 @@ app.delete('/api/posts/:id', checkAuth, (req, res) => {
 
 // API to create a new user (for sign up)
 app.post('/api/users', checkAuth, (req, res) => {
-    const { username, email, display_name, faculty, program, grad_year, exchange_term, uw_verified } = req.body;
+    const { username, email, display_name, faculty, program, grad_year, exchange_term, uw_verified, user_type } = req.body;
 
     if (!username || !username.trim()) {
         return res.status(400).json({ error: 'Username is required' });
@@ -176,10 +176,13 @@ app.post('/api/users', checkAuth, (req, res) => {
             return res.status(409).json({ error: 'Username already exists' });
         }
 
+        const validUserTypes = ['current_exchange', 'prospective', 'alumni', 'browsing'];
+        const finalUserType = (user_type && validUserTypes.includes(user_type)) ? user_type : 'browsing';
+
         // Create new user with email and profile info
         const insertSql = `
-            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term, uw_verified) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (username, display_name, email, faculty, program, grad_year, exchange_term, uw_verified, user_type) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const params = [
             username.trim(),
@@ -189,7 +192,8 @@ app.post('/api/users', checkAuth, (req, res) => {
             program || null,
             grad_year || null,
             exchange_term || null,
-            uw_verified || false
+            uw_verified || false,
+            finalUserType
         ];
 
         connection.query(insertSql, params, (error, results) => {
@@ -222,6 +226,134 @@ app.get('/api/users/by-email/:email', (req, res) => {
     });
 });
 
+// Sign-up: check email/username not already in DB (public, no auth)
+app.get('/api/users/availability', (req, res) => {
+    const email = (req.query.email || '').trim();
+    const username = (req.query.username || '').trim();
+
+    if (!email && !username) {
+        return res.status(400).json({ error: 'Provide email and/or username' });
+    }
+
+    const sql = `
+        SELECT
+            (SELECT COUNT(*) FROM users WHERE LOWER(TRIM(email)) = LOWER(?)) AS email_count,
+            (SELECT COUNT(*) FROM users WHERE username = ?) AS username_count
+    `;
+    connection.query(sql, [email, username], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        const row = results[0];
+        res.json({
+            emailTaken: email ? Number(row.email_count) > 0 : null,
+            usernameTaken: username ? Number(row.username_count) > 0 : null,
+        });
+    });
+});
+
+// API to search users (for new message, search page - must be before /api/users/:username)
+// Query: q, exclude, excludeConversations (1), includeTags (1),
+//        faculty, program, grad_year, exchange_term (optional filters; AND logic)
+app.get('/api/users/search', (req, res) => {
+    const q = (req.query.q || '').trim();
+    const exclude = (req.query.exclude || '').trim();
+    const excludeConversations = req.query.excludeConversations === '1';
+    const includeTags = req.query.includeTags === '1';
+    const filterFaculty = (req.query.faculty || '').trim();
+    const filterProgram = (req.query.program || '').trim();
+    const filterGradYear = (req.query.grad_year || '').trim();
+    const filterExchangeTerm = (req.query.exchange_term || '').trim();
+
+    let sql = "SELECT u.username, u.display_name, u.bio, u.faculty, u.program, u.grad_year, u.exchange_term, u.uw_verified FROM users AS u WHERE 1=1";
+    const params = [];
+    if (exclude) {
+        sql += " AND u.username != ?";
+        params.push(exclude);
+    }
+    if (excludeConversations && exclude) {
+        sql += ` AND u.username NOT IN (
+            SELECT user2_username FROM conversations WHERE user1_username = ?
+            UNION
+            SELECT user1_username FROM conversations WHERE user2_username = ?
+        )`;
+        params.push(exclude, exclude);
+    }
+    if (q) {
+        const pattern = `%${q}%`;
+        sql += ` AND (
+            u.username LIKE ? OR u.display_name LIKE ? OR u.program LIKE ?
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt
+                WHERE pt.username = u.username AND pt.tag_type = 'program' AND pt.tag_value LIKE ?
+            )
+        )`;
+        params.push(pattern, pattern, pattern, pattern);
+    }
+    if (filterFaculty) {
+        sql += " AND u.faculty LIKE ?";
+        params.push(`%${filterFaculty}%`);
+    }
+    if (filterProgram) {
+        const progPat = `%${filterProgram}%`;
+        sql += ` AND (u.program LIKE ? OR EXISTS (
+            SELECT 1 FROM profile_tags pt WHERE pt.username = u.username AND pt.tag_type = 'program' AND pt.tag_value LIKE ?
+        ))`;
+        params.push(progPat, progPat);
+    }
+    if (filterGradYear) {
+        const gy = parseInt(filterGradYear, 10);
+        if (!Number.isNaN(gy)) {
+            sql += ` AND (u.grad_year = ? OR EXISTS (
+                SELECT 1 FROM profile_tags pt WHERE pt.username = u.username AND pt.tag_type = 'year' AND pt.tag_value = ?
+            ))`;
+            params.push(gy, String(gy));
+        }
+    }
+    if (filterExchangeTerm) {
+        const termPat = `%${filterExchangeTerm}%`;
+        sql += ` AND (u.exchange_term LIKE ? OR EXISTS (
+            SELECT 1 FROM profile_tags pt WHERE pt.username = u.username
+            AND pt.tag_type IN ('term', 'exchange_term') AND pt.tag_value LIKE ?
+        ))`;
+        params.push(termPat, termPat);
+    }
+    sql += " ORDER BY u.display_name ASC LIMIT 50";
+
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (!includeTags || !results.length) {
+            return res.json(results);
+        }
+        const usernames = results.map((r) => r.username);
+        const placeholders = usernames.map(() => '?').join(',');
+        connection.query(
+            `SELECT username, tag_type, tag_value FROM profile_tags WHERE username IN (${placeholders}) ORDER BY username, tag_type`,
+            usernames,
+            (tagErr, tagRows) => {
+                if (tagErr) {
+                    console.error('Database error fetching tags:', tagErr);
+                    return res.json(results);
+                }
+                const tagsByUser = {};
+                for (const row of tagRows) {
+                    if (!tagsByUser[row.username]) tagsByUser[row.username] = [];
+                    tagsByUser[row.username].push({ tag_type: row.tag_type, tag_value: row.tag_value });
+                }
+                const enriched = results.map((r) => ({
+                    ...r,
+                    tags: tagsByUser[r.username] || [],
+                }));
+                res.json(enriched);
+            }
+        );
+    });
+});
+
 // API to get a user
 app.get('/api/user/:username', (req, res) => {
     const username = req.params.username;
@@ -242,9 +374,9 @@ app.get('/api/user/:username', (req, res) => {
 // API to update a user (protected)
 app.put('/api/user/:username', checkAuth, (req, res) => {
     const username = req.params.username;
-    const { display_name, bio, faculty, program, grad_year, exchange_term } = req.body;
-    const sql = "UPDATE users SET display_name = ?, bio = ?, faculty = ?, program = ?, grad_year = ?, exchange_term = ? WHERE username = ?";
-    connection.query(sql, [display_name, bio, faculty, program, grad_year, exchange_term, username], (error, results) => {
+    const { display_name, bio, faculty, program, grad_year, exchange_term, destination_country, destination_school } = req.body;
+    const sql = "UPDATE users SET display_name = ?, bio = ?, faculty = ?, program = ?, grad_year = ?, exchange_term = ?, destination_country =?, destination_school =? WHERE username = ?";
+    connection.query(sql, [display_name, bio, faculty, program, grad_year, exchange_term, destination_country, destination_school, username], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             return res.status(500).send(error);
@@ -363,6 +495,107 @@ app.get('/api/posts/:username', (req, res) => {
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// POST /api/conversations - create or get existing conversation
+// Query: username (current user)  Body: { targetUsername }
+// Returns: { id, senderName } (conversation for display in list)
+app.post('/api/conversations', checkAuth, (req, res) => {
+    const username = req.query.username;
+    const { targetUsername } = req.body;
+
+    if (!username || !targetUsername || !String(targetUsername).trim()) {
+        return res.status(400).json({ error: 'username and targetUsername are required' });
+    }
+    const target = String(targetUsername).trim();
+    if (target.toLowerCase() === username.toLowerCase()) {
+        return res.status(400).json({ error: 'Cannot start a conversation with yourself' });
+    }
+
+    const conn = mysql.createConnection(config);
+
+    // Check if user exists
+    conn.query("SELECT username, display_name FROM users WHERE username = ?", [target], (err, users) => {
+        if (err) {
+            console.error('Error checking user:', err);
+            res.status(500).json({ error: 'Failed to create conversation' });
+            conn.end();
+            return;
+        }
+        if (!users || users.length === 0) {
+            res.status(404).json({ error: 'User not found' });
+            conn.end();
+            return;
+        }
+
+        const u1 = username < target ? username : target;
+        const u2 = username < target ? target : username;
+
+        // Find existing conversation (order-independent)
+        const findSql = `
+            SELECT id FROM conversations
+            WHERE (user1_username = ? AND user2_username = ?) OR (user1_username = ? AND user2_username = ?)
+        `;
+        conn.query(findSql, [u1, u2, u2, u1], (findErr, existing) => {
+            if (findErr) {
+                console.error('Error finding conversation:', findErr);
+                res.status(500).json({ error: 'Failed to create conversation' });
+                conn.end();
+                return;
+            }
+            if (existing && existing.length > 0) {
+                const convId = String(existing[0].id);
+                conn.end();
+                return res.status(200).json({
+                    id: convId,
+                    senderName: users[0].display_name || users[0].username,
+                });
+            }
+
+            // Create new conversation
+            const insertSql = "INSERT INTO conversations (user1_username, user2_username) VALUES (?, ?)";
+            conn.query(insertSql, [u1, u2], (insErr, result) => {
+                if (insErr) {
+                    console.error('Error creating conversation:', insErr);
+                    res.status(500).json({ error: 'Failed to create conversation' });
+                    conn.end();
+                    return;
+                }
+                const convId = String(result.insertId);
+                conn.end();
+                res.status(201).json({
+                    id: convId,
+                    senderName: users[0].display_name || users[0].username,
+                });
+            });
+        });
+    });
+});
+
+// GET /api/messages-unread-count - total unread messages for nav badge
+app.get('/api/messages-unread-count', (req, res) => {
+    const username = req.query.username;
+    if (!username) {
+        return res.status(400).json({ error: 'User is not logged in' });
+    }
+    const conn = mysql.createConnection(config);
+    const sql = `
+        SELECT COUNT(*) AS cnt
+        FROM messages m
+        JOIN conversations c ON c.id = m.conversation_id
+        WHERE ((c.user1_username = ? AND m.sender_username = c.user2_username)
+            OR (c.user2_username = ? AND m.sender_username = c.user1_username))
+        AND (m.is_read = 0 OR m.is_read IS NULL)
+    `;
+    conn.query(sql, [username, username], (err, results) => {
+        if (err) {
+            console.error('Error fetching unread count:', err);
+            res.status(500).json({ error: 'Failed to retrieve unread count' });
+        } else {
+            res.json({ count: Number(results[0]?.cnt || 0) });
+        }
+        conn.end();
+    });
+});
+
 // 1) GET /api/messages-list - conversation list (left sidebar)
 // Query param: userId (required) eventually
 // Returns: [{ id, senderName, lastMessage, lastMessageAt, unread }]
@@ -418,6 +651,31 @@ app.get('/api/messages-list', (req, res) => {
             res.json(list);
         }
         connection.end();
+    });
+});
+
+// PUT /api/conversations/:conversationId/read - mark messages as read when user views conversation
+app.put('/api/conversations/:conversationId/read', (req, res) => {
+    const { conversationId } = req.params;
+    const username = req.query.username;
+    if (!username) return res.status(400).json({ error: 'username required' });
+    const conn = mysql.createConnection(config);
+    const sql = `
+        UPDATE messages m
+        JOIN conversations c ON c.id = m.conversation_id
+        SET m.is_read = 1
+        WHERE m.conversation_id = ?
+        AND ((c.user1_username = ? AND m.sender_username = c.user2_username)
+            OR (c.user2_username = ? AND m.sender_username = c.user1_username))
+    `;
+    conn.query(sql, [conversationId, username, username], (err) => {
+        if (err) {
+            console.error('Error marking as read:', err);
+            res.status(500).json({ error: 'Failed to mark as read' });
+        } else {
+            res.json({ success: true });
+        }
+        conn.end();
     });
 });
 
@@ -535,15 +793,16 @@ app.post('/api/courses', checkAuth, (req, res) => {
         country,
         continent,
         term_taken,
-        proof_url
+        proof_url,
+        is_anonymous = 0  // Story 4 AC4 — anonymous posting
     } = req.body;
 
     const sql = `
         INSERT INTO course_equivalencies 
-        (username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url, is_anonymous) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const params = [username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url];
+    const params = [username, uw_course_code, uw_course_name, host_course_code, host_course_name, host_university, country, continent, term_taken, proof_url, is_anonymous ? 1 : 0];
 
     connection.query(sql, params, (error, results) => {
         if (error) {
@@ -637,52 +896,62 @@ app.get('/api/users/:username/saved-courses', (req, res) => {
 
 app.get('/api/courses/meta/filters', (req, res) => {
     // We fetch the unique values currently in your DB to fill the dropdowns
-    const sqlCountries = "SELECT DISTINCT country FROM course_equivalencies WHERE country IS NOT NULL";
-    const sqlContinents = "SELECT DISTINCT continent FROM course_equivalencies WHERE continent IS NOT NULL";
-    const sqlTerms = "SELECT DISTINCT term_taken FROM course_equivalencies WHERE term_taken IS NOT NULL";
+    const sqlCountries = "SELECT DISTINCT country FROM course_equivalencies WHERE country IS NOT NULL AND country != ''";
+    const sqlContinents = "SELECT DISTINCT continent FROM course_equivalencies WHERE continent IS NOT NULL AND continent != ''";
+    const sqlTerms = "SELECT DISTINCT term_taken FROM course_equivalencies WHERE term_taken IS NOT NULL AND term_taken != ''";
 
-    connection.query(`${sqlCountries}; ${sqlContinents}; ${sqlTerms}`, (error, results) => {
-        if (error) {
-            console.error('Filter Fetch Error:', error);
-            // Fallback so the frontend doesn't crash
+    connection.query(sqlCountries, (err1, res1) => {
+        if (err1) {
+            console.error('Filter Fetch Error:', err1);
             return res.json({ countries: [], continents: [], terms: [] });
         }
-
-        // results will be an array of 3 arrays because of the semicolons
-        res.json({
-            countries: results[0].map(r => r.country),
-            continents: results[1].map(r => r.continent),
-            terms: results[2].map(r => r.term_taken)
+        connection.query(sqlContinents, (err2, res2) => {
+            if (err2) return res.json({ countries: [], continents: [], terms: [] });
+            
+            connection.query(sqlTerms, (err3, res3) => {
+                if (err3) return res.json({ countries: [], continents: [], terms: [] });
+                res.json({
+                    countries: res1.map(r => r.country),
+                    continents: res2.map(r => r.continent),
+                    terms: res3.map(r => r.term_taken)
+                });
+            });
         });
     });
 });
 
+// GET /api/courses - Search and filter course equivalencies
+// Story 4: JOIN users for display_name, handle is_anonymous (AC4) and legacy data (AC5)
+// Sprint 2: sort param support (Story 5), JOIN course_reviews for avg_rating
 app.get('/api/courses', (req, res) => {
     const { q, country, continent, faculty, term, sort = 'last_updated', page = 1, limit = 15 } = req.query;
     const offset = (page - 1) * limit;
 
-    // Join course_reviews for avg_rating sort
-    let sql = `SELECT c.*, AVG(r.cleanliness_rating) AS avg_rating
+    let sql = `SELECT c.*,
+                      AVG(r.cleanliness_rating) AS avg_rating,
+                      CASE WHEN c.is_anonymous = 1 THEN NULL ELSE u.display_name END AS display_name
                FROM course_equivalencies c
                LEFT JOIN course_reviews r ON r.course_id = c.course_id
+               LEFT JOIN users u ON u.username = c.username
                WHERE 1=1`;
     const params = [];
 
     if (q) {
-        sql += " AND (c.host_university LIKE ? OR c.host_course_name LIKE ? OR c.host_course_code LIKE ?)";
+        // Story 4 AC3: also search by student name
+        sql += " AND (c.host_university LIKE ? OR c.host_course_name LIKE ? OR c.host_course_code LIKE ? OR u.display_name LIKE ? OR c.username LIKE ?)";
         const search = `%${q}%`;
-        params.push(search, search, search);
+        params.push(search, search, search, search, search);
     }
-    if (country) { sql += " AND c.country = ?"; params.push(country); }
-    if (continent) { sql += " AND c.continent = ?"; params.push(continent); }
-    if (term) { sql += " AND c.term_taken = ?"; params.push(term); }
+    if (country)   { sql += " AND c.country = ?";    params.push(country); }
+    if (continent) { sql += " AND c.continent = ?";  params.push(continent); }
+    if (term)      { sql += " AND c.term_taken = ?"; params.push(term); }
 
     sql += " GROUP BY c.course_id";
 
     // Sort order
     const ORDER = {
-        avg_rating: "avg_rating DESC",
-        university: "c.host_university ASC",
+        avg_rating:   "avg_rating DESC",
+        university:   "c.host_university ASC",
         last_updated: "c.last_updated DESC",
     };
     sql += ` ORDER BY ${ORDER[sort] || ORDER.last_updated}`;
@@ -712,15 +981,15 @@ app.get('/api/courses', (req, res) => {
     });
 });
 
-
-
 // GET /api/courses/:id - Get a single course by ID
+// Story 4: handle is_anonymous (AC4) and missing author as legacy data (AC5)
 app.get('/api/courses/:id', (req, res) => {
     const { id } = req.params;
     const sql = `
-        SELECT c.*, u.display_name 
-        FROM course_equivalencies c 
-        LEFT JOIN users u ON c.username = u.username 
+        SELECT c.*,
+               CASE WHEN c.is_anonymous = 1 THEN NULL ELSE u.display_name END AS display_name
+        FROM course_equivalencies c
+        LEFT JOIN users u ON c.username = u.username
         WHERE c.course_id = ?
     `;
     connection.query(sql, [id], (error, results) => {
@@ -777,7 +1046,7 @@ app.get('/api/users/:username/milestones/export', (req, res) => {
     );
 });
 
-// GET /api/users/:username/milestones - supports phase and destination filters (Stories 1 & 2)
+// GET /api/users/:username/milestones - supports type, phase, destination filters (Sprint 2 Stories 1 & 2)
 app.get('/api/users/:username/milestones', (req, res) => {
     const { username } = req.params;
     const { type, phase, destination } = req.query;
@@ -884,7 +1153,7 @@ app.delete('/api/milestones/:id', (req, res) => {
     });
 });
 
-// GET /api/contacts - get all study abroad contacts (Story 3)
+// GET /api/contacts - get all study abroad contacts (Sprint 2 Story 3)
 app.get('/api/contacts', (req, res) => {
     const sql = "SELECT * FROM study_abroad_contacts ORDER BY faculty, name";
     connection.query(sql, (error, results) => {
@@ -896,7 +1165,7 @@ app.get('/api/contacts', (req, res) => {
     });
 });
 
-// GET /api/advisors - get all academic advisors (Story 4)
+// GET /api/advisors - get all academic advisors (Sprint 2 Story 4)
 app.get('/api/advisors', (req, res) => {
     const sql = "SELECT * FROM academic_advisors ORDER BY faculty, name";
     connection.query(sql, (error, results) => {
@@ -908,7 +1177,7 @@ app.get('/api/advisors', (req, res) => {
     });
 });
 
-// DELETE /api/users/:username - delete account with password confirmation (Story 6)
+// DELETE /api/users/:username - delete account with password confirmation (Sprint 2 Story 6)
 app.delete('/api/users/:username', (req, res) => {
     const { username } = req.params;
     const { password } = req.body;
@@ -932,7 +1201,7 @@ app.delete('/api/users/:username', (req, res) => {
     });
 });
 
-// PUT /api/users/:username/type - update user type selection (Story 7)
+// PUT /api/users/:username/type - update user type selection (Sprint 2 Story 7)
 app.put('/api/users/:username/type', (req, res) => {
     const { username } = req.params;
     const { user_type } = req.body;
@@ -949,14 +1218,14 @@ app.put('/api/users/:username/type', (req, res) => {
     });
 });
 
-// POST /api/auth/signout - sign out (Story 8)
+// POST /api/auth/signout - sign out (Sprint 2 Story 8)
 // Stateless for now — client handles session clearing
 // Future: invalidate server-side session token here
 app.post('/api/auth/signout', (req, res) => {
     res.json({ success: true, message: 'Signed out successfully' });
 });
 
-// GET /api/users/:username/tags - get profile tags for a user (Story 9)
+// GET /api/users/:username/tags - get profile tags for a user (Sprint 2 Story 9)
 app.get('/api/users/:username/tags', (req, res) => {
     const { username } = req.params;
     const sql = "SELECT * FROM profile_tags WHERE username = ? ORDER BY tag_type";
@@ -966,7 +1235,7 @@ app.get('/api/users/:username/tags', (req, res) => {
     });
 });
 
-// POST /api/users/:username/tags - upsert tags from profile fields (Story 9)
+// POST /api/users/:username/tags - upsert tags from profile fields (Sprint 2 Story 9)
 app.post('/api/users/:username/tags', (req, res) => {
     const { username } = req.params;
     const { program, grad_year, destination_country, destination_school, exchange_term } = req.body;

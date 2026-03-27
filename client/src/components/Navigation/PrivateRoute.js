@@ -4,15 +4,15 @@ import SignIn from '../SignIn';
 
 import NavBar, { NAV_WIDTH_COLLAPSED } from '../App/NavBar';
 import Profile from '../Profile';
+import ProfilePage from '../Profile/ProfilePage';
 import Search from '../App/Search';
 import CourseSearch from '../CourseSearch';
 import CourseSubmit from '../CourseSubmit';
 import Messaging from '../Messaging';
-import Timeline from '../Timeline';
 import ContactsList from '../ContactsList';
-import AdvisorsList from '../AdvisorsList';
 import DeleteAccount from '../DeleteAccount';
-import UserTypeSelect from '../UserTypeSelect';
+import UserTypeSelect from '../SignIn/UserTypeSelect';
+import ExchangeCalendar from '../ExchangeCalendar';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -99,20 +99,20 @@ const PrivateRoute = ({ authenticated, authUser }) => {
     // Authenticated users: redirect "/" to profile page
     return (
         <>
-            <NavBar />
+            <NavBar currentUser={currentUser} authUser={authUser} />
             <MainLayout>
                 <Routes>
                     <Route path="/" element={<Navigate replace to="/profile" />} />
                     <Route path="/SignIn" element={<Navigate replace to="/profile" />} />
                     <Route path="/messages" element={<Messaging currentUser={currentUser} authUser={authUser} />} />
-                    <Route path="/search" element={<Search />} />
+                    <Route path="/search" element={<Search currentUser={currentUser} authUser={authUser} />} />
                     <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={currentUser} authUser={authUser} />} />
                     <Route path="/course-equivalency" element={<CourseSearch currentUser={currentUser} authUser={authUser} />} />
                     <Route path="/profile" element={<Profile currentUser={currentUser} authUser={authUser} />} />
+                    <Route path="/profile/:username" element={<ProfilePage currentUser={currentUser} authUser={authUser} />} />
                     {/* Sprint 2 routes */}
-                    <Route path="/timeline" element={<Timeline currentUser={currentUser} authUser={authUser} />} />
+                    <Route path="/calendar" element={<ExchangeCalendar currentUser={currentUser} />} />
                     <Route path="/contacts" element={<ContactsList />} />
-                    <Route path="/advisors" element={<AdvisorsList />} />
                     <Route
                         path="/settings/delete-account"
                         element={<DeleteAccount currentUser={currentUser} authUser={authUser} />}
@@ -121,6 +121,7 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                         path="/settings/user-type"
                         element={<UserTypeSelect currentUser={currentUser} authUser={authUser} />}
                     />
+
                 </Routes>
             </MainLayout>
         </>

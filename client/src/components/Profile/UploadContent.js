@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Grid, Box, Typography, Button, styled, ImageList, ImageListItem, Modal, IconButton, Snackbar, Alert } from '@mui/material'
 import { ChevronLeft, ChevronRight, PhotoCamera, FileUpload, Delete } from '@mui/icons-material'
 
-const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase }) => {
+const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase, isOwnProfile = true }) => {
 
     const [fileUrl, setFileUrl] = React.useState('')
     const [selectedPost, setSelectedPost] = React.useState(null)
@@ -126,7 +126,7 @@ const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase }) =
 
     return (
         <>
-            {(!posts || posts.length === 0) && (
+            {isOwnProfile && (!posts || posts.length === 0) && (
                 <>
                     <Grid item>
                         <PhotoCamera sx={{ fontSize: '62px', color: '#6e6e6e' }} />
@@ -140,6 +140,11 @@ const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase }) =
                 </>
             )}
 
+            {!isOwnProfile && (!posts || posts.length === 0) && (
+                <Typography color="text.secondary" textAlign="center">No photos yet.</Typography>
+            )}
+
+            {isOwnProfile && (
             <Grid item>
                 <Button component="label"
                     role={undefined}
@@ -154,6 +159,7 @@ const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase }) =
                         multiple />
                 </Button>
             </Grid>
+            )}
 
             {posts && posts.length > 0 && (
                 <ImageList sx={{ width: '80%', maxWidth: '1000px', height: 'auto', mt: 4, px: 2 }} cols={cols} rowHeight={300} gap={12}>
@@ -217,6 +223,7 @@ const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase }) =
                                     objectFit: 'contain'
                                 }}
                             />
+                            {isOwnProfile && (
                             <IconButton
                                 onClick={() => handleDelete(selectedPost.photo_id)}
                                 sx={{
@@ -230,6 +237,7 @@ const UploadContent = ({ fetchPosts, posts, cols, currentUsername, firebase }) =
                             >
                                 <Delete />
                             </IconButton>
+                            )}
                         </Box>
                     )}
 

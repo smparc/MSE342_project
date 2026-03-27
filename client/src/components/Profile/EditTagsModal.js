@@ -1,25 +1,33 @@
 import * as React from 'react';
-import { Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert } from '@mui/material';
+import { Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert, MenuItem } from '@mui/material';
 
-const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, displayName, bio, setProfileChanged, firebase }) => {
+import { FACULTIES, getProgramsForFaculty } from '../../data/facultyPrograms'
+
+const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, program, setProgram, gradYear, setGradYear, exchangeTerm, setExchangeTerm, exchangeCountry, setExchangeCountry, exchangeSchool, setExchangeSchool, displayName, bio, setProfileChanged, firebase }) => {
 
     const [tempFaculty, setTempFaculty] = React.useState(faculty)
     const [tempProgram, setTempProgram] = React.useState(program)
     const [tempGradYear, setTempGradYear] = React.useState(gradYear)
     const [tempExchangeTerm, setTempExchangeTerm] = React.useState(exchangeTerm)
+    const [tempExchangeCountry, setTempExchangeCountry] = React.useState(exchangeCountry)
+    const [tempExchangeSchool, setTempExchangeSchool] = React.useState(exchangeSchool)
     const [error, setError] = React.useState(false)
+
+    const TERMS = ['3A', '3B', '4A', '4B']
 
     React.useEffect(() => {
         setTempFaculty(faculty)
         setTempProgram(program)
         setTempGradYear(gradYear)
         setTempExchangeTerm(exchangeTerm)
-    }, [faculty, program, gradYear, exchangeTerm])
+        setTempExchangeCountry(exchangeCountry)
+        setTempExchangeSchool(exchangeSchool)
+    }, [faculty, program, gradYear, exchangeTerm, exchangeCountry, exchangeSchool])
 
     const handleSubmit = async (event) => {
         event.preventDefault()
 
-        if (!tempFaculty || !tempProgram || !tempGradYear || !tempExchangeTerm) {
+        if (!tempFaculty || !tempProgram || !tempGradYear || !tempExchangeTerm || !tempExchangeCountry || !tempExchangeSchool) {
             setError(true)
             return
         }
@@ -42,7 +50,9 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
                     faculty: tempFaculty,
                     program: tempProgram,
                     grad_year: tempGradYear === '' ? null : tempGradYear,
-                    exchange_term: tempExchangeTerm
+                    exchange_term: tempExchangeTerm,
+                    destination_country: tempExchangeCountry,
+                    destination_school: tempExchangeSchool
                 }),
             })
             const data = await response.json()
@@ -51,6 +61,8 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
                 setProgram(tempProgram)
                 setGradYear(tempGradYear)
                 setExchangeTerm(tempExchangeTerm)
+                setExchangeCountry(tempExchangeCountry)
+                setExchangeSchool(tempExchangeSchool)
                 setProfileChanged(true)
                 handleClose()
             }
@@ -78,21 +90,53 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
 
                             <Grid item width='100%'>
                                 <TextField fullWidth
+                                    select
                                     required
                                     margin='dense'
                                     id='edit-faculty-field'
                                     label="Faculty"
+                                    value={tempFaculty || ''}
+                                    onChange={(event) => {
+                                        setTempFaculty(event.target.value)
+                                        setTempProgram('')
+                                    }}>
+                                        {FACULTIES.map(faculty => (
+                                            <MenuItem key={faculty} value={faculty}>{faculty}</MenuItem>
+                                        ))}
+
+                                </TextField>
+                                        
+                                {/* <FormControl fullWidth>
+                                <InputLabel id='edit-faculty-field-label'>Faculty</InputLabel>
+                                <Select fullWidth
+                                    // margin='dense'
+                                    labelId='edit-faculty-field-label'
+                                    id='edit-faculty-field'
+                                    label="Faculty"
                                     value={tempFaculty}
-                                    onChange={(event) => setTempFaculty(event.target.value)} />
+                                    onChange={(event) => setTempFaculty(event.target.value)}>
+                                        <MenuItem value={'Art'}>Art</MenuItem>
+                                        <MenuItem value={'Engineering'}>Engineering</MenuItem>
+                                        <MenuItem value={'Environment'}>Environment</MenuItem>
+                                        <MenuItem value={'Health'}>Health</MenuItem>
+                                        <MenuItem value={'Mathematics'}>Mathematics</MenuItem>
+                                        <MenuItem value={'Science'}>Science</MenuItem>
+                                </Select>
+                                </FormControl> */}
                             </Grid>
                             <Grid item width='100%'>
                                 <TextField fullWidth
+                                    select
                                     required
                                     margin='normal'
                                     id='edit-program-field'
                                     label="Program"
                                     value={tempProgram}
-                                    onChange={(event) => setTempProgram(event.target.value)} />
+                                    onChange={(event) => setTempProgram(event.target.value)}>
+                                        {getProgramsForFaculty(tempFaculty).map(program => (
+                                            <MenuItem key={program} value={program}>{program}</MenuItem>
+                                        ))}
+                                    </TextField>
                             </Grid>
                             <Grid item width='100%'>
                                 <TextField fullWidth
@@ -106,12 +150,37 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
                             </Grid>
                             <Grid item width='100%'>
                                 <TextField fullWidth
+                                    select
                                     required
                                     margin='normal'
                                     id='edit-exchange-term-field'
                                     label="Exchange Term"
                                     value={tempExchangeTerm}
-                                    onChange={(event) => setTempExchangeTerm(event.target.value)} />
+                                    onChange={(event) => setTempExchangeTerm(event.target.value)}>
+                                        {TERMS.map(term => (
+                                            <MenuItem key={term} value={term}>{term}</MenuItem>
+                                        ))}
+                                    </TextField>
+                            </Grid>
+
+                            <Grid item width='100%'>
+                                <TextField fullWidth
+                                    required
+                                    margin='normal'
+                                    id='edit-exchange-country-field'
+                                    label="Exchange Country"
+                                    value={tempExchangeCountry}
+                                    onChange={(event) => setTempExchangeCountry(event.target.value)} />
+                            </Grid>
+
+                            <Grid item width='100%'>
+                                <TextField fullWidth
+                                    required
+                                    margin='normal'
+                                    id='edit-exchange-school-field'
+                                    label="Exchange School"
+                                    value={tempExchangeSchool}
+                                    onChange={(event) => setTempExchangeSchool(event.target.value)} />
                             </Grid>
                         </Grid>
                     </form>

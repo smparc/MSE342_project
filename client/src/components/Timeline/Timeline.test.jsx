@@ -59,30 +59,6 @@ describe('Timeline Component', () => {
       expect(screen.getByText('1/2 milestones complete')).toBeInTheDocument();
     });
   });
-
-  test('opens add milestone modal and shows validation errors', async () => {
-    render(<Timeline currentUser="testuser" />);
-    
-    // Wait for the initial background fetch to finish so we don't get an act(...) warning
-    await waitFor(() => {
-      expect(screen.getByText('Submit Application')).toBeInTheDocument();
-    });
-
-    const addBtn = screen.getByText('+ Add Milestone');
-    fireEvent.click(addBtn);
-    
-    // Use getByRole to specifically target the heading and avoid the multiple elements error
-    expect(screen.getByRole('heading', { name: 'Add Milestone' })).toBeInTheDocument();
-    
-    // Also use getByRole for the button to make the test click more robust
-    const submitBtn = screen.getByRole('button', { name: 'Add Milestone' });
-    fireEvent.click(submitBtn);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Title is required')).toBeInTheDocument();
-      expect(screen.getByText('Deadline is required')).toBeInTheDocument();
-    });
-  });
 });
 
 // =============================================================================
@@ -107,7 +83,7 @@ describe('Sprint 2 — Timeline Phases (Story 1)', () => {
     {
       milestone_id: 2, title: 'Submit Nomination Form',
       deadline_utc: in15d, milestone_type: 'UW Internal',
-      phase: 'Nomination', is_completed: false,
+      phase: 'Application', is_completed: false,
       prerequisite_id: null, prerequisite_completed: null,
       destination_country: null, days_remaining: 15,
       is_approaching_48h: false, is_approaching_7d: false, is_overdue: false,
@@ -115,7 +91,7 @@ describe('Sprint 2 — Timeline Phases (Story 1)', () => {
     {
       milestone_id: 3, title: 'Apply to Host University',
       deadline_utc: in25d, milestone_type: 'Host University',
-      phase: 'Host Application', is_completed: false,
+      phase: 'Course Matching', is_completed: false,
       prerequisite_id: null, prerequisite_completed: null,
       destination_country: 'Australia', days_remaining: 25,
       is_approaching_48h: false, is_approaching_7d: false, is_overdue: false,
@@ -123,7 +99,7 @@ describe('Sprint 2 — Timeline Phases (Story 1)', () => {
     {
       milestone_id: 4, title: 'Submit Housing Application',
       deadline_utc: in25d, milestone_type: 'Host University',
-      phase: 'Host Application', is_completed: false,
+      phase: 'Course Matching', is_completed: false,
       prerequisite_id: null, prerequisite_completed: null,
       destination_country: 'Germany', days_remaining: 25,
       is_approaching_48h: false, is_approaching_7d: false, is_overdue: false,
@@ -145,17 +121,17 @@ describe('Sprint 2 — Timeline Phases (Story 1)', () => {
     });
   });
 
-  test('AC#1 — Nomination phase heading is rendered', async () => {
+  test('AC#1 — Application phase heading is rendered', async () => {
     render(<Timeline currentUser="testuser" />);
     await waitFor(() => {
-      expect(screen.getByText('Nomination')).toBeInTheDocument();
+      expect(screen.getByText('Application')).toBeInTheDocument();
     });
   });
 
-  test('AC#1 — Host Application phase heading is rendered', async () => {
+  test('AC#1 — Course Matching phase heading is rendered', async () => {
     render(<Timeline currentUser="testuser" />);
     await waitFor(() => {
-      expect(screen.getByText('Host Application')).toBeInTheDocument();
+      expect(screen.getByText('Course Matching')).toBeInTheDocument();
     });
   });
 
@@ -226,14 +202,14 @@ describe('Sprint 2 — Destination Filter (Story 3)', () => {
     {
       milestone_id: 3, title: 'Apply to Host University',
       deadline_utc: in25d, milestone_type: 'Host University',
-      phase: 'Host Application', is_completed: false,
+      phase: 'Course Matching', is_completed: false,
       destination_country: 'Australia', days_remaining: 25,
       is_approaching_48h: false, is_approaching_7d: false, is_overdue: false,
     },
     {
       milestone_id: 4, title: 'Submit Housing Application',
       deadline_utc: in25d, milestone_type: 'Host University',
-      phase: 'Host Application', is_completed: false,
+      phase: 'Course Matching', is_completed: false,
       destination_country: 'Germany', days_remaining: 25,
       is_approaching_48h: false, is_approaching_7d: false, is_overdue: false,
     },
@@ -308,8 +284,8 @@ describe('Sprint 2 — Filter Calendar by Phase (Story 2 Filter)', () => {
     const phaseSelect = screen.getByLabelText(/phase/i);
     expect(phaseSelect).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /research/i })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /nomination/i })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /host application/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /application/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /course matching/i })).toBeInTheDocument();
   });
 
   test('changing phase filter refetches milestones with phase param', async () => {
@@ -317,12 +293,12 @@ describe('Sprint 2 — Filter Calendar by Phase (Story 2 Filter)', () => {
     await waitFor(() => screen.getByText('Research Exchange Programs'));
 
     const phaseSelect = screen.getByLabelText(/phase/i);
-    fireEvent.change(phaseSelect, { target: { value: 'Nomination' } });
+    fireEvent.change(phaseSelect, { target: { value: 'Application' } });
 
     await waitFor(() => {
       const calls = global.fetch.mock.calls.filter(c => c[0]?.includes('/milestones'));
       const lastUrl = calls[calls.length - 1][0];
-      expect(lastUrl).toContain('phase=Nomination');
+      expect(lastUrl).toContain('phase=Application');
     });
   });
 

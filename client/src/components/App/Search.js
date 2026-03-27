@@ -2,122 +2,116 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
 import CircularProgress from '@mui/material/CircularProgress';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
+import Grid from '@mui/material/Grid';
+import { UserSearchCard, UserProfileModal, SearchFiltersBar, useUserSearch } from '../UserSearch';
+import { FirebaseContext, authFetch } from '../Firebase';
+import '../CourseSearch/CourseSearch.css';
 
-const Search = () => {
-  const [query, setQuery] = React.useState('');
-  const [user, setUser] = React.useState(null);
-  // Implement next sprint
-  const [posts, setPosts] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [searched, setSearched] = React.useState(false);
+const Search = ({ currentUser, authUser }) => {
+  const firebase = React.useContext(FirebaseContext);
+  const currentUsername = currentUser || authUser?.email?.split('@')[0] || '';
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [filters, setFilters] = React.useState({
+    faculty: '',
+    gradYear: '',
+  });
+  const [selectedUser, setSelectedUser] = React.useState(null);
 
-  const handleSearch = async () => {
-    const searchTerm = query.trim();
-    if (!searchTerm) return;
+  const { users, loading, error, searchUsers } = useUserSearch({
+    currentUsername,
+    searchQuery,
+    includeTags: true,
+    excludeConversations: false,
+    enabled: true,
+    fetchAllWhenEmpty: true,
+    facultyFilter: filters.faculty,
+    gradYearFilter: filters.gradYear,
+  });
 
-    setLoading(true);
-    setSearched(true);
-  
-    try {
-      // Get user profile by username (MUST BE EXACT USERNAME)
-      const userRes = await fetch(`/api/user/${encodeURIComponent(searchTerm)}`);
-      if (userRes.ok) {
-        const userData = await userRes.json();
-        setUser(userData || null);
-      } else {
-        // test to make sure ui still works
-        setUser(null);
-      }
+  React.useEffect(() => {
+    const debounceMs = searchQuery.trim() ? 300 : 0;
+    const timer = setTimeout(searchUsers, debounceMs);
+    return () => clearTimeout(timer);
+  }, [searchQuery, filters.faculty, filters.gradYear, searchUsers]);
 
-      // Get all posts by the username
-      const postsRes = await fetch(`/api/posts/${encodeURIComponent(searchTerm)}`);
-      if (postsRes.ok) {
-        const postsData = await postsRes.json();
-        setPosts(postsData || []);
-      } else {
-        setPosts([]);
-      }
-    } catch (err) {
-      console.error('Search failed:', err);
-      setUser(null);
-      setPosts([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
   };
 
   return (
     <Box
+      className="cs-wrap"
       sx={{
-        p: 3,
-        pb: 10,
-        maxWidth: 600,
+        pb: 6,
+        maxWidth: 1100,
         margin: '0 auto',
       }}
     >
-      {/* SEARCH FIELD */}
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Search
+        Search Users
       </Typography>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+      <div className="cs-search-row">
         <TextField
           fullWidth
-          placeholder="Search by EXACT username"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by name, username, or program…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
           size="small"
-          sx={{ mb: 2 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          }}
         />
+      </div>
 
-        <Button
-          variant="contained"
-          onClick={handleSearch}
-          disabled={loading || !query.trim()}
-          sx={{ whiteSpace: 'nowrap' }}
-        >
-          Search
-        </Button>
-      </Box>
+      <SearchFiltersBar
+        filters={filters}
+        onChange={setFilters}
+        onClear={() => setFilters({ faculty: '', gradYear: '' })}
+      />
 
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <CircularProgress size={28} />
-        </Box>
-      )}
-
-      {!loading && searched && !user && posts.length === 0 && (
-        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
-          No users or posts found for "{query}".
+      {error && (
+        <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+          {error}
         </Typography>
       )}
 
-      {/* USER RESULT
-          Next sprint: display profile picture, year, destination, and other attributes
-      */}
-      {!loading && user && (
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-            User
-          </Typography>
-          <List disablePadding>
-            <ListItem sx={{ bgcolor: 'grey.50', borderRadius: 1 }}>
-              <ListItemText
-                primary={user.display_name}
-              />
-            </ListItem>
-          </List>
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress size={32} />
         </Box>
       )}
 
-      {/* POST RESULT
-          Implement next sprint
-      */}
+      {!loading && users.length === 0 && (
+        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 6 }}>
+          No users match your criteria.
+        </Typography>
+      )}
+
+      {!loading && users.length > 0 && (
+        <Grid container spacing={2}>
+          {users.map((user) => (
+            <Grid item xs={12} key={user.username}>
+              <UserSearchCard user={user} onClick={() => handleUserClick(user)} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+      <UserProfileModal
+        open={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        user={selectedUser}
+        currentUsername={currentUsername}
+        authFetch={authFetch}
+        firebase={firebase}
+      />
     </Box>
   );
 };

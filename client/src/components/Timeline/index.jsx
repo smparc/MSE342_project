@@ -14,7 +14,13 @@ const fmtDualTime = (utcStr) => {
 const MILESTONE_TYPES = ['UW Internal', 'Host University'];
 
 // Sprint 2 — phase order for grouping (Story 1)
-const PHASES = ['Research', 'Nomination', 'Host Application'];
+const PHASES = [
+  'Info Session',
+  'Research',
+  'Application',
+  'Course Matching',
+  'Pre-departure Training',
+];
 
 export default function Timeline({ currentUser, destination: destProp }) {
   const [milestones, setMilestones] = useState([]);
@@ -25,14 +31,6 @@ export default function Timeline({ currentUser, destination: destProp }) {
   // Sprint 2 — phase and destination filter state (Stories 1, 2, 3)
   const [phaseFilter, setPhaseFilter] = useState('');
   const [destFilter, setDestFilter] = useState(destProp || '');
-
-  // Add milestone form
-  const [showAdd, setShowAdd] = useState(false);
-  const [addForm, setAddForm] = useState({
-    title: '', deadline_utc: '', milestone_type: 'UW Internal', form_link: '', prerequisite_id: '',
-  });
-  const [addErrors, setAddErrors] = useState({});
-  const [addLoading, setAddLoading] = useState(false);
 
   const fetchMilestones = useCallback(async () => {
     if (!currentUser) return;
@@ -69,43 +67,6 @@ export default function Timeline({ currentUser, destination: destProp }) {
     if (!window.confirm('Delete this milestone?')) return;
     await fetch(`${API}/api/milestones/${id}`, { method: 'DELETE' });
     fetchMilestones();
-  };
-
-  // Export .ics (AC#8)
-  const exportICS = () => {
-    window.open(`${API}/api/users/${currentUser}/milestones/export`, '_blank');
-  };
-
-  // Add milestone
-  const validateAdd = () => {
-    const e = {};
-    if (!addForm.title.trim()) e.title = 'Title is required';
-    if (!addForm.deadline_utc) e.deadline_utc = 'Deadline is required';
-    if (!addForm.milestone_type) e.milestone_type = 'Type is required';
-    return e;
-  };
-
-  const submitAdd = async () => {
-    const e = validateAdd();
-    if (Object.keys(e).length) { setAddErrors(e); return; }
-    setAddLoading(true);
-    try {
-      await fetch(`${API}/api/users/${currentUser}/milestones`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...addForm,
-          prerequisite_id: addForm.prerequisite_id || null,
-        }),
-      });
-      setShowAdd(false);
-      setAddForm({ title: '', deadline_utc: '', milestone_type: 'UW Internal', form_link: '', prerequisite_id: '' });
-      fetchMilestones();
-    } catch {
-      setAddErrors({ submit: 'Failed to add milestone' });
-    } finally {
-      setAddLoading(false);
-    }
   };
 
   // Progress calculation
@@ -150,14 +111,6 @@ export default function Timeline({ currentUser, destination: destProp }) {
         <div>
           <h1 className="tl-title">Exchange Timeline</h1>
           <p className="tl-subtitle">Track all your important application deadlines in one place</p>
-        </div>
-        <div className="tl-header-actions">
-          <button className="tl-btn tl-btn-outline" onClick={exportICS}>
-            ↓ Export .ics
-          </button>
-          <button className="tl-btn tl-btn-primary" onClick={() => setShowAdd(true)}>
-            + Add Milestone
-          </button>
         </div>
       </div>
 
@@ -246,10 +199,7 @@ export default function Timeline({ currentUser, destination: destProp }) {
         <div className="tl-empty">
           <div className="tl-empty-icon">📅</div>
           <h3>No milestones yet</h3>
-          <p>Add your first deadline to get started tracking your exchange application.</p>
-          <button className="tl-btn tl-btn-primary" onClick={() => setShowAdd(true)}>
-            + Add Milestone
-          </button>
+          <p>Your deadlines and checklist items will appear here.</p>
         </div>
       ) : (
         <div className="tl-phases">
@@ -274,93 +224,6 @@ export default function Timeline({ currentUser, destination: destProp }) {
         </div>
       )}
 
-      {/* ── Add Milestone Modal ── */}
-      {showAdd && (
-        <div className="tl-modal-overlay" onClick={() => setShowAdd(false)}>
-          <div className="tl-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="tl-modal-close" onClick={() => setShowAdd(false)}>✕</button>
-            <h2 className="tl-modal-title">Add Milestone</h2>
-
-            <div className="tl-form-field">
-              <label>Title *</label>
-              <input
-                className={`tl-input ${addErrors.title ? 'error' : ''}`}
-                placeholder="e.g. Submit Study Plan to WaterlooAbroad"
-                value={addForm.title}
-                onChange={(e) => setAddForm((p) => ({ ...p, title: e.target.value }))}
-              />
-              {addErrors.title && <span className="tl-field-err">{addErrors.title}</span>}
-            </div>
-
-            <div className="tl-form-field">
-              <label>Deadline (UTC) *</label>
-              <input
-                type="datetime-local"
-                className={`tl-input ${addErrors.deadline_utc ? 'error' : ''}`}
-                value={addForm.deadline_utc}
-                onChange={(e) => setAddForm((p) => ({ ...p, deadline_utc: e.target.value }))}
-              />
-              {addErrors.deadline_utc && <span className="tl-field-err">{addErrors.deadline_utc}</span>}
-            </div>
-
-            <div className="tl-form-field">
-              <label>Type *</label>
-              <select
-                className="tl-input"
-                value={addForm.milestone_type}
-                onChange={(e) => setAddForm((p) => ({ ...p, milestone_type: e.target.value }))}
-              >
-                {MILESTONE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-
-            {/* Sprint 2 — phase selection when adding a milestone (Story 1) */}
-            <div className="tl-form-field">
-              <label>Phase</label>
-              <select
-                className="tl-input"
-                value={addForm.phase || 'Research'}
-                onChange={(e) => setAddForm((p) => ({ ...p, phase: e.target.value }))}
-              >
-                {PHASES.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-
-            <div className="tl-form-field">
-              <label>Link to Form / Portal (optional)</label>
-              <input
-                className="tl-input"
-                placeholder="https://waterlooabroad.uwaterloo.ca/…"
-                value={addForm.form_link}
-                onChange={(e) => setAddForm((p) => ({ ...p, form_link: e.target.value }))}
-              />
-            </div>
-
-            <div className="tl-form-field">
-              <label>Prerequisite Milestone ID (optional)</label>
-              <select
-                className="tl-input"
-                value={addForm.prerequisite_id}
-                onChange={(e) => setAddForm((p) => ({ ...p, prerequisite_id: e.target.value }))}
-              >
-                <option value="">None</option>
-                {milestones.map((m) => (
-                  <option key={m.milestone_id} value={m.milestone_id}>{m.title}</option>
-                ))}
-              </select>
-            </div>
-
-            {addErrors.submit && <div className="tl-field-err">{addErrors.submit}</div>}
-
-            <div className="tl-modal-footer">
-              <button className="tl-btn tl-btn-outline" onClick={() => setShowAdd(false)}>Cancel</button>
-              <button className="tl-btn tl-btn-primary" onClick={submitAdd} disabled={addLoading}>
-                {addLoading ? 'Adding…' : 'Add Milestone'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 

@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Alert, Snackbar, IconButton } from '@mui/material'
+import { Box, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Typography, Alert, Snackbar, IconButton } from '@mui/material'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { FirebaseContext, authFetch } from '../Firebase'
 
-const CourseTable = ({ username }) => {
+const CourseTable = ({ username, readOnly = false }) => {
     const firebase = React.useContext(FirebaseContext)
 
     const [list, setList] = React.useState([])
@@ -141,19 +141,19 @@ const CourseTable = ({ username }) => {
     };
 
     return (
-        <>
+        <Box maxWidth='1000px'>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
                 <TableContainer>
                     <Table aria-label="simple table">
                         <TableHead>
                             <TableRow>
-                                <TableCell align={'left'}><strong>UW Code</strong></TableCell>
+                                <TableCell align={'left'} sx={{minWidth: '45px'}}><strong>UW Code</strong></TableCell>
                                 <TableCell align={'left'}><strong>UW Course Name</strong></TableCell>
                                 <TableCell align={'left'}><strong>Host University</strong></TableCell>
                                 <TableCell align={'left'}><strong>Host Code</strong></TableCell>
                                 <TableCell align={'left'}><strong>Host Course Name</strong></TableCell>
                                 <TableCell align={'center'}><strong>Status</strong></TableCell>
-                                <TableCell align={'center'}><strong>Actions</strong></TableCell>
+                                {!readOnly && <TableCell align={'center'}><strong>Actions</strong></TableCell>}
                             </TableRow>
 
                         </TableHead>
@@ -163,7 +163,7 @@ const CourseTable = ({ username }) => {
                                     <TableCell>{row.uw_course_code}</TableCell>
 
                                     <TableCell align={'left'}>{row.uw_course_name}</TableCell>
-                                    <TableCell align={'center'}>{row.host_university}</TableCell>
+                                    <TableCell align={'left'}>{row.host_university}</TableCell>
                                     <TableCell align={'left'}>{row.host_course_code}</TableCell>
                                     <TableCell align={'left'}>{row.host_course_name}</TableCell>
                                     <TableCell align={'center'}>
@@ -175,6 +175,7 @@ const CourseTable = ({ username }) => {
                                             {row.status}
                                         </Typography>
                                     </TableCell>
+                                    {!readOnly && (
                                     <TableCell align={'center'} sx={{ p: 0 }}>
                                         <IconButton size="small" onClick={() => editRow(row)} color="primary">
                                             <EditIcon fontSize="small" />
@@ -183,6 +184,7 @@ const CourseTable = ({ username }) => {
                                             <DeleteIcon fontSize="small" />
                                         </IconButton>
                                     </TableCell>
+                                    )}
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -190,13 +192,14 @@ const CourseTable = ({ username }) => {
 
                 </TableContainer>
 
-
+                {!readOnly && (
                 <Button variant='outlined' fullWidth onClick={handleClick}
                     sx={{ marginTop: '20px', border: '1px solid #3143E3', color: '#3143E3', ":hover": { bgcolor: '#3143E3', color: 'white' } }}>
                     Submit new course
                 </Button>
+                )}
 
-                {dataFormStatus &&
+                {!readOnly && dataFormStatus &&
                     <>
                         <Grid container alignItems={'center'} justifyContent={'center'} direction={'column'} spacing={2} mt={'10px'}>
                             <Grid item width="100%">
@@ -286,7 +289,7 @@ const CourseTable = ({ username }) => {
                     <Alert severity='success'>Course changes saved</Alert>
                 </Snackbar>
             </Paper>
-        </>
+        </Box>
     )
 }
 

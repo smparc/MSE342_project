@@ -7,15 +7,28 @@ import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
-import ChatIcon from '@mui/icons-material/Chat';
+import Badge from '@mui/material/Badge';
+// import ChatIcon from '@mui/icons-material/Chat';
+// import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import TextsmsOutlinedIcon from '@mui/icons-material/TextsmsOutlined';
 import SearchIcon from '@mui/icons-material/Search';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+// import MenuBookIcon from '@mui/icons-material/MenuBook';
+import FolderSpecialOutlinedIcon from '@mui/icons-material/FolderSpecialOutlined';
 import PersonIcon from '@mui/icons-material/Person';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
 import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
 import { DeleteForever, Settings } from '@mui/icons-material';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonth';
+import ContactPageOutlinedIcon from '@mui/icons-material/ContactPageOutlined';
+
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+
+
 
 const NAV_WIDTH_COLLAPSED = 72;
 const NAV_WIDTH_EXPANDED = 240;
@@ -23,22 +36,66 @@ const NAV_WIDTH_EXPANDED = 240;
 // <Route path="/advisors" element={<AdvisorsList />} />
 
 const navItems = [
-  { path: '/messages', label: 'Messages', icon: ChatIcon, testId: 'ChatIcon' },
+  { path: '/messages', label: 'Messages', icon: TextsmsOutlinedIcon, testId: 'TextsmsOutlinedIcon' },
   { path: '/search', label: 'Search', icon: SearchIcon, testId: 'SearchIcon' },
-  { path: '/course-equivalency', label: 'Course Equivalency', icon: MenuBookIcon, testId: 'MenuBookIcon' },
-  { path: '/timeline', label: 'Timeline', icon: TimelineIcon, testId: 'TimelineIcon' },
-  { path: '/contacts', label: 'Contacts', icon: PersonIcon },
-  { path: '/advisors', label: 'Advisors', icon: PersonIcon },
-  { path: '/profile', label: 'Profile', icon: PersonIcon },
-  { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
-  { path: '/settings/user-type', label: 'Settings', icon: Settings }
+
+  // { path: '/profile', label: 'Profile', icon: PersonIcon },
+
+  { path: '/course-equivalency', label: 'Course Equivalency', icon: FolderSpecialOutlinedIcon, testId: 'MenuBookIcon' },
+  { path: '/calendar', label: 'Calendar', icon: CalendarMonthOutlinedIcon, testId: 'CalendarIcon' },
+  { path: '/contacts', label: 'Support', icon: ContactPageOutlinedIcon },
+//   { path: '/profile', label: 'Profile', icon: PersonIcon },
+
+  // { path: '/settings/delete-account', label: 'Delete', icon: DeleteForever },
+  // { path: '/settings/user-type', label: 'Settings', icon: Settings }
 ];
 
-const NavBar = () => {
+const NavBar = ({ currentUser, authUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const firebase = React.useContext(FirebaseContext);
   const [expanded, setExpanded] = React.useState(false);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  const username = currentUser || authUser?.email?.split('@')[0];
+
+  React.useEffect(() => {
+    if (!username) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch(`/api/messages-unread-count?username=${encodeURIComponent(username)}`);
+        const data = await res.json();
+        if (res.ok && data.count != null) setUnreadCount(data.count);
+      } catch {
+        // ignore
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    const onRead = () => fetchUnread();
+    window.addEventListener('messages-read', onRead);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('messages-read', onRead);
+    };
+  }, [username]);
+
+  const [settingsAnchor, setSettingsAnchor] = React.useState(null)
+  const openSettings = Boolean(settingsAnchor)
+
+  const handleSettingsClick = (event) => {
+    setSettingsAnchor(event.currentTarget)
+  }
+
+  const handleSettingsClose = () => {
+    setSettingsAnchor(null)
+  }
+
+  const handleNavigateSettings = (path) => {
+    navigate(path)
+    handleSettingsClose()
+  }
+
 
   const currentPath = location.pathname;
   const isActive = (path) =>
@@ -93,7 +150,7 @@ const NavBar = () => {
             display: 'flex',
           }}
         >
-          <AirplaneTicketIcon fontSize="medium" sx={{ color: 'primary.main' }} />
+          <AirplaneTicketIcon fontSize="medium" sx={{ color: 'text.primary' }} />
         </Box>
         {expanded && (
           <Typography variant="h6" fontWeight={700} noWrap sx={{ color: 'text.primary' }}>
@@ -101,10 +158,13 @@ const NavBar = () => {
           </Typography>
         )}
       </Box>
-      <List disablePadding sx={{ pt: 2, flex: 1 }}>
+      {/* <List disablePadding sx={{ pt: 2, flex: 1 }}> */}
+      {/* AI used to help with centering */}
+      <List disablePadding sx={{ my: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '20px' }}>
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
+          const showUnreadBadge = item.path === '/messages' && unreadCount > 0;
           return (
             <ListItemButton
               key={item.path}
@@ -119,18 +179,31 @@ const NavBar = () => {
                 justifyContent: expanded ? 'flex-start' : 'center',
                 '&.Mui-selected': {
                   backgroundColor: 'action.selected',
+                  '& .MuiListItemIcon-root': {
+                    color: 'text.primary',
+                  },
                 },
+                // Z - AI help in guiding me to put font size here
+                '& .MuiSvgIcon-root' : {fontSize: '32px'},
+                stroke: 'white', strokeWidth: 0.6
               }}
             >
-              <ListItemIcon
+              <ListItemIcon fontSize='large'
                 sx={{
                   minWidth: expanded ? 56 : 0,
                   justifyContent: 'center',
                   alignItems: 'center',
                   display: 'flex',
+                  color: 'text.primary'
                 }}
               >
-                <Icon fontSize="medium" />
+                {showUnreadBadge ? (
+                  <Badge badgeContent={unreadCount > 99 ? '99+' : unreadCount} color="error">
+                    <Icon sx={{ color: 'inherit', fontSize: '28px' }} />
+                  </Badge>
+                ) : (
+                  <Icon sx={{ fontSize: '28px'}} />
+                )}
               </ListItemIcon>
               {expanded && (
                 <ListItemText
@@ -144,21 +217,26 @@ const NavBar = () => {
         })}
       </List>
 
+      {/* Divider between 2 big units */}
+      {/* TODO: move profile below and change it to avatar */}
       <Divider />
 
-      <List disablePadding sx={{ pb: 2 }}>
+        <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
-          onClick={handleSignOut}
+          // onClick={handleSignOut}
+          onClick={() => navigate('/profile')}
           sx={{
             py: 1.5,
             px: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: expanded ? 'flex-start' : 'center',
-            color: 'error.main',
+            // color: 'error.main',
+            color: 'text.primary',
             '&:hover': {
-              backgroundColor: 'error.light',
-              color: 'error.contrastText',
+              backgroundColor: 'action.hover'
+              // backgroundColor: 'error.light',
+              // color: 'error.contrastText',
             },
           }}
         >
@@ -171,17 +249,130 @@ const NavBar = () => {
               color: 'inherit',
             }}
           >
-            <LogoutIcon fontSize="medium" />
+            {/* <LogoutIcon fontSize="medium" /> */}
+            <AccountCircleOutlinedIcon sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.6}} />
           </ListItemIcon>
-          {expanded && (
+          {expanded && (  
             <ListItemText
-              primary={<Typography variant="body1">Sign Out</Typography>}
+              // primary={<Typography variant="body1">Sign Out</Typography>}
+              primary={<Typography variant="body1">Profile</Typography>}
               primaryTypographyProps={{ noWrap: true }}
               sx={{ py: 0, my: 0 }}
             />
           )}
         </ListItemButton>
       </List>
+
+
+      <List disablePadding sx={{ pb: 2 }}>
+        <ListItemButton
+          // onClick={handleSignOut}
+          onClick={handleSettingsClick}
+          sx={{
+            py: 1.5,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: expanded ? 'flex-start' : 'center',
+            // color: 'error.main',
+            color: 'text.primary',
+            '&:hover': {
+              backgroundColor: 'action.hover'
+              // backgroundColor: 'error.light',
+              // color: 'error.contrastText',
+            },
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: expanded ? 56 : 0,
+              justifyContent: 'center',
+              alignItems: 'center',
+              display: 'flex',
+              color: 'inherit',
+            }}
+          >
+            {/* <LogoutIcon fontSize="medium" /> */}
+            <Settings sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.6}} />
+            {/* <SettingsOutlinedIcon sx={{fontSize: '28px'}} /> */}
+          </ListItemIcon>
+          {expanded && (  
+            <ListItemText
+              // primary={<Typography variant="body1">Sign Out</Typography>}
+              primary={<Typography variant="body1">More</Typography>}
+              primaryTypographyProps={{ noWrap: true }}
+              sx={{ py: 0, my: 0 }}
+            />
+          )}
+        </ListItemButton>
+      </List>
+      
+      <Menu
+        anchorEl={settingsAnchor}
+        open={openSettings}
+        onClose={handleSettingsClose}
+        onClick={handleSettingsClose}
+        disableScrollLock={true}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            mt: -1,
+            ml: 2,
+            minWidth: 200,
+            borderRadius: 3,
+            '& .MuiMenuItem-root': {
+              py: 1.5,
+              px: 2,
+              borderRadius: 1,
+              mx: 1,
+              my: 0.5,
+            },
+          },
+        }}
+      >
+        <MenuItem onClick={() => handleNavigateSettings('/profile')}>
+          <ListItemIcon>
+            <AccountCircleOutlinedIcon fontSize="small" sx={{ color: 'text.secondary'}} />
+          </ListItemIcon>
+          <ListItemText>Profile</ListItemText>
+        </MenuItem>
+
+        <MenuItem onClick={() => handleNavigateSettings('/settings/user-type')}>
+          <ListItemIcon>
+            <Settings fontSize="small" sx={{ color: 'text.secondary' }} />
+          </ListItemIcon>
+          <ListItemText>User Settings</ListItemText>
+        </MenuItem>
+
+
+
+        <Divider sx={{ my: 1, mx: 2 }} />
+
+        <MenuItem onClick={() => { handleSettingsClose(); handleSignOut(); }} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText>Sign Out</ListItemText>
+        </MenuItem>
+
+        <MenuItem onClick={() => handleNavigateSettings('/settings/delete-account')} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteForever fontSize="small" sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText>Delete Account</ListItemText>
+        </MenuItem>
+
+      </Menu>
+
+
     </Box>
   );
 };

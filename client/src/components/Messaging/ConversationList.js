@@ -5,12 +5,15 @@ import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
+import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
+import AddCommentIcon from '@mui/icons-material/AddComment';
 import { formatMessageTimestamp } from './utils';
 
-const ConversationList = ({ conversations, selectedId, onSelect }) => {
+const ConversationList = ({ conversations, selectedId, onSelect, onNewMessage }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const filteredConversations = React.useMemo(() => {
@@ -23,10 +26,29 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
 
   return (
     <Box sx={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ py: 1.5, px: 2, borderBottom: 1, borderColor: 'divider' }}>
+      <Box
+        sx={{
+          py: 1.5,
+          px: 2,
+          borderBottom: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Typography variant="h6" component="h2">
           Messages
         </Typography>
+        <IconButton
+          onClick={onNewMessage}
+          aria-label="Create or write new message"
+          size="small"
+          color="primary"
+          sx={{ ml: 0.5 }}
+        >
+          <AddCommentIcon />
+        </IconButton>
       </Box>
       <Box sx={{ px: 1.5, py: 1, borderBottom: 1, borderColor: 'divider' }}>
         <TextField
@@ -45,7 +67,14 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
-              backgroundColor: 'action.hover',
+              backgroundColor: 'tertiary.light',
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'tertiary.main',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'tertiary.main',
+                borderWidth: 2,
+              },
             },
           }}
         />
@@ -53,6 +82,7 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
       <List disablePadding sx={{ flex: 1, overflow: 'auto' }}>
         {filteredConversations.map((conv) => {
           const isSelected = conv.id === selectedId;
+          const hasUnread = (conv.unread || 0) > 0;
           return (
             <ListItemButton
               key={conv.id}
@@ -67,20 +97,30 @@ const ConversationList = ({ conversations, selectedId, onSelect }) => {
                 },
               }}
             >
-              <Avatar
-                sx={{
-                  bgcolor: isSelected ? 'primary.main' : 'grey.400',
-                  width: 48,
-                  height: 48,
-                  mr: 2,
-                }}
+              <Badge
+                badgeContent={hasUnread ? (conv.unread > 99 ? '99+' : conv.unread) : 0}
+                color="error"
+                invisible={!hasUnread}
+                sx={{ mr: 2 }}
               >
-                {(conv.senderName || '?').charAt(0)}
-              </Avatar>
+                <Avatar
+                  sx={{
+                    bgcolor: isSelected ? 'primary.main' : 'grey.400',
+                    width: 48,
+                    height: 48,
+                  }}
+                >
+                  {(conv.senderName || '?').charAt(0)}
+                </Avatar>
+              </Badge>
               <ListItemText
                 primary={
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="subtitle1" noWrap>
+                    <Typography
+                      variant="subtitle1"
+                      noWrap
+                      sx={{ fontWeight: hasUnread ? 600 : 400 }}
+                    >
                       {conv.senderName}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">

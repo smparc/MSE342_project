@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -8,8 +8,16 @@ import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Alert from '@mui/material/Alert';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Autocomplete from '@mui/material/Autocomplete';
+import { FACULTIES, getProgramsForFaculty } from '../../data/facultyPrograms';
 import { withFirebase } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
+import UserTypeSelect from './UserTypeSelect';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket';
 
 const SignIn = ({ firebase }) => {
@@ -21,6 +29,7 @@ const SignIn = ({ firebase }) => {
     const [program, setProgram] = useState('');
     const [gradYear, setGradYear] = useState('');
     const [exchangeTerm, setExchangeTerm] = useState('');
+    const [userType, setUserType] = useState('browsing');
 
     // UI state
     const [error, setError] = useState(null);
@@ -29,6 +38,9 @@ const SignIn = ({ firebase }) => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const theme = useTheme();
+
+    const programOptions = useMemo(() => getProgramsForFaculty(faculty), [faculty]);
 
     // Convert Firebase error codes to user-friendly messages
     const getErrorMessage = (error) => {
@@ -68,14 +80,49 @@ const SignIn = ({ firebase }) => {
         return true;
     };
 
-    // Step 1 -> Step 2 (profile info)
-    const handleNextToProfile = () => {
+    // Step 1 -> Step 2 (profile info): ensure email and username are not already in DB
+    const handleNextToProfile = async (event) => {
+        event.preventDefault();
         setError(null);
         if (!validateStep1()) return;
-        setStep(2);
+
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({
+                email: email.trim(),
+                username: username.trim(),
+            });
+            const res = await fetch(`/api/users/availability?${params}`);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || 'Could not verify availability');
+            }
+            const parts = [];
+            if (data.emailTaken) {
+                parts.push('This email is already registered');
+            }
+            if (data.usernameTaken) {
+                parts.push('This username is already taken');
+            }
+            if (parts.length > 0) {
+                setError({ message: parts.join('. ') });
+                return;
+            }
+            setStep(2);
+        } catch (err) {
+            setError({ message: err.message || 'Something went wrong. Please try again' });
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Step 2 -> Create account and redirect
+    // Step 2 -> Step 3 (user type)
+    const handleNextToUserType = () => {
+        setError(null);
+        setStep(3);
+    };
+
+    // Step 3 -> Create account and redirect
     const handleCompleteSignUp = async (event) => {
         event.preventDefault();
         setError(null);
@@ -103,6 +150,7 @@ const SignIn = ({ firebase }) => {
                     grad_year: gradYear ? parseInt(gradYear) : null,
                     exchange_term: exchangeTerm.trim() || null,
                     uw_verified: isUwEmail,
+                    user_type: userType,
                 }),
             });
 
@@ -123,6 +171,12 @@ const SignIn = ({ firebase }) => {
     const handleBackToStep1 = () => {
         setError(null);
         setStep(1);
+    };
+
+    // Step 3 <- back to Step 2
+    const handleBackToStep2 = () => {
+        setError(null);
+        setStep(2);
     };
 
     const onSignIn = async (event) => {
@@ -162,6 +216,7 @@ const SignIn = ({ firebase }) => {
         setProgram('');
         setGradYear('');
         setExchangeTerm('');
+        setUserType('browsing');
     };
 
     // Step 1: Sign In / Sign Up form
@@ -268,30 +323,73 @@ const SignIn = ({ firebase }) => {
                 Help others find and connect with you (optional - you can add this later)
             </Typography>
 
-            <form noValidate onSubmit={handleCompleteSignUp}>
+            <form noValidate onSubmit={handleNextToUserType}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
-                        <TextField
-                            variant="outlined"
-                            fullWidth
-                            id="faculty"
-                            label="Faculty"
-                            name="faculty"
-                            placeholder="e.g. Engineering"
-                            value={faculty}
-                            onChange={(e) => setFaculty(e.target.value)}
-                        />
+                        <FormControl fullWidth>
+                            <InputLabel id="signin-faculty-label">Faculty</InputLabel>
+                            <Select
+                                labelId="signin-faculty-label"
+                                id="faculty"
+                                name="faculty"
+                                label="Faculty"
+                                value={faculty}
+                                onChange={(e) => {
+                                    setFaculty(e.target.value);
+                                    setProgram('');
+                                }}
+                            >
+                                <MenuItem value="">
+                                    <em>Optional — select faculty</em>
+                                </MenuItem>
+                                {FACULTIES.map((f) => (
+                                    <MenuItem key={f} value={f}>
+                                        {f}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <TextField
-                            variant="outlined"
-                            fullWidth
-                            id="program"
-                            label="Program"
-                            name="program"
-                            placeholder="e.g. MSCI"
+                        <Autocomplete
+                            key={faculty || 'no-faculty'}
+                            freeSolo
+                            disabled={!faculty}
+                            options={programOptions}
                             value={program}
-                            onChange={(e) => setProgram(e.target.value)}
+                            onChange={(_, newValue) => setProgram(newValue ?? '')}
+                            inputValue={program}
+                            onInputChange={(_, newInput, reason) => {
+                                if (reason === 'input' || reason === 'clear') {
+                                    setProgram(newInput);
+                                }
+                            }}
+                            filterOptions={(opts, state) => {
+                                const q = state.inputValue.trim().toLowerCase();
+                                if (!q) return opts;
+                                return opts.filter((o) =>
+                                    o.toLowerCase().includes(q)
+                                );
+                            }}
+                            noOptionsText={
+                                faculty
+                                    ? 'No programs match — keep typing or enter your own'
+                                    : 'Select a faculty first'
+                            }
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Program"
+                                    name="program"
+                                    id="program"
+                                    placeholder={faculty ? 'Search or type a program' : ''}
+                                    helperText={
+                                        faculty
+                                            ? 'Type to filter the list; you can enter a program not listed'
+                                            : ''
+                                    }
+                                />
+                            )}
                         />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -347,6 +445,56 @@ const SignIn = ({ firebase }) => {
                         disabled={loading}
                         sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
                     >
+                        Next
+                    </Button>
+                </Box>
+            </form>
+        </Paper>
+    );
+
+    // Step 3: User Type Selection
+    const renderStep3 = () => (
+        <Paper elevation={6} sx={{ p: 5, borderRadius: 3 }}>
+            <Typography variant="h5" component="h1" gutterBottom fontWeight="bold" textAlign="center">
+                Tell us about yourself
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }} textAlign="center">
+                This helps personalize your experience
+            </Typography>
+
+            <form noValidate onSubmit={handleCompleteSignUp}>
+                <UserTypeSelect
+                    value={userType}
+                    onChange={setUserType}
+                    disabled={loading}
+                />
+
+                {error && (
+                    <Typography align="center" color="error" sx={{ mt: 2, p: 1 }}>
+                        {error.message}
+                    </Typography>
+                )}
+
+                <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                    <Button
+                        type="button"
+                        fullWidth
+                        variant="outlined"
+                        color="primary"
+                        onClick={handleBackToStep2}
+                        disabled={loading}
+                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        color="primary"
+                        disabled={loading}
+                        sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
+                    >
                         {loading ? 'Please wait...' : 'Complete Sign Up'}
                     </Button>
                 </Box>
@@ -361,7 +509,7 @@ const SignIn = ({ firebase }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 45%, #3d3d6b 100%)`,
                 py: 4,
                 position: 'relative',
             }}
@@ -384,6 +532,7 @@ const SignIn = ({ firebase }) => {
             <Container maxWidth="sm">
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
+                {step === 3 && renderStep3()}
             </Container>
         </Box>
     );

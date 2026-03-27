@@ -1,0 +1,442 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+.ec-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  font-family: 'DM Sans', sans-serif;
+  color: #1a1a2e;
+}
+
+/* ── Header ── */
+.ec-header { margin-bottom: 1.5rem; }
+.ec-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2rem;
+  color: #1a1a2e;
+  margin: 0 0 0.25rem;
+}
+.ec-subtitle { color: #666; font-size: 0.95rem; margin: 0; }
+
+/* ── Tabs ── */
+.ec-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #f0f0f5;
+  padding-bottom: 0;
+}
+.ec-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 0.6rem 1.1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #777;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ec-tab:hover { color: #1a1a2e; }
+.ec-tab.active {
+  color: #1a1a2e;
+  border-bottom-color: #1a1a2e;
+  font-weight: 600;
+}
+
+/* ── Filters (Story 1) ── */
+.ec-filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #fafafa;
+  border: 1.5px solid #e8e8f0;
+  border-radius: 10px;
+}
+.ec-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+.ec-filter-field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ec-select {
+  padding: 7px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  font-size: 0.88rem;
+  font-family: 'DM Sans', sans-serif;
+  background: #fff;
+  color: #1a1a2e;
+  outline: none;
+  cursor: pointer;
+}
+.ec-select:focus { border-color: #1a1a2e; }
+.ec-select option {
+  background: #fff;
+  color: #1a1a2e;
+}
+.ec-input {
+  padding: 7px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  font-size: 0.88rem;
+  font-family: 'DM Sans', sans-serif;
+  background: #fff;
+  color: #1a1a2e;
+  outline: none;
+  width: 160px;
+}
+.ec-input:focus { border-color: #1a1a2e; }
+.ec-clear-filters {
+  align-self: flex-end;
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 0.83rem;
+  color: #666;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.15s, color 0.15s;
+}
+.ec-clear-filters:hover { border-color: #1a1a2e; color: #1a1a2e; }
+
+/* ── Empty state (Story 1 AC5) ── */
+.ec-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #888;
+}
+.ec-empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.ec-empty p { font-size: 0.95rem; margin: 0; }
+
+/* ── Month navigation ── */
+.ec-month-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.ec-month-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.3rem;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+.ec-nav-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ec-nav-btn:hover { background: #f0f0f5; border-color: #1a1a2e; }
+
+.ec-loading {
+  text-align: center;
+  color: #aaa;
+  padding: 3rem;
+  font-size: 0.92rem;
+}
+
+/* ── Calendar grid ── */
+.ec-calendar-wrap {
+  border: 1.5px solid #e8e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.ec-day-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f4f4f9;
+  border-bottom: 1.5px solid #e8e8f0;
+}
+.ec-day-header {
+  text-align: center;
+  padding: 0.5rem 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ec-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.ec-cell {
+  min-height: 80px;
+  padding: 0.4rem 0.45rem;
+  border-right: 1px solid #f0f0f5;
+  border-bottom: 1px solid #f0f0f5;
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+}
+.ec-cell:nth-child(7n) { border-right: none; }
+.ec-cell:hover { background: #fafafe; }
+.ec-cell--empty { cursor: default; background: #fafafa; }
+.ec-cell--today { background: #fffbeb; }
+.ec-cell--today .ec-day-num {
+  background: #1a1a2e;
+  color: #fff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+}
+.ec-cell--selected { background: #eef2ff; }
+.ec-day-num {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.ec-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+.ec-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ec-dot.ms-done    { background: #22c55e; }
+.ec-dot.ms-urgent  { background: #ef4444; }
+.ec-dot.ms-soon    { background: #f59e0b; }
+.ec-dot.ms-overdue { background: #dc2626; }
+.ec-dot.ms-upcoming{ background: #6366f1; }
+.ec-dot-more {
+  font-size: 0.62rem;
+  color: #888;
+  line-height: 1;
+  align-self: center;
+}
+
+/* ── Day detail panel ── */
+.ec-day-panel {
+  background: #fff;
+  border: 1.5px solid #e8e8f0;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+.ec-day-panel-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+  color: #1a1a2e;
+}
+.ec-day-panel-empty { color: #aaa; font-size: 0.88rem; margin: 0; }
+.ec-event-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f4f4f9;
+}
+.ec-event-row:last-child { border-bottom: none; }
+.ec-event-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #6366f1;
+}
+.ec-event-row.ms-done    .ec-event-bullet { background: #22c55e; }
+.ec-event-row.ms-urgent  .ec-event-bullet { background: #ef4444; }
+.ec-event-row.ms-soon    .ec-event-bullet { background: #f59e0b; }
+.ec-event-row.ms-overdue .ec-event-bullet { background: #dc2626; }
+.ec-event-info { flex: 1; }
+.ec-event-title { font-weight: 500; font-size: 0.9rem; display: block; }
+.ec-event-type  { font-size: 0.75rem; color: #999; }
+.ec-event-done-badge {
+  font-size: 0.75rem;
+  color: #16a34a;
+  font-weight: 600;
+  background: #f0fdf4;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #86efac;
+}
+
+/* ── Legend ── */
+.ec-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.ec-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: #777;
+}
+
+/* ════════════════════════════════════════
+   CHECKLIST (Story 2)
+   ════════════════════════════════════════ */
+.ec-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* AC3 — Progress bar */
+.ec-progress-card {
+  background: #f4f4f9;
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+}
+.ec-progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.ec-progress-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1a1a2e;
+}
+.ec-progress-count {
+  font-size: 0.82rem;
+  color: #666;
+}
+.ec-progress-bar-wrap {
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 0.35rem;
+}
+.ec-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.ec-progress-pct {
+  font-size: 0.78rem;
+  color: #888;
+  text-align: right;
+}
+
+/* Phase groups */
+.ec-checklist-group { }
+.ec-checklist-phase {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1rem;
+  color: #1a1a2e;
+  margin: 0 0 0.6rem;
+  padding: 0.3rem 0.9rem;
+  background: #f4f4f9;
+  border-left: 4px solid #6366f1;
+  border-radius: 0 6px 6px 0;
+}
+
+/* AC2 & AC4 — checklist items */
+.ec-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #f4f4f9;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.12s;
+}
+.ec-checklist-item:hover { background: #fafafe; }
+.ec-checklist-item.completed .ec-checklist-title {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.ec-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid #c7c7d9;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ec-checkbox.checked {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+.ec-checklist-title {
+  flex: 1;
+  font-size: 0.92rem;
+  color: #1a1a2e;
+}
+.ec-checklist-done-badge {
+  font-size: 0.72rem;
+  color: #16a34a;
+  font-weight: 600;
+  background: #f0fdf4;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #86efac;
+  flex-shrink: 0;
+}
+
+/* ── Fix: force native select dropdowns to render in light mode.
+   Without this, if a parent or :root sets color-scheme: dark (common
+   in Timeline.css or global styles), the OS-rendered option list
+   will appear as a solid black box. ── */
+select,
+.ec-select,
+.tl-input,
+.tl-modal select {
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #1a1a2e;
+}
+
+select option,
+.ec-select option,
+.tl-input option,
+.tl-modal select option {
+  background-color: #ffffff;
+  color: #1a1a2e;
+}
+
+@media (max-width: 640px) {
+  .ec-grid { grid-template-columns: repeat(7, 1fr); }
+  .ec-cell { min-height: 56px; padding: 0.25rem; }
+  .ec-day-num { font-size: 0.72rem; }
+  .ec-dot { width: 5px; height: 5px; }
+}
