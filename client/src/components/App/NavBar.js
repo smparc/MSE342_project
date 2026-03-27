@@ -22,6 +22,7 @@ import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
 import { DeleteForever, Settings } from '@mui/icons-material';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonth';
 import ContactPageOutlinedIcon from '@mui/icons-material/ContactPageOutlined';
 
@@ -223,6 +224,7 @@ const NavBar = ({ currentUser, authUser }) => {
 
         <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
+          aria-label="Profile"
           // onClick={handleSignOut}
           onClick={() => navigate('/profile')}
           sx={{
@@ -266,6 +268,7 @@ const NavBar = ({ currentUser, authUser }) => {
 
       <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
+          aria-label="Settings"
           // onClick={handleSignOut}
           onClick={handleSettingsClick}
           sx={{
@@ -293,7 +296,9 @@ const NavBar = ({ currentUser, authUser }) => {
             }}
           >
             {/* <LogoutIcon fontSize="medium" /> */}
-            <Settings sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.6}} />
+            {/* <Settings sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.6}} /> */}
+            <MenuOutlinedIcon sx={{fontSize: '32px', stroke: 'white', strokeWidth: 0.5}} />
+            
             {/* <SettingsOutlinedIcon sx={{fontSize: '28px'}} /> */}
           </ListItemIcon>
           {expanded && (  
@@ -345,12 +350,12 @@ const NavBar = ({ currentUser, authUser }) => {
           <ListItemText>Profile</ListItemText>
         </MenuItem>
 
-        <MenuItem onClick={() => handleNavigateSettings('/settings/user-type')}>
+        {/* <MenuItem onClick={() => handleNavigateSettings('/settings/user-type')}>
           <ListItemIcon>
             <Settings fontSize="small" sx={{ color: 'text.secondary' }} />
           </ListItemIcon>
           <ListItemText>User Settings</ListItemText>
-        </MenuItem>
+        </MenuItem> */}
 
 
 

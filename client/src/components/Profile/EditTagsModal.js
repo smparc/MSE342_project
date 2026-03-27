@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Grid, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert, MenuItem } from '@mui/material';
+import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Alert, MenuItem, IconButton, Typography, Stack, Box } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close'
 
 import { FACULTIES, getProgramsForFaculty } from '../../data/facultyPrograms'
 
@@ -14,6 +15,39 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
     const [error, setError] = React.useState(false)
 
     const TERMS = ['3A', '3B', '4A', '4B']
+    
+    const labelStyle = {
+        fontSize: '0.78rem',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+        color: '#666',
+        mb: 0.5,
+        fontFamily: "'DM Sans', sans-serif"
+    };
+
+    // AI used to help match UI to other pages
+    const inputStyle = {
+        '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+            bgcolor: '#fafafa',
+            '& fieldset': {
+                borderWidth: '2px',
+                borderColor: '#e2e8f0',
+            },
+            '&:hover fieldset': {
+                borderColor: '#cbd5e1',
+            },
+            '&.Mui-focused fieldset': {
+                borderColor: '#1a1a2e',
+            },
+        },
+        '& .MuiInputBase-input': {
+            fontSize: '0.9rem',
+            fontFamily: "'DM Sans', sans-serif",
+            padding: '10px 14px',
+        }
+    };
 
     React.useEffect(() => {
         setTempFaculty(faculty)
@@ -74,129 +108,220 @@ const EditTagsModal = ({ open, handleClose, username, faculty, setFaculty, progr
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose}
-                fullWidth={true}
-                maxWidth={'sm'}>
-                <DialogTitle textAlign={'center'} fontWeight={600} fontSize={'25px'}>Edit tags</DialogTitle>
-                <DialogContent>
-                    <form onSubmit={handleSubmit} id='edit-tags-modal'>
-                        <Grid container
-                            justifyContent={'center'}
-                            alignItems={'center'}
-                            direction={'column'}
-                            py='20px'
-                            px={'30px'}
-                        >
+            
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            fullWidth={true}
+            maxWidth={'sm'}
+            PaperProps={{
+                sx: {
+                    borderRadius: '16px',
+                    p: '1rem',
+                    position: 'relative'
+                }
+            }}
+        >
+            <IconButton
+                onClick={handleClose}
+                sx={{
+                    position: 'absolute',
+                    right: 16,
+                    top: 16,
+                    bgcolor: '#f0f0f5',
+                    '&:hover': { bgcolor: '#e2e2e8' },
+                    width: 28,
+                    height: 28,
+                }}
+            >
+                <CloseIcon sx={{ fontSize: '1rem', color: '#666' }} />
+            </IconButton>
 
-                            <Grid item width='100%'>
-                                <TextField fullWidth
-                                    select
-                                    required
-                                    margin='dense'
-                                    id='edit-faculty-field'
-                                    label="Faculty"
-                                    value={tempFaculty || ''}
-                                    onChange={(event) => {
-                                        setTempFaculty(event.target.value)
-                                        setTempProgram('')
-                                    }}>
-                                        {FACULTIES.map(faculty => (
-                                            <MenuItem key={faculty} value={faculty}>{faculty}</MenuItem>
-                                        ))}
+            <DialogTitle sx={{
+                fontFamily: "'DM Serif Display', serif",
+                fontSize: '20px',
+                pb: 1,
+                color: '#1a1a2e'
+            }}>
+                Edit Tags
+            </DialogTitle>
 
-                                </TextField>
-                                        
-                                {/* <FormControl fullWidth>
-                                <InputLabel id='edit-faculty-field-label'>Faculty</InputLabel>
-                                <Select fullWidth
-                                    // margin='dense'
-                                    labelId='edit-faculty-field-label'
-                                    id='edit-faculty-field'
-                                    label="Faculty"
-                                    value={tempFaculty}
-                                    onChange={(event) => setTempFaculty(event.target.value)}>
-                                        <MenuItem value={'Art'}>Art</MenuItem>
-                                        <MenuItem value={'Engineering'}>Engineering</MenuItem>
-                                        <MenuItem value={'Environment'}>Environment</MenuItem>
-                                        <MenuItem value={'Health'}>Health</MenuItem>
-                                        <MenuItem value={'Mathematics'}>Mathematics</MenuItem>
-                                        <MenuItem value={'Science'}>Science</MenuItem>
-                                </Select>
-                                </FormControl> */}
-                            </Grid>
-                            <Grid item width='100%'>
-                                <TextField fullWidth
-                                    select
-                                    required
-                                    margin='normal'
-                                    id='edit-program-field'
-                                    label="Program"
-                                    value={tempProgram}
-                                    onChange={(event) => setTempProgram(event.target.value)}>
-                                        {getProgramsForFaculty(tempFaculty).map(program => (
-                                            <MenuItem key={program} value={program}>{program}</MenuItem>
-                                        ))}
-                                    </TextField>
-                            </Grid>
-                            <Grid item width='100%'>
-                                <TextField fullWidth
-                                    required
-                                    margin='dense'
-                                    id='edit-grad-year-field'
-                                    label="Graduation Year"
-                                    type="number"
-                                    value={tempGradYear}
-                                    onChange={(event) => setTempGradYear(event.target.value)} />
-                            </Grid>
-                            <Grid item width='100%'>
-                                <TextField fullWidth
-                                    select
-                                    required
-                                    margin='normal'
-                                    id='edit-exchange-term-field'
-                                    label="Exchange Term"
-                                    value={tempExchangeTerm}
-                                    onChange={(event) => setTempExchangeTerm(event.target.value)}>
-                                        {TERMS.map(term => (
-                                            <MenuItem key={term} value={term}>{term}</MenuItem>
-                                        ))}
-                                    </TextField>
-                            </Grid>
+            <DialogContent>
+                <form onSubmit={handleSubmit} id='edit-tags-modal'>
+                    <Stack spacing={2.5} sx={{ mt: 1 }}>
+                        {/* waterloo form section */}
+                        <Typography sx={{
+                            fontSize: '12px',
+                            fontWeight: 800,
+                            color: '#1a1a2e',
+                            bgcolor: '#f4f4f9',
+                            p: '4px 10px',
+                            borderRadius: '4px',
+                            borderLeft: '4px solid #1a1a2e'
+                        }}>
+                            WATERLOO DETAILS
+                        </Typography>
 
-                            <Grid item width='100%'>
-                                <TextField fullWidth
-                                    required
-                                    margin='normal'
-                                    id='edit-exchange-country-field'
-                                    label="Exchange Country"
-                                    value={tempExchangeCountry}
-                                    onChange={(event) => setTempExchangeCountry(event.target.value)} />
-                            </Grid>
+                        <Box>
+                            <Typography sx={labelStyle}>Faculty *</Typography>
+                            <TextField
+                                fullWidth
+                                select
+                                required
+                                id='edit-faculty-field'
+                                SelectProps={{ inputProps: { 'aria-label': 'Faculty' } }}
+                                value={tempFaculty || ''}
+                                variant="outlined"
+                                sx={inputStyle}
+                                onChange={(event) => {
+                                    setTempFaculty(event.target.value)
+                                    setTempProgram('')
+                                }}
+                            >
+                                {FACULTIES.map(f => (
+                                    <MenuItem key={f} value={f}>{f}</MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
 
-                            <Grid item width='100%'>
-                                <TextField fullWidth
-                                    required
-                                    margin='normal'
-                                    id='edit-exchange-school-field'
-                                    label="Exchange School"
-                                    value={tempExchangeSchool}
-                                    onChange={(event) => setTempExchangeSchool(event.target.value)} />
-                            </Grid>
-                        </Grid>
-                    </form>
-                    <Grid item>
-                        {error && <Alert severity='error'>All entries must have a value. Please try again.</Alert>}
-                    </Grid>
-                </DialogContent>
-                <DialogActions>
+                        <Box>
+                            <Typography sx={labelStyle}>Program *</Typography>
+                            <TextField
+                                fullWidth
+                                select
+                                required
+                                id='edit-program-field'
+                                SelectProps={{ inputProps: { 'aria-label': 'Program' } }}
+                                value={tempProgram}
+                                variant="outlined"
+                                sx={inputStyle}
+                                onChange={(event) => setTempProgram(event.target.value)}
+                            >
+                                {getProgramsForFaculty(tempFaculty).map(p => (
+                                    <MenuItem key={p} value={p}>{p}</MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
 
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button type='submit' form='edit-tags-modal'>Save Changes</Button>
+                        <Box>
+                            <Typography sx={labelStyle}>Graduation Year *</Typography>
+                            <TextField
+                                fullWidth
+                                required
+                                id='edit-grad-year-field'
+                                inputProps={{ 'aria-label': 'Graduation Year' }}
+                                type="number"
+                                value={tempGradYear}
+                                variant="outlined"
+                                sx={inputStyle}
+                                onChange={(event) => setTempGradYear(event.target.value)}
+                            />
+                        </Box>
 
-                </DialogActions>
-            </Dialog>
+                        {/* exchange form section */}
+                        <Typography sx={{
+                            fontSize: '12px',
+                            fontWeight: 800,
+                            color: '#1a1a2e',
+                            bgcolor: '#f4f4f9',
+                            p: '4px 10px',
+                            borderRadius: '4px',
+                            borderLeft: '4px solid #6366f1',
+                            mt: 2
+                        }}>
+                            EXCHANGE DETAILS
+                        </Typography>
 
-        </>
+                        <Box>
+                            <Typography sx={labelStyle}>Exchange Term *</Typography>
+                            <TextField
+                                fullWidth
+                                select
+                                required
+                                id='edit-exchange-term-field'
+                                SelectProps={{ inputProps: { 'aria-label': 'Exchange Term' } }}
+                                value={tempExchangeTerm}
+                                variant="outlined"
+                                sx={inputStyle}
+                                onChange={(event) => setTempExchangeTerm(event.target.value)}
+                            >
+                                {TERMS.map(t => (
+                                    <MenuItem key={t} value={t}>{t}</MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
+
+                        <Box>
+                            <Typography sx={labelStyle}>Exchange Country *</Typography>
+                            <TextField
+                                fullWidth
+                                required
+                                id='edit-exchange-country-field'
+                                inputProps={{ 'aria-label': 'Exchange Country' }}
+                                value={tempExchangeCountry}
+                                variant="outlined"
+                                sx={inputStyle}
+                                onChange={(event) => setTempExchangeCountry(event.target.value)}
+                            />
+                        </Box>
+
+                        <Box>
+                            <Typography sx={labelStyle}>Exchange School *</Typography>
+                            <TextField
+                                fullWidth
+                                required
+                                id='edit-exchange-school-field'
+                                inputProps={{ 'aria-label': 'Exchange School' }}
+                                value={tempExchangeSchool}
+                                variant="outlined"
+                                sx={inputStyle}
+                                onChange={(event) => setTempExchangeSchool(event.target.value)}
+                            />
+                        </Box>
+                    </Stack>
+                    {error && <Alert severity='error' sx={{ mt: 2, borderRadius: '8px' }}>All entries must have a value.</Alert>}
+                </form>
+            </DialogContent>
+
+            <DialogActions sx={{ p: '20px 24px' }}>
+                <Button
+                    onClick={handleClose}
+                    sx={{
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontWeight: 600,
+                        fontSize: '0.88rem',
+                        color: '#1a1a2e',
+                        border: '2px solid #1a1a2e',
+                        borderRadius: '8px',
+                        px: 3,
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: '#f0f0f8', border: '2px solid #1a1a2e' }
+                    }}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    type='submit'
+                    form='edit-tags-modal'
+                    variant="contained"
+                    sx={{
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontWeight: 600,
+                        fontSize: '0.88rem',
+                        bgcolor: '#1a1a2e',
+                        color: '#fff',
+                        borderRadius: '8px',
+                        px: 3,
+                        textTransform: 'none',
+                        boxShadow: 'none',
+                        '&:hover': { bgcolor: '#2d2d52', boxShadow: 'none' }
+                    }}
+                >
+                    Save Changes
+                </Button>
+            </DialogActions>
+        </Dialog>
+    </>
     )
 }
 

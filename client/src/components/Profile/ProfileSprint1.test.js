@@ -139,32 +139,32 @@ describe('Profile Sprint 1', () => {
 
     renderWithTheme(<Profile />);
 
-    // Wait for the profile to load and click the "Edit Profile" button
+    // wait for the profile to load and click the "Edit Profile" button
     const editButton = await screen.findByRole('button', { name: /Edit Profile/i });
     fireEvent.click(editButton);
 
-    // Wait for the modal to appear
+    // wait for the modal
     const displayNameInput = await screen.findByLabelText(/Display Name/i);
-    const bioInput = await screen.findByLabelText(/Bio/i);
+    // const bioInput = await screen.findByLabelText(/Bio/i);
 
-    // Enter only whitespace into both fields
+    // Enter only whitespace into display name field only (bio can now have white space/be empty)
     fireEvent.change(displayNameInput, { target: { value: '   ' } });
-    fireEvent.change(bioInput, { target: { value: '  \n  ' } });
+    // fireEvent.change(bioInput, { target: { value: '  \n  ' } });
 
-    // Click "Save Changes"
+    // save changes
     const saveButton = screen.getByRole('button', { name: /Save Changes/i });
     fireEvent.click(saveButton);
 
-    // Verify error alert appears
+    // verify error alert appears
     await waitFor(() => {
-      expect(screen.getByText(/All entries must have a value. Please try again./i)).toBeInTheDocument();
+      // expect(screen.getByText(/All entries must have a value. Please try again./i)).toBeInTheDocument();
+      expect(screen.getByText(/Display name must have a value./i)).toBeInTheDocument();
     });
   });
 
 
   describe('CourseTable', () => {
     beforeEach(async () => {
-      // Mock initial user fetch and initial empty courses fetch
       global.fetch
         .mockResolvedValueOnce({
           ok: true,
@@ -177,10 +177,8 @@ describe('Profile Sprint 1', () => {
 
       renderWithTheme(<Profile />);
 
-      // Wait for Profile to load user data (settle initial effects)
       await screen.findByText('john.doe');
 
-      // Mock the initial courses fetch that happens when CourseTable mounts
       global.fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => [],
@@ -260,7 +258,9 @@ describe('Profile Sprint 1', () => {
       faculty: 'Engineering',
       program: 'Software Engineering',
       grad_year: '2026',
-      exchange_term: 'Fall 2025'
+      exchange_term: '3B',
+      exchange_country: 'Denmark',
+      exchange_school: 'DTU'
     };
 
     it('should successfully update tags and display them in the profile header', async () => {
@@ -277,18 +277,37 @@ describe('Profile Sprint 1', () => {
       const editTagsButton = await screen.findByRole('button', { name: /Add Tags/i });
       fireEvent.click(editTagsButton);
 
-      fireEvent.change(screen.getByLabelText(/Faculty/i), { target: { value: updatedTags.faculty } });
-      fireEvent.change(screen.getByLabelText(/Program/i), { target: { value: updatedTags.program } });
+      // fireEvent.change(screen.getByLabelText(/Faculty/i), { target: { value: updatedTags.faculty } });
+      // fireEvent.change(screen.getByLabelText(/Program/i), { target: { value: updatedTags.program } });
+
+      const facultySelect = screen.getByLabelText(/Faculty/i)
+      fireEvent.mouseDown(facultySelect)
+      fireEvent.click(screen.getByText(updatedTags.faculty))
+
+      const programSelect = screen.getByLabelText(/Program/i)
+      fireEvent.mouseDown(programSelect)
+      fireEvent.click(screen.getByText(updatedTags.program))
+
       fireEvent.change(screen.getByLabelText(/Graduation Year/i), { target: { value: updatedTags.grad_year } });
-      fireEvent.change(screen.getByLabelText(/Exchange Term/i), { target: { value: updatedTags.exchange_term } });
+      // fireEvent.change(screen.getByLabelText(/Exchange Term/i), { target: { value: updatedTags.exchange_term } });
+
+      const termSelect = screen.getByLabelText(/Exchange Term/i)
+      fireEvent.mouseDown(termSelect)
+      fireEvent.click(screen.getByText(updatedTags.exchange_term))
+
+      fireEvent.change(screen.getByLabelText(/Exchange Country/i), { target: { value: updatedTags.exchange_country } });
+      fireEvent.change(screen.getByLabelText(/Exchange School/i), { target: { value: updatedTags.exchange_school } });
+
 
       fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(updatedTags.faculty)).toBeInTheDocument();
-        expect(screen.getByText(updatedTags.program)).toBeInTheDocument();
-        expect(screen.getByText(`Class of ${updatedTags.grad_year}`)).toBeInTheDocument();
-        expect(screen.getByText(`${updatedTags.exchange_term} Exchange`)).toBeInTheDocument();
+        expect(screen.getByText(updatedTags.faculty)).toBeInTheDocument()
+        expect(screen.getByText(updatedTags.program)).toBeInTheDocument()
+        expect(screen.getByText(`Class of ${updatedTags.grad_year}`)).toBeInTheDocument()
+        expect(screen.getByText(`${updatedTags.exchange_term} Exchange`)).toBeInTheDocument()
+        expect(screen.getByText(updatedTags.exchange_country))
+        expect(screen.getByText(updatedTags.exchange_school))
       });
 
       expect(screen.getByText(/Profile changes saved/i)).toBeInTheDocument();
