@@ -226,6 +226,10 @@ AI declaration:
 Zeina - Used for occasional debugging (syntax errors, package/networking errors, etc.)
 * Used for fixing styling on some MUI components (ex. i learned from AI that a particular component comes with default styling)
 * Used to determine that I need to use Multer for posting photos
+* Used for UI improvements (base UI was already established and coded previously)
+* Used for help with developing landing page
+* Used for help routing landing page issues
+
 
 Cindy - Used for debugging and design aid
 * Used for making UI (e.g. flex box size) of some new components (e.g. loading screen) look more cohesive with existing components 
