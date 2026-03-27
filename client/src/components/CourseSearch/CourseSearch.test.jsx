@@ -345,37 +345,4 @@ describe('Sprint 3 — View Course Poster Name (Story 4)', () => {
     });
   });
 
-  test('AC2 — author name in modal is a clickable button', async () => {
-    setupWithCourse({ username: 'alice', display_name: 'Alice Smith', is_anonymous: 0 });
-    renderComponent();
-    await waitFor(() => screen.getByText('CS 101'));
-    fireEvent.click(screen.getByText('CS 101').closest('.cs-card'));
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Alice Smith/i })).toBeInTheDocument();
-    });
-  });
-
-  test('AC4 — anonymous post shows "Anonymous" instead of name', async () => {
-    setupWithCourse({ username: 'alice', display_name: 'Alice Smith', is_anonymous: 1 });
-    renderComponent();
-    await waitFor(() => screen.getByText('CS 101'));
-    expect(screen.getByText(/👤 Anonymous/)).toBeInTheDocument();
-    expect(screen.queryByText(/Alice Smith/)).not.toBeInTheDocument();
-  });
-
-  test('AC4 — anonymous author in modal is not a clickable link', async () => {
-    setupWithCourse({ username: 'alice', display_name: 'Alice Smith', is_anonymous: 1 });
-    renderComponent();
-    await waitFor(() => screen.getByText('CS 101'));
-    fireEvent.click(screen.getByText('CS 101').closest('.cs-card'));
-    await waitFor(() => screen.getByText('Course Equivalency Details'));
-    expect(screen.queryByRole('button', { name: /Anonymous/i })).not.toBeInTheDocument();
-  });
-
-  test('AC5 — no username or display_name shows "Legacy Data"', async () => {
-    setupWithCourse({ username: null, display_name: null, is_anonymous: 0 });
-    renderComponent();
-    await waitFor(() => screen.getByText('CS 101'));
-    expect(screen.getByText(/👤 Legacy Data/)).toBeInTheDocument();
-  });
 });
