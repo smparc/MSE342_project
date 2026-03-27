@@ -41,7 +41,8 @@ const PrivateRoute = ({ authenticated, authUser }) => {
     useEffect(() => {
         const fetchUsername = async () => {
             if (!authUser?.email) {
-                setLoading(false);
+                setLoading(false); // Ensure loading is false if no email
+                setUserExistsInDb(false); // Ensure this is false if no email
                 return;
             }
 
@@ -56,7 +57,6 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                         setUserExistsInDb(false);
                     }
                 } else {
-                    // User not found in DB - still in sign-up flow
                     setUserExistsInDb(false);
                 }
             } catch (error) {
@@ -91,17 +91,12 @@ const PrivateRoute = ({ authenticated, authUser }) => {
         );
     }
 
-    // Not authenticated OR user doesn't exist in DB yet (still signing up)
     if (!authenticated || !userExistsInDb) {
         return (
             <Routes>
                 <Route path="/" element={<Landing />} />
-                {/* <Route path="/landing" element={<Landing />} /> */}
                 <Route path="/SignIn" element={<SignIn onSignupComplete={reloadUserStatus}/>} />
-
-                {authenticated &&  (
-                    <Route path="/settings/user-type" element={<UserTypeSelect onSignupComplete={reloadUserStatus} />} />
-                )}
+                {authenticated && <Route path="/settings/user-type" element={<UserTypeSelect onSignupComplete={reloadUserStatus} />} />}
                 <Route path="*" element={<Navigate replace to="/" />} />
             </Routes>
         );
@@ -110,8 +105,8 @@ const PrivateRoute = ({ authenticated, authUser }) => {
     // Authenticated users: redirect "/" to profile page
     return (
             <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path='/SignIn' element={<SignIn />} />
+            <Route path="/" element={<Navigate replace to="/profile" />} />
+            <Route path='/SignIn' element={<Navigate replace to="/profile" />} />
             <Route
                 path="*"
                 element={
@@ -119,7 +114,6 @@ const PrivateRoute = ({ authenticated, authUser }) => {
                         <NavBar currentUser={currentUser} authUser={authUser} />
                         <MainLayout>
                             <Routes>
-                                {/* <Route path="/SignIn" element={<SignIn />} /> */}
                                 <Route path="/messages" element={<Messaging currentUser={currentUser} authUser={authUser} />} />
                                 <Route path="/search" element={<Search currentUser={currentUser} authUser={authUser} />} />
                                 <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={currentUser} authUser={authUser} />} />

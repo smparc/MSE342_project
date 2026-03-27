@@ -165,8 +165,7 @@ const SignIn = ({ firebase, onSignupComplete }) => {
                 onSignupComplete()
             }
 
-            navigate('/profile')
-
+            console.log('[SignIn] Sign-up complete! Letting PrivateRoute handle redirect.');
             // window.location.href = '/';
         } catch (err) {
             setError({ message: getErrorMessage(err) });
@@ -204,8 +203,7 @@ const SignIn = ({ firebase, onSignupComplete }) => {
 
         try {
             await firebase.doSignInWithEmailAndPassword(email, password);
-            // navigate('/');
-            navigate('/profile');
+            console.log('[SignIn] Sign-in complete! Letting PrivateRoute handle redirect.');
         } catch (err) {
             setError({ message: getErrorMessage(err) });
         } finally {
@@ -518,7 +516,7 @@ const SignIn = ({ firebase, onSignupComplete }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 45%, #3d3d6b 100%)`,
+                background: `radial-gradient(circle at center, rgb(152, 187, 234) 0%, ${theme.palette.background.default} 100%)`,
                 py: 4,
                 position: 'relative',
             }}
@@ -533,8 +531,8 @@ const SignIn = ({ firebase, onSignupComplete }) => {
                     gap: 1,
                 }}
             >
-                <AirplaneTicketIcon sx={{ fontSize: 32, color: 'white' }} />
-                <Typography variant="h5" fontWeight={700} sx={{ color: 'white' }}>
+                <AirplaneTicketIcon sx={{ fontSize: 32, color: 'navy' }} />
+                <Typography variant="h5" fontWeight={700} sx={{ color: 'navy' }}>
                     WatExchange
                 </Typography>
             </Box>
