@@ -32,7 +32,7 @@ describe('Story 3 — Study Abroad Contacts List', () => {
   test('AC#1 — renders the contacts page with a heading', async () => {
     render(<ContactsList />);
     await waitFor(() => {
-      expect(screen.getByText(/Study Abroad Contacts/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Study Abroad Contacts/i).length).toBeGreaterThan(0);
     });
   });
 
