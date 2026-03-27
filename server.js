@@ -201,19 +201,11 @@ app.post('/api/users', checkAuth, (req, res) => {
                 console.error('Database error:', error);
                 return res.status(500).json({ error: 'Failed to create user' });
             }
-            const uname = username.trim();
-            connection.query(
-                "INSERT INTO profile_tags (username, tag_type, tag_value) VALUES (?, 'user_type', ?) ON DUPLICATE KEY UPDATE tag_value = ?",
-                [uname, finalUserType, finalUserType],
-                (tagErr) => {
-                    if (tagErr) console.error('Error adding user_type tag:', tagErr);
-                    res.status(201).json({
-                        success: true,
-                        message: 'User created successfully',
-                        username: uname
-                    });
-                }
-            );
+            res.status(201).json({
+                success: true,
+                message: 'User created successfully',
+                username: username.trim()
+            });
         });
     });
 });
