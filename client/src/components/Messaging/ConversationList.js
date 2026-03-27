@@ -37,7 +37,7 @@ const ConversationList = ({ conversations, selectedId, onSelect, onNewMessage })
           justifyContent: 'space-between',
         }}
       >
-        <Typography variant="h6" component="h2">
+        <Typography variant="h6" component="h2" sx={{fontSize: '1.6rem'}}>
           Messages
         </Typography>
         <IconButton

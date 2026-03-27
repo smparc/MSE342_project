@@ -50,7 +50,7 @@ const Search = ({ currentUser, authUser }) => {
         margin: '0 auto',
       }}
     >
-      <Typography variant="h6" sx={{ mb: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2, fontSize: '2rem' }}>
         Search Users
       </Typography>
       <div className="cs-search-row">

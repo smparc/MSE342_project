@@ -175,7 +175,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                         color: '#000',
                                         ":hover": { bgcolor: '#efefef' },
                                         fontWeight: '600',
-                                        fontSize: '14px',
+                                        fontSize: '15px',
                                         borderRadius: '8px',
                                         boxShadow: 'none'
                                     }}
@@ -193,7 +193,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                                         color: '#000',
                                         ":hover": { bgcolor: '#efefef' },
                                         fontWeight: '600',
-                                        fontSize: '14px',
+                                        fontSize: '15px',
                                         borderRadius: '8px',
                                         boxShadow: 'none'
                                     }}

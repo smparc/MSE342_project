@@ -35,6 +35,7 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
             setTempName(displayName)
             // setTempBio(bio)
             return
+        
         }
         setError(false)
 
@@ -176,7 +177,7 @@ const EditProfileModal = ({ open, handleClose, displayName, setDisplayName, bio,
                                 maxRows={5}
                                     // color='blue'
                                 id='edit-bio-field'
-                                    // label="Bio"
+                                    label="Bio"
                                 value={tempBio}
                                 inputProps={{ maxLength: 200, 'aria-label': 'Bio' }}
                                 onChange={(event) => setTempBio(event.target.value)}
