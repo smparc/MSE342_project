@@ -34,6 +34,11 @@ const Messaging = ({ currentUser, authUser }) => {
   const [listLoadError, setListLoadError] = React.useState(false);
   const [newMessageModalOpen, setNewMessageModalOpen] = React.useState(false);
 
+  /** Conversations created via "New message" that have not had a message sent yet */
+  const ephemeralConversationIdsRef = React.useRef(new Set());
+  /** Empty conversations the user navigated away from — hidden until they have a lastMessage from server */
+  const dismissedEmptyConversationIdsRef = React.useRef(new Set());
+
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
   const currentMessages = messages[selectedConversationId] || [];
 
@@ -47,7 +52,12 @@ const Messaging = ({ currentUser, authUser }) => {
         setListLoadError(true);
         return;
       }
-      setConversations(sortConversationsByLastActive(data));
+      const filtered = data.filter((c) => {
+        const empty = !c.lastMessage || !String(c.lastMessage).trim();
+        if (dismissedEmptyConversationIdsRef.current.has(String(c.id)) && empty) return false;
+        return true;
+      });
+      setConversations(sortConversationsByLastActive(filtered));
     } catch (error) {
       //console.error('Error loading conversation list:', error);
       setConversations([]);
@@ -127,15 +137,38 @@ const Messaging = ({ currentUser, authUser }) => {
   }, [loadConversationList]);
 
   const handleSelectConversation = (conversationId) => {
+    const prevId = selectedConversationId;
+    const prevKey = prevId != null ? String(prevId) : '';
+    const nextKey = String(conversationId);
+    const shouldDropEmptyPrev =
+      Boolean(prevKey) &&
+      prevKey !== nextKey &&
+      ephemeralConversationIdsRef.current.has(prevKey);
+
+    if (shouldDropEmptyPrev) {
+      ephemeralConversationIdsRef.current.delete(prevKey);
+      dismissedEmptyConversationIdsRef.current.add(prevKey);
+      setMessages((m) => {
+        const next = { ...m };
+        delete next[prevId];
+        delete next[prevKey];
+        return next;
+      });
+    }
+
     setSelectedConversationId(conversationId);
-    setConversations((prev) =>
-      prev.map((c) => (c.id === conversationId ? { ...c, unread: 0 } : c))
-    );
+    setConversations((prev) => {
+      const list = shouldDropEmptyPrev ? prev.filter((c) => String(c.id) !== prevKey) : prev;
+      return list.map((c) =>
+        String(c.id) === nextKey ? { ...c, unread: 0 } : c
+      );
+    });
   };
 
   const handleConversationCreated = (newConv) => {
     const existing = conversations.find((c) => c.id === newConv.id);
     if (!existing) {
+      ephemeralConversationIdsRef.current.add(String(newConv.id));
       setConversations((prev) =>
         sortConversationsByLastActive([
           {
@@ -173,6 +206,10 @@ const Messaging = ({ currentUser, authUser }) => {
         console.error('Failed to send message:', data);
         return;
       }
+
+      const convKey = String(selectedConversationId);
+      ephemeralConversationIdsRef.current.delete(convKey);
+      dismissedEmptyConversationIdsRef.current.delete(convKey);
 
       const newMessage = {
         id: data.id,
