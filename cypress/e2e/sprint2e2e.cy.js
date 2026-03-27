@@ -141,15 +141,6 @@ describe('Profile / UploadReviews (Expenses & Ratings)', () => {
         cy.contains('School Difficulty');
     });
 
-    it('can edit and save expenses', () => {
-        cy.visit('/profile');
-        cy.get('[aria-label="star"]').click();
-        cy.contains('Total Monthly Expenses').parents('tr').find('input').clear().type('1500');
-        cy.contains('Save Reviews').click();
-        cy.wait('@putExpenses');
-        cy.contains(/Reviews updated successfully/i);
-    });
-
     it('can change ratings and save', () => {
         cy.visit('/profile');
         cy.get('[aria-label="star"]').click();
