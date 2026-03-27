@@ -254,8 +254,8 @@ app.get('/api/users/availability', (req, res) => {
 });
 
 // API to search users (for new message, search page - must be before /api/users/:username)
-// Query: q, exclude, excludeConversations (1), includeTags (1),
-//        faculty, program, grad_year, exchange_term (optional filters; AND logic)
+// Query: q (matches username, display_name, program, destination_country, destination_school, program/country/school tags), exclude, excludeConversations (1), includeTags (1),
+//        faculty, program, grad_year, exchange_term, exchange_country (repeat for OR match), exchange_school (optional filters; AND logic)
 app.get('/api/users/search', (req, res) => {
     const q = (req.query.q || '').trim();
     const exclude = (req.query.exclude || '').trim();
@@ -265,8 +265,13 @@ app.get('/api/users/search', (req, res) => {
     const filterProgram = (req.query.program || '').trim();
     const filterGradYear = (req.query.grad_year || '').trim();
     const filterExchangeTerm = (req.query.exchange_term || '').trim();
+    const rawExchangeCountry = req.query.exchange_country;
+    const filterExchangeCountries = (Array.isArray(rawExchangeCountry) ? rawExchangeCountry : rawExchangeCountry != null ? [rawExchangeCountry] : [])
+        .map((s) => String(s).trim())
+        .filter(Boolean);
+    const filterExchangeSchool = (req.query.exchange_school || '').trim();
 
-    let sql = "SELECT u.username, u.display_name, u.bio, u.faculty, u.program, u.grad_year, u.exchange_term, u.uw_verified FROM users AS u WHERE 1=1";
+    let sql = "SELECT u.username, u.display_name, u.bio, u.faculty, u.program, u.grad_year, u.exchange_term, u.destination_country, u.destination_school, u.uw_verified FROM users AS u WHERE 1=1";
     const params = [];
     if (exclude) {
         sql += " AND u.username != ?";
@@ -284,12 +289,21 @@ app.get('/api/users/search', (req, res) => {
         const pattern = `%${q}%`;
         sql += ` AND (
             u.username LIKE ? OR u.display_name LIKE ? OR u.program LIKE ?
+            OR u.destination_country LIKE ? OR u.destination_school LIKE ?
             OR EXISTS (
                 SELECT 1 FROM profile_tags pt
                 WHERE pt.username = u.username AND pt.tag_type = 'program' AND pt.tag_value LIKE ?
             )
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt
+                WHERE pt.username = u.username AND pt.tag_type = 'country' AND pt.tag_value LIKE ?
+            )
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt
+                WHERE pt.username = u.username AND pt.tag_type = 'school' AND pt.tag_value LIKE ?
+            )
         )`;
-        params.push(pattern, pattern, pattern, pattern);
+        params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
     }
     if (filterFaculty) {
         sql += " AND u.faculty LIKE ?";
@@ -318,6 +332,25 @@ app.get('/api/users/search', (req, res) => {
             AND pt.tag_type IN ('term', 'exchange_term') AND pt.tag_value LIKE ?
         ))`;
         params.push(termPat, termPat);
+    }
+    if (filterExchangeCountries.length) {
+        const ph = filterExchangeCountries.map(() => '?').join(',');
+        sql += ` AND (
+            u.destination_country IN (${ph})
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt WHERE pt.username = u.username
+                AND pt.tag_type = 'country' AND pt.tag_value IN (${ph})
+            )
+        )`;
+        params.push(...filterExchangeCountries, ...filterExchangeCountries);
+    }
+    if (filterExchangeSchool) {
+        const schoolPat = `%${filterExchangeSchool}%`;
+        sql += ` AND (u.destination_school LIKE ? OR EXISTS (
+            SELECT 1 FROM profile_tags pt WHERE pt.username = u.username
+            AND pt.tag_type = 'school' AND pt.tag_value LIKE ?
+        ))`;
+        params.push(schoolPat, schoolPat);
     }
     sql += " ORDER BY u.display_name ASC LIMIT 50";
 
