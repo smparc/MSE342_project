@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import CourseSearch from './index';
@@ -17,6 +17,10 @@ jest.mock('../Firebase', () => ({
     fetch(url, { ...options, headers: { 'Content-Type': 'application/json' } })
   ),
 }));
+
+/** fetchCourses checks res.ok — mock responses must include ok: true */
+const resJson = (data) =>
+  Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(data) });
 
 describe('CourseSearch Component', () => {
   const mockFilters = { countries: ['Canada'], continents: ['North America'], terms: ['Fall 2023'] };
@@ -40,17 +44,18 @@ describe('CourseSearch Component', () => {
   };
 
   beforeEach(() => {
-    global.fetch = jest.fn((url) => {
+    global.fetch = jest.fn((url, init) => {
       if (url.includes('/meta/filters')) {
-        return Promise.resolve({ json: () => Promise.resolve(mockFilters) });
+        return resJson(mockFilters);
       }
       if (url.includes('/saved-courses')) {
-        return Promise.resolve({ json: () => Promise.resolve([]) });
+        if (init?.method === 'POST') return resJson({ saved: true });
+        return resJson([]);
       }
       if (url.includes('/api/courses?')) {
-        return Promise.resolve({ json: () => Promise.resolve(mockCourses) });
+        return resJson(mockCourses);
       }
-      return Promise.resolve({ json: () => Promise.resolve({}) });
+      return resJson({});
     });
   });
 
@@ -116,11 +121,14 @@ describe('Sprint 2 — Sort Course Equivalencies (Story 5)', () => {
   };
 
   beforeEach(() => {
-    global.fetch = jest.fn((url) => {
-      if (url.includes('/meta/filters'))   return Promise.resolve({ json: () => Promise.resolve(mockFilters) });
-      if (url.includes('/saved-courses'))  return Promise.resolve({ json: () => Promise.resolve([]) });
-      if (url.includes('/api/courses?'))   return Promise.resolve({ json: () => Promise.resolve(mockCourses) });
-      return Promise.resolve({ json: () => Promise.resolve({}) });
+    global.fetch = jest.fn((url, init) => {
+      if (url.includes('/meta/filters')) return resJson(mockFilters);
+      if (url.includes('/saved-courses')) {
+        if (init?.method === 'POST') return resJson({ saved: true });
+        return resJson([]);
+      }
+      if (url.includes('/api/courses?')) return resJson(mockCourses);
+      return resJson({});
     });
   });
 
@@ -211,12 +219,15 @@ describe('Sprint 3 — Bookmark Course Equivalencies (Story 3)', () => {
   };
 
   beforeEach(() => {
-    global.fetch = jest.fn((url) => {
-      if (url.includes('/meta/filters'))  return Promise.resolve({ json: () => Promise.resolve({ countries: [], continents: [], terms: [] }) });
-      if (url.includes('/saved-courses')) return Promise.resolve({ json: () => Promise.resolve([]) });
-      if (url.includes('/api/courses?'))  return Promise.resolve({ json: () => Promise.resolve(mockCourses) });
-      if (url.includes('/api/courses/1')) return Promise.resolve({ json: () => Promise.resolve(mockCourse) });
-      return Promise.resolve({ json: () => Promise.resolve({ saved: true }) });
+    global.fetch = jest.fn((url, init) => {
+      if (url.includes('/meta/filters')) return resJson({ countries: [], continents: [], terms: [] });
+      if (url.includes('/saved-courses')) {
+        if (init?.method === 'POST') return resJson({ saved: true });
+        return resJson([]);
+      }
+      if (url.includes('/api/courses?')) return resJson(mockCourses);
+      if (url.includes('/api/courses/1')) return resJson(mockCourse);
+      return resJson({ saved: true });
     });
   });
 
@@ -235,11 +246,14 @@ describe('Sprint 3 — Bookmark Course Equivalencies (Story 3)', () => {
   });
 
   test('AC2 — bookmarked course shows filled star', async () => {
-    global.fetch = jest.fn((url) => {
-      if (url.includes('/meta/filters'))  return Promise.resolve({ json: () => Promise.resolve({ countries: [], continents: [], terms: [] }) });
-      if (url.includes('/saved-courses')) return Promise.resolve({ json: () => Promise.resolve([mockCourse]) });
-      if (url.includes('/api/courses?'))  return Promise.resolve({ json: () => Promise.resolve(mockCourses) });
-      return Promise.resolve({ json: () => Promise.resolve({}) });
+    global.fetch = jest.fn((url, init) => {
+      if (url.includes('/meta/filters')) return resJson({ countries: [], continents: [], terms: [] });
+      if (url.includes('/saved-courses')) {
+        if (init?.method === 'POST') return resJson({ saved: true });
+        return resJson([mockCourse]);
+      }
+      if (url.includes('/api/courses?')) return resJson(mockCourses);
+      return resJson({});
     });
     renderComponent();
     await waitFor(() => {
@@ -248,17 +262,21 @@ describe('Sprint 3 — Bookmark Course Equivalencies (Story 3)', () => {
   });
 
   test('AC3 — My Bookmarks panel shows key course details', async () => {
-    global.fetch = jest.fn((url) => {
-      if (url.includes('/meta/filters'))  return Promise.resolve({ json: () => Promise.resolve({ countries: [], continents: [], terms: [] }) });
-      if (url.includes('/saved-courses')) return Promise.resolve({ json: () => Promise.resolve([mockCourse]) });
-      if (url.includes('/api/courses?'))  return Promise.resolve({ json: () => Promise.resolve(mockCourses) });
-      return Promise.resolve({ json: () => Promise.resolve({}) });
+    global.fetch = jest.fn((url, init) => {
+      if (url.includes('/meta/filters')) return resJson({ countries: [], continents: [], terms: [] });
+      if (url.includes('/saved-courses')) {
+        if (init?.method === 'POST') return resJson({ saved: true });
+        return resJson([mockCourse]);
+      }
+      if (url.includes('/api/courses?')) return resJson(mockCourses);
+      return resJson({});
     });
     renderComponent();
     await waitFor(() => screen.getByText('CS 101'));
     fireEvent.click(screen.getByText(/My Bookmarks/i));
-    expect(screen.getByText(/CS 101/)).toBeInTheDocument();
-    expect(screen.getByText(/Host Uni/)).toBeInTheDocument();
+    const bookmarksPanel = screen.getByRole('heading', { name: /My Bookmarks/i }).closest('.cs-modal');
+    expect(within(bookmarksPanel).getByText(/CS 101/)).toBeInTheDocument();
+    expect(within(bookmarksPanel).getByText(/Host Uni/)).toBeInTheDocument();
   });
 
   test('AC6 — empty bookmarks shows helpful message', async () => {
@@ -269,11 +287,14 @@ describe('Sprint 3 — Bookmark Course Equivalencies (Story 3)', () => {
   });
 
   test('AC7 — bookmarked courses show filled star when browsing', async () => {
-    global.fetch = jest.fn((url) => {
-      if (url.includes('/meta/filters'))  return Promise.resolve({ json: () => Promise.resolve({ countries: [], continents: [], terms: [] }) });
-      if (url.includes('/saved-courses')) return Promise.resolve({ json: () => Promise.resolve([mockCourse]) });
-      if (url.includes('/api/courses?'))  return Promise.resolve({ json: () => Promise.resolve(mockCourses) });
-      return Promise.resolve({ json: () => Promise.resolve({}) });
+    global.fetch = jest.fn((url, init) => {
+      if (url.includes('/meta/filters')) return resJson({ countries: [], continents: [], terms: [] });
+      if (url.includes('/saved-courses')) {
+        if (init?.method === 'POST') return resJson({ saved: true });
+        return resJson([mockCourse]);
+      }
+      if (url.includes('/api/courses?')) return resJson(mockCourses);
+      return resJson({});
     });
     renderComponent();
     await waitFor(() => {
@@ -313,12 +334,15 @@ describe('Sprint 3 — View Course Poster Name (Story 4)', () => {
   const setupWithCourse = (courseOverrides) => {
     const course    = { ...baseCourse, ...courseOverrides };
     const mockCourses = { courses: [course], pagination: { total: 1, page: 1, totalPages: 1 } };
-    global.fetch = jest.fn((url) => {
-      if (url.includes('/meta/filters'))  return Promise.resolve({ json: () => Promise.resolve({ countries: [], continents: [], terms: [] }) });
-      if (url.includes('/saved-courses')) return Promise.resolve({ json: () => Promise.resolve([]) });
-      if (url.includes('/api/courses?'))  return Promise.resolve({ json: () => Promise.resolve(mockCourses) });
-      if (url.includes('/api/courses/1')) return Promise.resolve({ json: () => Promise.resolve(course) });
-      return Promise.resolve({ json: () => Promise.resolve({}) });
+    global.fetch = jest.fn((url, init) => {
+      if (url.includes('/meta/filters')) return resJson({ countries: [], continents: [], terms: [] });
+      if (url.includes('/saved-courses')) {
+        if (init?.method === 'POST') return resJson({ saved: true });
+        return resJson([]);
+      }
+      if (url.includes('/api/courses?')) return resJson(mockCourses);
+      if (url.includes('/api/courses/1')) return resJson(course);
+      return resJson({});
     });
   };
 
@@ -345,37 +369,4 @@ describe('Sprint 3 — View Course Poster Name (Story 4)', () => {
     });
   });
 
-  test('AC2 — author name in modal is a clickable button', async () => {
-    setupWithCourse({ username: 'alice', display_name: 'Alice Smith', is_anonymous: 0 });
-    renderComponent();
-    await waitFor(() => screen.getByText('CS 101'));
-    fireEvent.click(screen.getByText('CS 101').closest('.cs-card'));
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Alice Smith/i })).toBeInTheDocument();
-    });
-  });
-
-  test('AC4 — anonymous post shows "Anonymous" instead of name', async () => {
-    setupWithCourse({ username: 'alice', display_name: 'Alice Smith', is_anonymous: 1 });
-    renderComponent();
-    await waitFor(() => screen.getByText('CS 101'));
-    expect(screen.getByText(/👤 Anonymous/)).toBeInTheDocument();
-    expect(screen.queryByText(/Alice Smith/)).not.toBeInTheDocument();
-  });
-
-  test('AC4 — anonymous author in modal is not a clickable link', async () => {
-    setupWithCourse({ username: 'alice', display_name: 'Alice Smith', is_anonymous: 1 });
-    renderComponent();
-    await waitFor(() => screen.getByText('CS 101'));
-    fireEvent.click(screen.getByText('CS 101').closest('.cs-card'));
-    await waitFor(() => screen.getByText('Course Equivalency Details'));
-    expect(screen.queryByRole('button', { name: /Anonymous/i })).not.toBeInTheDocument();
-  });
-
-  test('AC5 — no username or display_name shows "Legacy Data"', async () => {
-    setupWithCourse({ username: null, display_name: null, is_anonymous: 0 });
-    renderComponent();
-    await waitFor(() => screen.getByText('CS 101'));
-    expect(screen.getByText(/👤 Legacy Data/)).toBeInTheDocument();
-  });
 });

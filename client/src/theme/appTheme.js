@@ -34,7 +34,8 @@ const appTheme = createTheme({
       disabled: '#888888',
     },
     background: {
-      default: '#f5f6fa',
+      // default: '#f5f6fa',
+      default: '#FCFCFC',
       paper: '#ffffff',
     },
     divider: '#e8eaf0',

@@ -20,7 +20,7 @@ import { useTheme } from '@mui/material/styles';
 import UserTypeSelect from './UserTypeSelect';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket';
 
-const SignIn = ({ firebase }) => {
+const SignIn = ({ firebase, onSignupComplete }) => {
     // Form fields
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -79,6 +79,8 @@ const SignIn = ({ firebase }) => {
         }
         return true;
     };
+    
+
 
     // Step 1 -> Step 2 (profile info): ensure email and username are not already in DB
     const handleNextToProfile = async (event) => {
@@ -159,7 +161,12 @@ const SignIn = ({ firebase }) => {
                 throw new Error(data.error || 'Failed to create user profile');
             }
 
-            window.location.href = '/';
+            if (onSignupComplete) {
+                onSignupComplete()
+            }
+
+            console.log('[SignIn] Sign-up complete! Letting PrivateRoute handle redirect.');
+            // window.location.href = '/';
         } catch (err) {
             setError({ message: getErrorMessage(err) });
         } finally {
@@ -196,7 +203,7 @@ const SignIn = ({ firebase }) => {
 
         try {
             await firebase.doSignInWithEmailAndPassword(email, password);
-            navigate('/');
+            console.log('[SignIn] Sign-in complete! Letting PrivateRoute handle redirect.');
         } catch (err) {
             setError({ message: getErrorMessage(err) });
         } finally {
@@ -509,7 +516,7 @@ const SignIn = ({ firebase }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 45%, #3d3d6b 100%)`,
+                background: `radial-gradient(circle at center, rgb(152, 187, 234) 0%, ${theme.palette.background.default} 100%)`,
                 py: 4,
                 position: 'relative',
             }}
@@ -524,8 +531,8 @@ const SignIn = ({ firebase }) => {
                     gap: 1,
                 }}
             >
-                <AirplaneTicketIcon sx={{ fontSize: 32, color: 'white' }} />
-                <Typography variant="h5" fontWeight={700} sx={{ color: 'white' }}>
+                <AirplaneTicketIcon sx={{ fontSize: 32, color: 'navy' }} />
+                <Typography variant="h5" fontWeight={700} sx={{ color: 'navy' }}>
                     WatExchange
                 </Typography>
             </Box>

@@ -2,6 +2,7 @@ import * as React from 'react'
 // import ProfileHeader from './ProfileHeader'
 import { Tabs, Tab } from '@mui/material'
 import { GridView, FolderSpecialOutlined, Star } from '@mui/icons-material'
+import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
 
 const SectionTab = ({ tabIndex, setTabIndex }) => {
 
@@ -21,11 +22,10 @@ const SectionTab = ({ tabIndex, setTabIndex }) => {
                 TabIndicatorProps={{ sx: { background: 'black' } }}
                 sx={{ '& .Mui-selected': { filter: 'invert(50%) brightness(20%)' } }}
             >
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<GridView sx={{fontSize: '26px'}} />} aria-label="grid" />
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<FolderSpecialOutlined sx={{fontSize: '28px'}} />} aria-label="books" />
-                <Tab disableRipple sx={{ marginX: '75px' }} icon={<Star sx={{fontSize: '26px'}} />} aria-label="star" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<GridView sx={{fontSize: '26px', stroke: 'white', strokeWidth: 0.2}} />} aria-label="grid" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<ClassOutlinedIcon sx={{fontSize: '28px', stroke: 'white', strokeWidth: 0.2}} />} aria-label="books" />
+                <Tab disableRipple sx={{ marginX: '75px' }} icon={<Star sx={{fontSize: '26px', stroke: 'white', strokeWidth: 0.2}} />} aria-label="star" />
             </Tabs>
-
         </>
     )
 }

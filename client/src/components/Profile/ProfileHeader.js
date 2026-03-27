@@ -1,7 +1,8 @@
-// include profile picture, bio, edit profile button
+// // include profile picture, bio, edit profile button
 
 import * as React from 'react'
-import { Grid, Typography, Box, Button, Snackbar, Alert, Chip, Divider } from '@mui/material'
+import { Grid, Typography, Box, Button, Snackbar, Alert, Chip, Stack } from '@mui/material'
+import VerifiedIcon from '@mui/icons-material/Verified'
 import AvatarDisplay from './AvatarDisplay'
 import EditProfileModal from './EditProfileModal'
 import EditTagsModal from './EditTagsModal'
@@ -27,6 +28,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
         setProfileChanged(false)
     };
 
+    // AI used to help IMPROVE already made UI 
     return (
         <>
             {/* <Grid container
@@ -40,7 +42,7 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
             {/* later move container to index and add this profile header as an item */}
             {/* profile card */}
             <Grid container justifyContent={'center'}>
-                <Grid item xs={12} sm={10} md={8} lg={7} sx={{lg: {maxWidth: '735px'}}} minWidth={'680px'} maxWidth={'800px'}
+                <Grid item xs={12} sm={10} md={8} lg={7} sx={{ lg: { maxWidth: '735px' } }} minWidth={'680px'} maxWidth={'800px'}
                 >
                     <Grid container
                         columnGap={'40px'}
@@ -70,117 +72,136 @@ const ProfileHeader = ({ username, displayName, setDisplayName, bio, setBio, fac
                             </Box>
                         </Grid>
 
-                        {/* AI used for help with wrapping */}
-                        <Grid item xs width='100%' sx={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                       
+                        <Grid item xs sx={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                            <Stack spacing={1} alignItems="flex-start">
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <Typography fontWeight={700} fontSize={28} sx={{ color: '#1a1a1a' }}>
+                                        {username}
+                                    </Typography>
+                                    {uwVerified && (
+                                        <VerifiedIcon sx={{ color: '#0095f6', fontSize: 24 }} titleAccess="UW Verified" />
+                                    )}
+                                </Stack>
 
-                            <Grid container
-                                flexDirection={'column'}
-                                alignItems='flex-start'
-                                justifyContent={'space-evenly'}
-                                sx={{ textWrap: 'wrap', height: '100%' }}
-                                rowGap={'4px'}>
+                                <Typography fontWeight={600} fontSize={16} sx={{ color: '#262626' }}>
+                                    {displayName}
+                                </Typography>
 
-                                <Grid item mb={'10px'}>
-                                    <Typography fontWeight={700} fontSize={24}>{username}</Typography>
-                                </Grid>
-                                <Grid item
-                                // border={'1px solid black'}
+                                <Typography
+                                    fontWeight={400}
+                                    fontSize={15}
+                                    sx={{
+                                        color: '#262626',
+                                        whiteSpace: 'pre-line',
+                                        wordBreak: 'break-word',
+                                        lineHeight: 1.5,
+                                        mt: 0.5
+                                    }}
                                 >
-                                    <Grid container flexDirection={'column'} justifyContent={'space-between'} sx={{ height: '100%' }}>
-
-                                        <Grid item mb={'12px'}>
-                                            <Typography fontWeight={400} fontSize={16}>{displayName}</Typography>
-                                        </Grid>
-                                        <Grid item mb={'12px'}>
-                                            <Typography fontWeight={400} fontSize={16} sx={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>{bio}</Typography>
-                                        </Grid>
-
-
-                                    </Grid>
-                                </Grid>
-                            </Grid>
+                                    {bio}
+                                </Typography>
+                            </Stack>
                         </Grid>
 
 
                         <Grid item xs={12}>
-                            {/* try here */}
-                            <Grid item>
-                                <Grid container spacing={2} direction={'column'}>
-                                    {/* school tags */}
-                                    <Grid item>
-                                        <Grid container spacing={1}>
-                                            <Grid item>
-                                                <Typography fontWeight={400}>UW term:</Typography>
-                                            </Grid>
-                                            <Grid item>
-                                                {uwVerified && <Grid item><Chip label="UW Verified" size="small" sx={{ bgcolor: '#E8F5E9', color: '#2E7D32', border: '1px solid #A5D6A7', fontWeight: '500' }} /></Grid>}
-                                            </Grid>
-                                            <Grid item>
-                                                {faculty && <Grid item><Chip label={faculty} size="small" sx={{ bgcolor: '#FFF9C4', color: '#827717', border: '1px solid #FFF176', fontWeight: '500' }} /></Grid>}
-                                            </Grid>
-                                            <Grid item>
-                                                {program && <Grid item><Chip label={program} size="small" sx={{ bgcolor: '#FCE4EC', color: '#C2185B', border: '1px solid #F8BBD0', fontWeight: '500' }} /></Grid>}
-                                            </Grid>
-                                            <Grid item>
-                                                {gradYear && <Grid item><Chip label={`Class of ${gradYear}`} size="small" sx={{ bgcolor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2', fontWeight: '500' }} /></Grid>}
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
-                                    {/* <Grid item>
-                                        <Divider variant="middle" />
-                                    </Grid> */}
-                                    <Grid item>
-                                        <Grid container spacing={1}>
-                                            <Grid item>
-                                                <Typography fontWeight={400}>Exchange term:</Typography>
-                                            </Grid>
-                                            <Grid item>
-                                                {exchangeTerm && <Grid item><Chip label={`${exchangeTerm} Exchange`} size="small" sx={{ bgcolor: '#E3F2FD', color: '#1565C0', border: '1px solid #BBDEFB', fontWeight: '500' }} /></Grid>}
-                                            </Grid>
-                                            <Grid item>
-                                                {exchangeCountry && <Grid item><Chip label={exchangeCountry} size="small" sx={{ bgcolor: '#FFF9C4', color: '#827717', border: '1px solid #FFF176', fontWeight: '500' }} /></Grid>}
-                                            </Grid>
-                                            <Grid item>
-                                                {exchangeSchool && <Grid item><Chip label={exchangeSchool} size="small" sx={{ bgcolor: '#FCE4EC', color: '#C2185B', border: '1px solid #F8BBD0', fontWeight: '500' }} /></Grid>}
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                            <Grid container columnGap={'10px'} mt={'30px'}>
-                                <Grid item xs>
-                                    <Button fullWidth variant='contained'
-                                        id="edit-profile-button"
+                            <Stack spacing={2.5} mt={1}>
+                                {/* waterloo tags */}
+                                <Stack spacing={1}>
+                                    <Typography
+                                        variant="overline"
                                         sx={{
-                                            bgcolor: '#F0F2F5',
-                                            height: '44px',
-                                            textTransform: 'none',
-                                            color: 'black', ":hover": { bgcolor: '#E7EAEE' },
-                                            fontWeight: '500', fontSize: '16px',
-                                            borderRadius: '12px'
+                                            fontSize: '10px',
+                                            fontWeight: 800,
+                                            color: '#666',
+                                            letterSpacing: '0.1em',
+                                            lineHeight: 1,
+                                            mb: 0.5,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
                                         }}
-                                        disableElevation={true}
-                                        onClick={() => setModalStatus(true)}>
-                                        Edit Profile
-                                    </Button>
-                                </Grid>
-                                <Grid item xs>
-                                    <Button fullWidth variant='contained'
-                                        id="edit-tags-button"
+                                    >
+                                        WATERLOO
+                                        <Box sx={{ flex: 1, height: '1px', bgcolor: '#efefef' }} />
+                                    </Typography>
+                                    <Stack direction="row" flexWrap="wrap" gap={2}>
+                                        {uwVerified && <Chip icon={<VerifiedIcon style={{ fontSize: 16, color: '#2E7D32' }} />} label="UW Verified" size="small" sx={{ bgcolor: '#edf7ed', color: '#1e4620', fontWeight: '600', border: '1px solid #c8e6c9' }} />}
+                                        {faculty && <Chip label={faculty} size="small" sx={{ bgcolor: '#fffde7', color: '#5d4037', fontWeight: '600', border: '1px solid #fff59d' }} />}
+                                        {program && <Chip label={program} size="small" sx={{ bgcolor: '#fce4ec', color: '#880e4f', fontWeight: '600', border: '1px solid #f8bbd0' }} />}
+                                        {gradYear && <Chip label={`Class of ${gradYear}`} size="small" sx={{ bgcolor: '#e3f2fd', color: '#0d47a1', fontWeight: '600', border: '1px solid #bbdefb' }} />}
+                                    </Stack>
+                                </Stack>
+
+                                {/* exchange */}
+                                <Stack spacing={1}>
+                                    <Typography
+                                        variant="overline"
                                         sx={{
-                                            bgcolor: '#F0F2F5',
-                                            height: '44px',
-                                            textTransform: 'none',
-                                            color: 'black', ":hover": { bgcolor: '#E7EAEE' },
-                                            fontWeight: '500', fontSize: '16px',
-                                            borderRadius: '12px'
+                                            fontSize: '10px',
+                                            fontWeight: 800,
+                                            color: '#666',
+                                            letterSpacing: '0.1em',
+                                            lineHeight: 1,
+                                            mb: 0.5,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
                                         }}
-                                        disableElevation={true}
-                                        onClick={() => setTagsModalStatus(true)}>
-                                        {(faculty || program || gradYear || exchangeTerm) ? 'Edit Tags' : 'Add Tags'}
-                                    </Button>
-                                </Grid>
-                            </Grid>
+                                    >
+                                        EXCHANGE
+                                        <Box sx={{ flex: 1, height: '1px', bgcolor: '#efefef' }} />
+                                    </Typography>
+                                    <Stack direction="row" flexWrap="wrap" gap={1}>
+                                        {exchangeTerm && <Chip label={`${exchangeTerm} Exchange`} size="small" sx={{ bgcolor: '#f3e5f5', color: '#4a148c', fontWeight: '600', border: '1px solid #e1bee7' }} />}
+                                        {exchangeCountry && <Chip label={exchangeCountry} size="small" sx={{ bgcolor: '#e0f2f1', color: '#004d40', fontWeight: '600', border: '1px solid #b2dfdb' }} />}
+                                        {exchangeSchool && <Chip label={exchangeSchool} size="small" sx={{ bgcolor: '#fff3e0', color: '#e65100', fontWeight: '600', border: '1px solid #ffe0b2' }} />}
+                                    </Stack>
+                                </Stack>
+                            </Stack>
+
+                            {/* modal buttons */}
+                            <Stack direction="row" spacing={1.5} mt={4}>
+                                <Button
+                                    fullWidth
+                                    variant='contained'
+                                    id="edit-profile-button"
+                                    sx={{
+                                        bgcolor: 'rgb(244, 244, 244)',
+                                        height: '38px',
+                                        textTransform: 'none',
+                                        color: '#000',
+                                        border: '1px solid #efefef',
+                                        ":hover": { bgcolor: '#efefef' },
+                                        fontWeight: '600',
+                                        fontSize: '15px',
+                                        borderRadius: '8px',
+                                        boxShadow: 'none'
+                                    }}
+                                    onClick={() => setModalStatus(true)}>
+                                    Edit Profile
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    variant='contained'
+                                    id="edit-tags-button"
+                                    sx={{
+                                        bgcolor: 'rgb(244, 244, 244)',
+                                        height: '38px',
+                                        textTransform: 'none',
+                                        color: '#000',
+                                        border: '1px solid #efefef',
+                                        ":hover": { bgcolor: '#efefef' },
+                                        fontWeight: '600',
+                                        fontSize: '15px',
+                                        borderRadius: '8px',
+                                        boxShadow: 'none'
+                                    }}
+                                    onClick={() => setTagsModalStatus(true)}>
+                                    {(faculty || program || gradYear || exchangeTerm) ? 'Edit Tags' : 'Add Tags'}
+                                </Button>
+                            </Stack>
                         </Grid>
                         <EditProfileModal open={modalStatus} handleClose={() => setModalStatus(false)} displayName={displayName} setDisplayName={setDisplayName} bio={bio} setBio={setBio} username={username} faculty={faculty} program={program} gradYear={gradYear} exchangeTerm={exchangeTerm} profileChanged={profileChanged} setProfileChanged={setProfileChanged} firebase={firebase} />
                         <EditTagsModal

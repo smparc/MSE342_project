@@ -6,7 +6,13 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
-import { UserSearchCard, UserProfileModal, SearchFiltersBar, useUserSearch } from '../UserSearch';
+import {
+  UserSearchCard,
+  UserProfileModal,
+  SearchFiltersBar,
+  emptyFilters,
+  useUserSearch,
+} from '../UserSearch';
 import { FirebaseContext, authFetch } from '../Firebase';
 import '../CourseSearch/CourseSearch.css';
 
@@ -14,10 +20,7 @@ const Search = ({ currentUser, authUser }) => {
   const firebase = React.useContext(FirebaseContext);
   const currentUsername = currentUser || authUser?.email?.split('@')[0] || '';
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [filters, setFilters] = React.useState({
-    faculty: '',
-    gradYear: '',
-  });
+  const [filters, setFilters] = React.useState({ ...emptyFilters });
   const [selectedUser, setSelectedUser] = React.useState(null);
 
   const { users, loading, error, searchUsers } = useUserSearch({
@@ -29,13 +32,14 @@ const Search = ({ currentUser, authUser }) => {
     fetchAllWhenEmpty: true,
     facultyFilter: filters.faculty,
     gradYearFilter: filters.gradYear,
+    exchangeTermFilter: filters.exchangeTerm,
   });
 
   React.useEffect(() => {
     const debounceMs = searchQuery.trim() ? 300 : 0;
     const timer = setTimeout(searchUsers, debounceMs);
     return () => clearTimeout(timer);
-  }, [searchQuery, filters.faculty, filters.gradYear, searchUsers]);
+  }, [searchQuery, filters.faculty, filters.gradYear, filters.exchangeTerm, searchUsers]);
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
@@ -50,13 +54,13 @@ const Search = ({ currentUser, authUser }) => {
         margin: '0 auto',
       }}
     >
-      <Typography variant="h6" sx={{ mb: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2, fontSize: '2rem' }}>
         Search Users
       </Typography>
       <div className="cs-search-row">
         <TextField
           fullWidth
-          placeholder="Search by name, username, or program…"
+          placeholder="Search by name, username, program, exchange country, or exchange university…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
@@ -74,7 +78,7 @@ const Search = ({ currentUser, authUser }) => {
       <SearchFiltersBar
         filters={filters}
         onChange={setFilters}
-        onClear={() => setFilters({ faculty: '', gradYear: '' })}
+        onClear={() => setFilters({ ...emptyFilters })}
       />
 
       {error && (

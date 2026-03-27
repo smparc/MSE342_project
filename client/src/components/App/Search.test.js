@@ -37,6 +37,22 @@ const renderSearch = (props = {}) =>
     </MemoryRouter>
   );
 
+function mockFetchForSearch(searchJson) {
+  return jest.fn((url) => {
+    const s = typeof url === 'string' ? url : '';
+    if (s.includes('/api/users/search')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => searchJson,
+      });
+    }
+    return Promise.resolve({
+      ok: true,
+      json: async () => [],
+    });
+  });
+}
+
 describe('Search', () => {
   const mockSearchResult = [
     {
@@ -53,10 +69,7 @@ describe('Search', () => {
   ];
 
   beforeEach(() => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [],
-    });
+    global.fetch = mockFetchForSearch([]);
   });
 
   afterEach(() => {
@@ -68,7 +81,7 @@ describe('Search', () => {
       renderSearch();
       expect(screen.getByRole('heading', { name: /Search Users/i })).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText(/Search by name, username, or program/i)
+        screen.getByPlaceholderText(/Search by name, username, program, exchange country, or exchange university/i)
       ).toBeInTheDocument();
     });
 
@@ -87,23 +100,22 @@ describe('Search', () => {
       );
     });
 
-    it('renders filter controls (faculty + class, Course Search style)', () => {
+    it('renders filter controls (faculty, class, exchange term)', () => {
       renderSearch();
       expect(screen.getByLabelText(/^Faculty$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Class \(graduation year\)/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^Exchange term$/i)).toBeInTheDocument();
     });
-
   });
 
   describe('search by text', () => {
     it('calls GET /api/users/search with q after the user types (debounced)', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
-      const input = screen.getByPlaceholderText(/Search by name, username, or program/i);
+      const input = screen.getByPlaceholderText(
+        /Search by name, username, program, exchange country, or exchange university/i
+      );
       fireEvent.change(input, { target: { value: 'john' } });
 
       await waitFor(
@@ -121,15 +133,15 @@ describe('Search', () => {
     });
 
     it('shows user cards when the API returns matches', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
-      fireEvent.change(screen.getByPlaceholderText(/Search by name, username, or program/i), {
-        target: { value: 'jo' },
-      });
+      fireEvent.change(
+        screen.getByPlaceholderText(/Search by name, username, program, exchange country, or exchange university/i),
+        {
+          target: { value: 'jo' },
+        }
+      );
 
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -138,10 +150,7 @@ describe('Search', () => {
     });
 
     it('shows empty message when API returns no users', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => [],
-      });
+      global.fetch = mockFetchForSearch([]);
 
       renderSearch();
 
@@ -150,16 +159,16 @@ describe('Search', () => {
       });
     });
 
-    it('sends typed program text as q (server matches username, name, and program)', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+    it('sends typed program text as q (server matches username, name, program, and exchange fields)', async () => {
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
-      fireEvent.change(screen.getByPlaceholderText(/Search by name, username, or program/i), {
-        target: { value: 'Biology' },
-      });
+      fireEvent.change(
+        screen.getByPlaceholderText(/Search by name, username, program, exchange country, or exchange university/i),
+        {
+          target: { value: 'Biology' },
+        }
+      );
 
       await waitFor(
         () => {
@@ -178,10 +187,7 @@ describe('Search', () => {
 
   describe('filters', () => {
     it('calls GET /api/users/search with faculty when a faculty is selected', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
       fireEvent.change(screen.getByLabelText(/^Faculty$/i), {
@@ -201,10 +207,7 @@ describe('Search', () => {
     });
 
     it('calls GET /api/users/search with grad_year when class is selected', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
       fireEvent.change(screen.getByLabelText(/Class \(graduation year\)/i), {
@@ -218,6 +221,28 @@ describe('Search', () => {
           );
           expect(searchUrl).toBeDefined();
           expect(searchUrl[0]).toMatch(/[?&]grad_year=2026/);
+        },
+        { timeout: 4000 }
+      );
+    });
+
+    it('calls GET /api/users/search with exchange_term when exchange term is selected', async () => {
+      global.fetch = mockFetchForSearch(mockSearchResult);
+
+      renderSearch();
+      fireEvent.change(screen.getByLabelText(/^Exchange term$/i), {
+        target: { value: '3A' },
+      });
+
+      await waitFor(
+        () => {
+          const urls = global.fetch.mock.calls
+            .map(([u]) => u)
+            .filter((u) => typeof u === 'string' && u.includes('/api/users/search'));
+          expect(urls.length).toBeGreaterThan(0);
+          const lastUrl = urls[urls.length - 1];
+          const u = new URL(lastUrl, 'http://localhost');
+          expect(u.searchParams.get('exchange_term')).toBe('3A');
         },
         { timeout: 4000 }
       );

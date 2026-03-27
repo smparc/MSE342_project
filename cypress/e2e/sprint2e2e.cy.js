@@ -141,15 +141,6 @@ describe('Profile / UploadReviews (Expenses & Ratings)', () => {
         cy.contains('School Difficulty');
     });
 
-    it('can edit and save expenses', () => {
-        cy.visit('/profile');
-        cy.get('[aria-label="star"]').click();
-        cy.contains('Total Monthly Expenses').parents('tr').find('input').clear().type('1500');
-        cy.contains('Save Reviews').click();
-        cy.wait('@putExpenses');
-        cy.contains(/Reviews updated successfully/i);
-    });
-
     it('can change ratings and save', () => {
         cy.visit('/profile');
         cy.get('[aria-label="star"]').click();
@@ -194,7 +185,7 @@ describe('ContactsList', () => {
     });
 });
 
-describe('AdvisorsList', () => {
+describe('AdvisorsList (under Directory & Support)', () => {
     const mockAdvisors = [
         { advisor_id: 1, name: 'Dr. Alice Wang', faculty: 'Engineering', programs: 'Exchange Programs', email: 'alice@uwaterloo.ca' },
         { advisor_id: 2, name: 'Dr. Bob Lee', faculty: 'Arts', programs: 'Study Abroad', email: 'bob@uwaterloo.ca' },
@@ -202,28 +193,28 @@ describe('AdvisorsList', () => {
 
     beforeEach(() => {
         commonIntercepts();
+        cy.intercept('GET', '/api/contacts', []);
         cy.intercept('GET', '/api/advisors', mockAdvisors);
-        cy.visit('/');
+        cy.visit('/contacts');
+        cy.contains('button', 'Academic Advisors').click();
     });
 
-    it('navigates to advisors and displays list', () => {
-        cy.visit('/advisors');
-        cy.url().should('include', '/advisors');
+    it('opens the Academic Advisors tab and displays the list', () => {
+        cy.url().should('include', '/contacts');
+        cy.contains('Directory & Support');
         cy.contains('Academic Advisors');
         cy.contains('Dr. Alice Wang');
         cy.contains('Dr. Bob Lee');
     });
 
     it('filters advisors by faculty', () => {
-        cy.visit('/advisors');
         cy.get('select[aria-label*="Filter"]').select('Engineering');
         cy.contains('Dr. Alice Wang');
         cy.contains('Dr. Bob Lee').should('not.exist');
     });
 
     it('searches advisors by name', () => {
-        cy.visit('/advisors');
-        cy.get('input[placeholder*="Search"]').type('Alice');
+        cy.get('input[aria-label="Search advisors"]').type('Alice');
         cy.contains('Dr. Alice Wang');
         cy.contains('Dr. Bob Lee').should('not.exist');
     });

@@ -150,6 +150,7 @@ Created Sprint 1 Branch -->
 * **Searchable Database:** Browse a searchable database of course equivalencies to see which foreign credits will be approved for your degree.
 * **Credit Verification:** Alumni can upload successfully matched courses to the database to help future students verify their credits.
 * **Advanced Filtering:** Filter past equivalencies by faculty, exchange term, school, country, and continent.
+* **Sorting & Bookmarks:** Sort equivalencies (e.g. by recency, rating, university) and save courses to a personal shortlist where supported.
 
 ### 👤 Profile & Personalization
 * **Dynamic Bios:** Create and edit personal bios.
@@ -157,10 +158,25 @@ Created Sprint 1 Branch -->
 * **Experience Sharing:** Alumni can post travel photos
 * **Course Management:** Alumni can share, edit, and delete the specific courses they took directly on their profile.
 
-### 🔍 Networking & Messaging
-* **User Search:** Search for users by name, school, country, or UW faculty to find relevant information.
-* **Information Transparency:** View another user's program, year, destination country, and school tags.
-* **Direct Messaging:** Contact exchange alumni directly from their profile and access a full chat history for follow-up questions.
+### 🔍 User Search
+* **Discover Users:** Dedicated Search area to find other students with filters for faculty, class year, and exchange term, plus a text search across name, username, program, exchange country, and exchange university.
+* **Rich Cards:** Results show faculty, program, class year, exchange term, destination country, and host school (with profile tags when present).
+* **Profile Preview:** Open a user from results to see more detail and start a conversation without leaving the flow.
+
+### 📇 Directory & Support
+* **Study Abroad Contacts:** Searchable contact cards for study abroad / international office staff (name, role, department, faculty, email).
+* **Academic Advisors:** Filter advisors by faculty and search by name or program; advisor cards show programs and contact details.
+
+### 📅 Exchange Calendar
+* **Deadline Calendar:** Month view of application and milestone deadlines with status styling (upcoming, due soon, overdue, complete).
+* **Filters:** Narrow milestones by program/type and destination (where applicable).
+* **Application Checklist:** Tab for checklist-style items, progress, and item management aligned with the exchange timeline.
+* **Export:** Download milestones as an `.ics` file for external calendars.
+
+### 💬 Messaging & Conversations
+* **Direct Messaging:** Full conversation history with other users; start chats from profiles or search.
+* **New Conversation:** Create-message flow picks a user and opens a thread; empty drafts are cleaned up when leaving the thread without sending.
+* **Message Times:** Conversation previews and timestamps use a consistent Eastern (North America) display timezone.
 
 ### 🔐 Authentication & Access Control
 * **Secure Sign-In:** Users can create accounts and sign in using email authentication.
@@ -183,7 +199,6 @@ Created Sprint 1 Branch -->
 
 | Team Member | Responsibility Area |
 | :--- | :--- |
-@@ -180,10 +189,20 @@ Created Sprint 1 Branch -->
 | **Elly** | Messaging Systems (Direct Messaging, Chat History) |
 | **Cindy** | User search Functionality |
 
@@ -194,16 +209,14 @@ Created Sprint 1 Branch -->
 | **Zeina** | Profile Management (Reviews, Financial Planning) |
 | **Matthew** | Course Equivalency (Sort) & Calendar/Resources (Contacts, Timeline)|
 | **Elly** | Sign In (Authentication, Sign Up, Sign In) |
-| **Cindy** | User search Functionality |
 
 ### (Sprint 3)
 
 | Team Member | Responsibility Area |
 | :--- | :--- |
-| **Zeina** |  |
-| **Matthew** | |
-| **Elly** |  |
-| **Cindy** |  |
+| **Zeina** | Landing page, Profile Management (UI updates, delete account, profile tags) |
+| **Matthew** | Calendar (Application checklist, Calendar view), Support (updated UI with tabs), Bookmark courses |
+| **Elly** | Messaging (Start new message, notifications), Search (search by user, filters, message from search) |
 
 ---
 
@@ -213,7 +226,12 @@ AI declaration:
 Zeina - Used for occasional debugging (syntax errors, package/networking errors, etc.)
 * Used for fixing styling on some MUI components (ex. i learned from AI that a particular component comes with default styling)
 * Used to determine that I need to use Multer for posting photos
-@@ -195,3 +214,7 @@ Cindy - Used for debugging and design aid
+* Used for UI improvements (base UI was already established and coded previously)
+* Used for help with developing landing page
+* Used for help routing landing page issues
+
+
+Cindy - Used for debugging and design aid
 * Used for making UI (e.g. flex box size) of some new components (e.g. loading screen) look more cohesive with existing components 
 * Used to make mock data for jest tests 
 * Used to help debug the syntax for the API url expression used in the stringMatching test 
