@@ -261,9 +261,31 @@ app.get('/api/users/availability', (req, res) => {
     });
 });
 
+// Distinct countries for user search multiselect (users.destination_country, profile_tags country, course_equivalencies.country)
+app.get('/api/users/search/exchange-countries', (req, res) => {
+    const sql = `
+        SELECT DISTINCT c FROM (
+            SELECT destination_country AS c FROM users WHERE destination_country IS NOT NULL AND destination_country != ''
+            UNION
+            SELECT tag_value AS c FROM profile_tags WHERE tag_type = 'country' AND tag_value IS NOT NULL AND tag_value != ''
+            UNION
+            SELECT country AS c FROM course_equivalencies WHERE country IS NOT NULL AND country != ''
+        ) AS t
+        ORDER BY c ASC
+    `;
+    connection.query(sql, [], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        const countries = (results || []).map((row) => row.c).filter(Boolean);
+        res.json({ countries });
+    });
+});
+
 // API to search users (for new message, search page - must be before /api/users/:username)
 // Query: q, exclude, excludeConversations (1), includeTags (1),
-//        faculty, program, grad_year, exchange_term, exchange_country, exchange_school (optional filters; AND logic)
+//        faculty, program, grad_year, exchange_term, exchange_country (repeat for OR match), exchange_school (optional filters; AND logic)
 app.get('/api/users/search', (req, res) => {
     const q = (req.query.q || '').trim();
     const exclude = (req.query.exclude || '').trim();
@@ -273,7 +295,10 @@ app.get('/api/users/search', (req, res) => {
     const filterProgram = (req.query.program || '').trim();
     const filterGradYear = (req.query.grad_year || '').trim();
     const filterExchangeTerm = (req.query.exchange_term || '').trim();
-    const filterExchangeCountry = (req.query.exchange_country || '').trim();
+    const rawExchangeCountry = req.query.exchange_country;
+    const filterExchangeCountries = (Array.isArray(rawExchangeCountry) ? rawExchangeCountry : rawExchangeCountry != null ? [rawExchangeCountry] : [])
+        .map((s) => String(s).trim())
+        .filter(Boolean);
     const filterExchangeSchool = (req.query.exchange_school || '').trim();
 
     let sql = "SELECT u.username, u.display_name, u.bio, u.faculty, u.program, u.grad_year, u.exchange_term, u.destination_country, u.destination_school, u.uw_verified FROM users AS u WHERE 1=1";
@@ -329,13 +354,16 @@ app.get('/api/users/search', (req, res) => {
         ))`;
         params.push(termPat, termPat);
     }
-    if (filterExchangeCountry) {
-        const countryPat = `%${filterExchangeCountry}%`;
-        sql += ` AND (u.destination_country LIKE ? OR EXISTS (
-            SELECT 1 FROM profile_tags pt WHERE pt.username = u.username
-            AND pt.tag_type = 'country' AND pt.tag_value LIKE ?
-        ))`;
-        params.push(countryPat, countryPat);
+    if (filterExchangeCountries.length) {
+        const ph = filterExchangeCountries.map(() => '?').join(',');
+        sql += ` AND (
+            u.destination_country IN (${ph})
+            OR EXISTS (
+                SELECT 1 FROM profile_tags pt WHERE pt.username = u.username
+                AND pt.tag_type = 'country' AND pt.tag_value IN (${ph})
+            )
+        )`;
+        params.push(...filterExchangeCountries, ...filterExchangeCountries);
     }
     if (filterExchangeSchool) {
         const schoolPat = `%${filterExchangeSchool}%`;

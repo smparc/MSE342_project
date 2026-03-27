@@ -37,6 +37,29 @@ const renderSearch = (props = {}) =>
     </MemoryRouter>
   );
 
+/** Fetch mock: countries list + search JSON (array). Search URL must not match exchange-countries. */
+function mockFetchForSearch(searchJson) {
+  return jest.fn((url) => {
+    const s = typeof url === 'string' ? url : '';
+    if (s.includes('/api/users/search/exchange-countries')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ countries: ['Germany', 'Japan', 'France'] }),
+      });
+    }
+    if (s.includes('/api/users/search')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => searchJson,
+      });
+    }
+    return Promise.resolve({
+      ok: true,
+      json: async () => [],
+    });
+  });
+}
+
 describe('Search', () => {
   const mockSearchResult = [
     {
@@ -53,10 +76,7 @@ describe('Search', () => {
   ];
 
   beforeEach(() => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [],
-    });
+    global.fetch = mockFetchForSearch([]);
   });
 
   afterEach(() => {
@@ -77,7 +97,10 @@ describe('Search', () => {
       await waitFor(
         () => {
           const call = global.fetch.mock.calls.find(
-            ([url]) => typeof url === 'string' && url.includes('/api/users/search')
+            ([url]) =>
+              typeof url === 'string' &&
+              url.includes('/api/users/search') &&
+              !url.includes('exchange-countries')
           );
           expect(call).toBeDefined();
           expect(call[0]).toMatch(/includeTags=1/);
@@ -95,15 +118,11 @@ describe('Search', () => {
       expect(screen.getByLabelText(/^Exchange country$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^Exchange school$/i)).toBeInTheDocument();
     });
-
   });
 
   describe('search by text', () => {
     it('calls GET /api/users/search with q after the user types (debounced)', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
       const input = screen.getByPlaceholderText(/Search by name, username, or program/i);
@@ -115,6 +134,7 @@ describe('Search', () => {
             ([url]) =>
               typeof url === 'string' &&
               url.includes('/api/users/search') &&
+              !url.includes('exchange-countries') &&
               /[?&]q=john/.test(url)
           );
           expect(searchCall).toBeDefined();
@@ -124,10 +144,7 @@ describe('Search', () => {
     });
 
     it('shows user cards when the API returns matches', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
       fireEvent.change(screen.getByPlaceholderText(/Search by name, username, or program/i), {
@@ -141,10 +158,7 @@ describe('Search', () => {
     });
 
     it('shows empty message when API returns no users', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => [],
-      });
+      global.fetch = mockFetchForSearch([]);
 
       renderSearch();
 
@@ -154,10 +168,7 @@ describe('Search', () => {
     });
 
     it('sends typed program text as q (server matches username, name, and program)', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
       fireEvent.change(screen.getByPlaceholderText(/Search by name, username, or program/i), {
@@ -167,7 +178,11 @@ describe('Search', () => {
       await waitFor(
         () => {
           const withQ = global.fetch.mock.calls.filter(
-            ([url]) => typeof url === 'string' && /[?&]q=/.test(url)
+            ([url]) =>
+              typeof url === 'string' &&
+              url.includes('/api/users/search') &&
+              !url.includes('exchange-countries') &&
+              /[?&]q=/.test(url)
           );
           expect(withQ.length).toBeGreaterThan(0);
           const lastUrl = withQ[withQ.length - 1][0];
@@ -181,10 +196,7 @@ describe('Search', () => {
 
   describe('filters', () => {
     it('calls GET /api/users/search with faculty when a faculty is selected', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
       fireEvent.change(screen.getByLabelText(/^Faculty$/i), {
@@ -194,7 +206,10 @@ describe('Search', () => {
       await waitFor(
         () => {
           const searchUrl = global.fetch.mock.calls.find(
-            ([url]) => typeof url === 'string' && url.includes('/api/users/search')
+            ([url]) =>
+              typeof url === 'string' &&
+              url.includes('/api/users/search') &&
+              !url.includes('exchange-countries')
           );
           expect(searchUrl).toBeDefined();
           expect(searchUrl[0]).toMatch(/[?&]faculty=Engineering/);
@@ -204,10 +219,7 @@ describe('Search', () => {
     });
 
     it('calls GET /api/users/search with grad_year when class is selected', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
-      });
+      global.fetch = mockFetchForSearch(mockSearchResult);
 
       renderSearch();
       fireEvent.change(screen.getByLabelText(/Class \(graduation year\)/i), {
@@ -217,7 +229,10 @@ describe('Search', () => {
       await waitFor(
         () => {
           const searchUrl = global.fetch.mock.calls.find(
-            ([url]) => typeof url === 'string' && url.includes('/api/users/search')
+            ([url]) =>
+              typeof url === 'string' &&
+              url.includes('/api/users/search') &&
+              !url.includes('exchange-countries')
           );
           expect(searchUrl).toBeDefined();
           expect(searchUrl[0]).toMatch(/[?&]grad_year=2026/);
@@ -227,17 +242,36 @@ describe('Search', () => {
     });
 
     it('calls GET /api/users/search with exchange_term, exchange_country, exchange_school when set', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => mockSearchResult,
+      global.fetch = jest.fn((url) => {
+        const s = typeof url === 'string' ? url : '';
+        if (s.includes('/api/users/search/exchange-countries')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ countries: ['Germany', 'France'] }),
+          });
+        }
+        if (s.includes('/api/users/search')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => mockSearchResult,
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => [],
+        });
       });
 
       renderSearch();
-      fireEvent.change(screen.getByLabelText(/^Exchange term$/i), {
-        target: { value: 'Fall 2025' },
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Germany' })).toBeInTheDocument();
       });
-      fireEvent.change(screen.getByLabelText(/^Exchange country$/i), {
-        target: { value: 'Germany' },
+      const countrySelect = screen.getByLabelText(/^Exchange country$/i);
+      const germanyOpt = screen.getByRole('option', { name: 'Germany' });
+      germanyOpt.selected = true;
+      fireEvent.change(countrySelect);
+      fireEvent.change(screen.getByLabelText(/^Exchange term$/i), {
+        target: { value: '3A' },
       });
       fireEvent.change(screen.getByLabelText(/^Exchange school$/i), {
         target: { value: 'TUM' },
@@ -245,12 +279,19 @@ describe('Search', () => {
 
       await waitFor(
         () => {
-          const withParams = global.fetch.mock.calls.filter(([url]) => typeof url === 'string');
-          expect(withParams.length).toBeGreaterThan(0);
-          const lastUrl = withParams[withParams.length - 1][0];
+          const urls = global.fetch.mock.calls
+            .map(([u]) => u)
+            .filter(
+              (u) =>
+                typeof u === 'string' &&
+                u.includes('/api/users/search') &&
+                !u.includes('exchange-countries')
+            );
+          expect(urls.length).toBeGreaterThan(0);
+          const lastUrl = urls[urls.length - 1];
           const u = new URL(lastUrl, 'http://localhost');
-          expect(u.searchParams.get('exchange_term')).toBe('Fall 2025');
-          expect(u.searchParams.get('exchange_country')).toBe('Germany');
+          expect(u.searchParams.get('exchange_term')).toBe('3A');
+          expect(u.searchParams.getAll('exchange_country')).toEqual(['Germany']);
           expect(u.searchParams.get('exchange_school')).toBe('TUM');
         },
         { timeout: 4000 }

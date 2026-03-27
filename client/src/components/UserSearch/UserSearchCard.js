@@ -152,7 +152,20 @@ const UserSearchCard = ({ user, onClick }) => {
             </Typography>
           )}
           {(uw_verified || group1.length > 0 || group2.length > 0 || extraChips.length > 0) && (
-            <Stack direction="row" flexWrap="wrap" gap={0.5} useFlexGap alignItems="center">
+            <Stack
+              direction="row"
+              flexWrap="nowrap"
+              gap={0.5}
+              useFlexGap
+              alignItems="center"
+              sx={{
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                maxWidth: '100%',
+                py: 0,
+                '& .MuiChip-root': { flexShrink: 0 },
+              }}
+            >
               {uw_verified && (
                 <Chip
                   key="uwVerified"

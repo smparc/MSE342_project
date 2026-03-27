@@ -5,11 +5,13 @@ const GRAD_YEARS = [];
 const y = new Date().getFullYear();
 for (let i = y - 2; i <= y + 8; i += 1) GRAD_YEARS.push(i);
 
+const EXCHANGE_TERMS = ['3A', '3B', '4A', '4B'];
+
 const emptyFilters = {
   faculty: '',
   gradYear: '',
   exchangeTerm: '',
-  exchangeCountry: '',
+  exchangeCountry: [],
   exchangeSchool: '',
 };
 
@@ -17,15 +19,36 @@ const emptyFilters = {
  * User search filters — same visual pattern as Course Search (.cs-filters / .cs-select).
  */
 const SearchFiltersBar = ({ filters, onChange, onClear }) => {
+  const [countryOptions, setCountryOptions] = React.useState([]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch('/api/users/search/exchange-countries')
+      .then((r) => (r.ok ? r.json() : { countries: [] }))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data.countries)) {
+          setCountryOptions(data.countries);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCountryOptions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const hasAny = Boolean(
     filters.faculty ||
       filters.gradYear ||
       filters.exchangeTerm ||
-      filters.exchangeCountry ||
+      (Array.isArray(filters.exchangeCountry) && filters.exchangeCountry.length) ||
       filters.exchangeSchool
   );
 
   const set = (patch) => onChange({ ...filters, ...patch });
+
+  const selectedCountries = Array.isArray(filters.exchangeCountry) ? filters.exchangeCountry : [];
 
   return (
     <div className="cs-filters" style={{ marginTop: 0 }}>
@@ -57,23 +80,37 @@ const SearchFiltersBar = ({ filters, onChange, onClear }) => {
         ))}
       </select>
 
-      <input
-        type="text"
-        className="cs-filter-input"
+      <select
+        className="cs-select"
         value={filters.exchangeTerm}
         onChange={(e) => set({ exchangeTerm: e.target.value })}
-        placeholder="Exchange term"
         aria-label="Exchange term"
-      />
+      >
+        <option value="">All exchange terms</option>
+        {EXCHANGE_TERMS.map((term) => (
+          <option key={term} value={term}>
+            {term}
+          </option>
+        ))}
+      </select>
 
-      <input
-        type="text"
-        className="cs-filter-input"
-        value={filters.exchangeCountry}
-        onChange={(e) => set({ exchangeCountry: e.target.value })}
-        placeholder="Exchange country"
+      <select
+        multiple
+        className="cs-select cs-select--multiselect"
+        value={selectedCountries}
+        onChange={(e) => {
+          const selected = Array.from(e.target.selectedOptions, (o) => o.value);
+          set({ exchangeCountry: selected });
+        }}
         aria-label="Exchange country"
-      />
+        size={Math.min(6, Math.max(3, countryOptions.length || 1))}
+      >
+        {countryOptions.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
 
       <input
         type="text"
