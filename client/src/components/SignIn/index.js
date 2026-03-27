@@ -20,7 +20,7 @@ import { useTheme } from '@mui/material/styles';
 import UserTypeSelect from './UserTypeSelect';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket';
 
-const SignIn = ({ firebase }) => {
+const SignIn = ({ firebase, onSignupComplete }) => {
     // Form fields
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -79,6 +79,8 @@ const SignIn = ({ firebase }) => {
         }
         return true;
     };
+    
+
 
     // Step 1 -> Step 2 (profile info): ensure email and username are not already in DB
     const handleNextToProfile = async (event) => {
@@ -159,7 +161,13 @@ const SignIn = ({ firebase }) => {
                 throw new Error(data.error || 'Failed to create user profile');
             }
 
-            window.location.href = '/';
+            if (onSignupComplete) {
+                onSignupComplete()
+            }
+
+            navigate('/profile')
+
+            // window.location.href = '/';
         } catch (err) {
             setError({ message: getErrorMessage(err) });
         } finally {
@@ -196,7 +204,8 @@ const SignIn = ({ firebase }) => {
 
         try {
             await firebase.doSignInWithEmailAndPassword(email, password);
-            navigate('/');
+            // navigate('/');
+            navigate('/profile');
         } catch (err) {
             setError({ message: getErrorMessage(err) });
         } finally {

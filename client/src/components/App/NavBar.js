@@ -14,20 +14,22 @@ import TextsmsOutlinedIcon from '@mui/icons-material/TextsmsOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 // import MenuBookIcon from '@mui/icons-material/MenuBook';
 import FolderSpecialOutlinedIcon from '@mui/icons-material/FolderSpecialOutlined';
-import PersonIcon from '@mui/icons-material/Person';
+// import PersonIcon from '@mui/icons-material/Person';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { FirebaseContext } from '../Firebase';
-import TimelineIcon from '@mui/icons-material/CalendarToday';
+// import TimelineIcon from '@mui/icons-material/CalendarToday';
 import AirplaneTicketIcon from '@mui/icons-material/AirplaneTicket'
 import { DeleteForever, Settings } from '@mui/icons-material';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+// import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonth';
 import ContactPageOutlinedIcon from '@mui/icons-material/ContactPageOutlined';
 
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+
+import DeleteAccount from '../DeleteAccount';
 
 
 
@@ -58,6 +60,8 @@ const NavBar = ({ currentUser, authUser }) => {
   const [expanded, setExpanded] = React.useState(false);
   const [unreadCount, setUnreadCount] = React.useState(0);
 
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false)
+  
   const username = currentUser || authUser?.email?.split('@')[0];
 
   React.useEffect(() => {
@@ -368,7 +372,11 @@ const NavBar = ({ currentUser, authUser }) => {
           <ListItemText>Sign Out</ListItemText>
         </MenuItem>
 
-        <MenuItem onClick={() => handleNavigateSettings('/settings/delete-account')} sx={{ color: 'error.main' }}>
+        <MenuItem onClick={() => {
+          // handleNavigateSettings('/settings/delete-account')} sx={{ color: 'error.main' }}
+          handleSettingsClose()
+          setShowDeleteModal(true)}} sx={{ color: 'error.main' }}
+          >
           <ListItemIcon>
             <DeleteForever fontSize="small" sx={{ color: 'error.main' }} />
           </ListItemIcon>
@@ -376,6 +384,14 @@ const NavBar = ({ currentUser, authUser }) => {
         </MenuItem>
 
       </Menu>
+
+      {showDeleteModal && (
+        <DeleteAccount 
+          currentUser={username} 
+          isFromNav={true} 
+          onClose={() => setShowDeleteModal(false)} 
+        />
+      )}
 
 
     </Box>

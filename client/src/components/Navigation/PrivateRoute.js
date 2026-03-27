@@ -13,6 +13,7 @@ import ContactsList from '../ContactsList';
 import DeleteAccount from '../DeleteAccount';
 import UserTypeSelect from '../SignIn/UserTypeSelect';
 import ExchangeCalendar from '../ExchangeCalendar';
+import Landing from '../Landing';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -32,6 +33,9 @@ const PrivateRoute = ({ authenticated, authUser }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [userExistsInDb, setUserExistsInDb] = useState(false);
+    const [checkDbTrigger, setCheckDbTrigger] = useState(0)
+
+    const reloadUserStatus = () => setCheckDbTrigger(prev => prev + 1)
 
     // Fetch username from database based on email
     useEffect(() => {
@@ -69,7 +73,7 @@ const PrivateRoute = ({ authenticated, authUser }) => {
             setLoading(false);
             setUserExistsInDb(false);
         }
-    }, [authenticated, authUser]);
+    }, [authenticated, authUser, checkDbTrigger]);
 
     // Show loading while checking user status
     if (authenticated && loading) {
@@ -91,40 +95,53 @@ const PrivateRoute = ({ authenticated, authUser }) => {
     if (!authenticated || !userExistsInDb) {
         return (
             <Routes>
-                <Route path="*" element={<SignIn />} />
+                <Route path="/" element={<Landing />} />
+                {/* <Route path="/landing" element={<Landing />} /> */}
+                <Route path="/SignIn" element={<SignIn onSignupComplete={reloadUserStatus}/>} />
+
+                {authenticated &&  (
+                    <Route path="/settings/user-type" element={<UserTypeSelect onSignupComplete={reloadUserStatus} />} />
+                )}
+                <Route path="*" element={<Navigate replace to="/" />} />
             </Routes>
         );
     }
 
     // Authenticated users: redirect "/" to profile page
     return (
-        <>
-            <NavBar currentUser={currentUser} authUser={authUser} />
-            <MainLayout>
-                <Routes>
-                    <Route path="/" element={<Navigate replace to="/profile" />} />
-                    <Route path="/SignIn" element={<Navigate replace to="/profile" />} />
-                    <Route path="/messages" element={<Messaging currentUser={currentUser} authUser={authUser} />} />
-                    <Route path="/search" element={<Search currentUser={currentUser} authUser={authUser} />} />
-                    <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={currentUser} authUser={authUser} />} />
-                    <Route path="/course-equivalency" element={<CourseSearch currentUser={currentUser} authUser={authUser} />} />
-                    <Route path="/profile" element={<Profile currentUser={currentUser} authUser={authUser} />} />
-                    <Route path="/profile/:username" element={<ProfilePage currentUser={currentUser} authUser={authUser} />} />
-                    {/* Sprint 2 routes */}
-                    <Route path="/calendar" element={<ExchangeCalendar currentUser={currentUser} />} />
-                    <Route path="/contacts" element={<ContactsList />} />
-                    <Route
-                        path="/settings/delete-account"
-                        element={<DeleteAccount currentUser={currentUser} authUser={authUser} />}
-                    />
-                    <Route
-                        path="/settings/user-type"
-                        element={<UserTypeSelect currentUser={currentUser} authUser={authUser} />}
-                    />
-
-                </Routes>
-            </MainLayout>
-        </>
+            <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path='/SignIn' element={<SignIn />} />
+            <Route
+                path="*"
+                element={
+                    <>
+                        <NavBar currentUser={currentUser} authUser={authUser} />
+                        <MainLayout>
+                            <Routes>
+                                {/* <Route path="/SignIn" element={<SignIn />} /> */}
+                                <Route path="/messages" element={<Messaging currentUser={currentUser} authUser={authUser} />} />
+                                <Route path="/search" element={<Search currentUser={currentUser} authUser={authUser} />} />
+                                <Route path="/course-equivalency/submit" element={<CourseSubmit currentUser={currentUser} authUser={authUser} />} />
+                                <Route path="/course-equivalency" element={<CourseSearch currentUser={currentUser} authUser={authUser} />} />
+                                <Route path="/profile" element={<Profile currentUser={currentUser} authUser={authUser} />} />
+                                <Route path="/profile/:username" element={<ProfilePage currentUser={currentUser} authUser={authUser} />} />
+                                <Route path="/calendar" element={<ExchangeCalendar currentUser={currentUser} />} />
+                                <Route path="/contacts" element={<ContactsList />} />
+                                <Route
+                                    path="/settings/delete-account"
+                                    element={<DeleteAccount currentUser={currentUser} authUser={authUser} />}
+                                />
+                                <Route
+                                    path="/settings/user-type"
+                                    element={<UserTypeSelect currentUser={currentUser} authUser={authUser} />}
+                                />
+                            </Routes>
+                        </MainLayout>
+                    </>
+                }
+            />
+        </Routes>
     );
 };
 
