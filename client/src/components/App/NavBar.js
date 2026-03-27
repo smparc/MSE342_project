@@ -350,12 +350,12 @@ const NavBar = ({ currentUser, authUser }) => {
           <ListItemText>Profile</ListItemText>
         </MenuItem>
 
-        <MenuItem onClick={() => handleNavigateSettings('/settings/user-type')}>
+        {/* <MenuItem onClick={() => handleNavigateSettings('/settings/user-type')}>
           <ListItemIcon>
             <Settings fontSize="small" sx={{ color: 'text.secondary' }} />
           </ListItemIcon>
           <ListItemText>User Settings</ListItemText>
-        </MenuItem>
+        </MenuItem> */}
 
 
 
