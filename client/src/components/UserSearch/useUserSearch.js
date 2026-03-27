@@ -12,6 +12,9 @@ export const useUserSearch = ({
   enabled = true,
   facultyFilter = '',
   gradYearFilter = '',
+  exchangeTermFilter = '',
+  exchangeCountryFilter = '',
+  exchangeSchoolFilter = '',
   /** When true (e.g. Search page), fetch with empty q to show a default user list. */
   fetchAllWhenEmpty = false,
 }) => {
@@ -27,7 +30,12 @@ export const useUserSearch = ({
       return;
     }
     const hasTextOrFilters =
-      searchQuery.trim() || facultyFilter.trim() || gradYearFilter.trim();
+      searchQuery.trim() ||
+      facultyFilter.trim() ||
+      gradYearFilter.trim() ||
+      exchangeTermFilter.trim() ||
+      exchangeCountryFilter.trim() ||
+      exchangeSchoolFilter.trim();
     if (!fetchAllWhenEmpty && !hasTextOrFilters) {
       setUsers([]);
       setError('');
@@ -44,6 +52,9 @@ export const useUserSearch = ({
       if (excludeConversations) params.set('excludeConversations', '1');
       if (facultyFilter.trim()) params.set('faculty', facultyFilter.trim());
       if (gradYearFilter.trim()) params.set('grad_year', gradYearFilter.trim());
+      if (exchangeTermFilter.trim()) params.set('exchange_term', exchangeTermFilter.trim());
+      if (exchangeCountryFilter.trim()) params.set('exchange_country', exchangeCountryFilter.trim());
+      if (exchangeSchoolFilter.trim()) params.set('exchange_school', exchangeSchoolFilter.trim());
 
       const url = `/api/users/search?${params.toString()}`;
       const response = await fetch(url);
@@ -70,6 +81,9 @@ export const useUserSearch = ({
     enabled,
     facultyFilter,
     gradYearFilter,
+    exchangeTermFilter,
+    exchangeCountryFilter,
+    exchangeSchoolFilter,
     fetchAllWhenEmpty,
   ]);
 

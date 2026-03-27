@@ -6,7 +6,13 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
-import { UserSearchCard, UserProfileModal, SearchFiltersBar, useUserSearch } from '../UserSearch';
+import {
+  UserSearchCard,
+  UserProfileModal,
+  SearchFiltersBar,
+  emptyFilters,
+  useUserSearch,
+} from '../UserSearch';
 import { FirebaseContext, authFetch } from '../Firebase';
 import '../CourseSearch/CourseSearch.css';
 
@@ -14,10 +20,7 @@ const Search = ({ currentUser, authUser }) => {
   const firebase = React.useContext(FirebaseContext);
   const currentUsername = currentUser || authUser?.email?.split('@')[0] || '';
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [filters, setFilters] = React.useState({
-    faculty: '',
-    gradYear: '',
-  });
+  const [filters, setFilters] = React.useState({ ...emptyFilters });
   const [selectedUser, setSelectedUser] = React.useState(null);
 
   const { users, loading, error, searchUsers } = useUserSearch({
@@ -29,13 +32,24 @@ const Search = ({ currentUser, authUser }) => {
     fetchAllWhenEmpty: true,
     facultyFilter: filters.faculty,
     gradYearFilter: filters.gradYear,
+    exchangeTermFilter: filters.exchangeTerm,
+    exchangeCountryFilter: filters.exchangeCountry,
+    exchangeSchoolFilter: filters.exchangeSchool,
   });
 
   React.useEffect(() => {
     const debounceMs = searchQuery.trim() ? 300 : 0;
     const timer = setTimeout(searchUsers, debounceMs);
     return () => clearTimeout(timer);
-  }, [searchQuery, filters.faculty, filters.gradYear, searchUsers]);
+  }, [
+    searchQuery,
+    filters.faculty,
+    filters.gradYear,
+    filters.exchangeTerm,
+    filters.exchangeCountry,
+    filters.exchangeSchool,
+    searchUsers,
+  ]);
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
@@ -74,7 +88,7 @@ const Search = ({ currentUser, authUser }) => {
       <SearchFiltersBar
         filters={filters}
         onChange={setFilters}
-        onClear={() => setFilters({ faculty: '', gradYear: '' })}
+        onClear={() => setFilters({ ...emptyFilters })}
       />
 
       {error && (

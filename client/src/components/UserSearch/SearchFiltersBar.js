@@ -5,18 +5,34 @@ const GRAD_YEARS = [];
 const y = new Date().getFullYear();
 for (let i = y - 2; i <= y + 8; i += 1) GRAD_YEARS.push(i);
 
+const emptyFilters = {
+  faculty: '',
+  gradYear: '',
+  exchangeTerm: '',
+  exchangeCountry: '',
+  exchangeSchool: '',
+};
+
 /**
  * User search filters — same visual pattern as Course Search (.cs-filters / .cs-select).
  */
 const SearchFiltersBar = ({ filters, onChange, onClear }) => {
-  const hasAny = Boolean(filters.faculty || filters.gradYear);
+  const hasAny = Boolean(
+    filters.faculty ||
+      filters.gradYear ||
+      filters.exchangeTerm ||
+      filters.exchangeCountry ||
+      filters.exchangeSchool
+  );
+
+  const set = (patch) => onChange({ ...filters, ...patch });
 
   return (
     <div className="cs-filters" style={{ marginTop: 0 }}>
       <select
         className="cs-select"
         value={filters.faculty}
-        onChange={(e) => onChange({ ...filters, faculty: e.target.value })}
+        onChange={(e) => set({ faculty: e.target.value })}
         aria-label="Faculty"
       >
         <option value="">All faculties</option>
@@ -30,7 +46,7 @@ const SearchFiltersBar = ({ filters, onChange, onClear }) => {
       <select
         className="cs-select"
         value={filters.gradYear}
-        onChange={(e) => onChange({ ...filters, gradYear: e.target.value })}
+        onChange={(e) => set({ gradYear: e.target.value })}
         aria-label="Class (graduation year)"
       >
         <option value="">All classes</option>
@@ -40,6 +56,33 @@ const SearchFiltersBar = ({ filters, onChange, onClear }) => {
           </option>
         ))}
       </select>
+
+      <input
+        type="text"
+        className="cs-filter-input"
+        value={filters.exchangeTerm}
+        onChange={(e) => set({ exchangeTerm: e.target.value })}
+        placeholder="Exchange term"
+        aria-label="Exchange term"
+      />
+
+      <input
+        type="text"
+        className="cs-filter-input"
+        value={filters.exchangeCountry}
+        onChange={(e) => set({ exchangeCountry: e.target.value })}
+        placeholder="Exchange country"
+        aria-label="Exchange country"
+      />
+
+      <input
+        type="text"
+        className="cs-filter-input"
+        value={filters.exchangeSchool}
+        onChange={(e) => set({ exchangeSchool: e.target.value })}
+        placeholder="Exchange school"
+        aria-label="Exchange school"
+      />
 
       {hasAny && (
         <button type="button" className="cs-clear-filters" onClick={onClear}>
@@ -51,3 +94,4 @@ const SearchFiltersBar = ({ filters, onChange, onClear }) => {
 };
 
 export default SearchFiltersBar;
+export { emptyFilters };

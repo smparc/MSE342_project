@@ -87,10 +87,13 @@ describe('Search', () => {
       );
     });
 
-    it('renders filter controls (faculty + class, Course Search style)', () => {
+    it('renders filter controls (faculty, class, exchange fields, Course Search style)', () => {
       renderSearch();
       expect(screen.getByLabelText(/^Faculty$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Class \(graduation year\)/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^Exchange term$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^Exchange country$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^Exchange school$/i)).toBeInTheDocument();
     });
 
   });
@@ -218,6 +221,37 @@ describe('Search', () => {
           );
           expect(searchUrl).toBeDefined();
           expect(searchUrl[0]).toMatch(/[?&]grad_year=2026/);
+        },
+        { timeout: 4000 }
+      );
+    });
+
+    it('calls GET /api/users/search with exchange_term, exchange_country, exchange_school when set', async () => {
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => mockSearchResult,
+      });
+
+      renderSearch();
+      fireEvent.change(screen.getByLabelText(/^Exchange term$/i), {
+        target: { value: 'Fall 2025' },
+      });
+      fireEvent.change(screen.getByLabelText(/^Exchange country$/i), {
+        target: { value: 'Germany' },
+      });
+      fireEvent.change(screen.getByLabelText(/^Exchange school$/i), {
+        target: { value: 'TUM' },
+      });
+
+      await waitFor(
+        () => {
+          const withParams = global.fetch.mock.calls.filter(([url]) => typeof url === 'string');
+          expect(withParams.length).toBeGreaterThan(0);
+          const lastUrl = withParams[withParams.length - 1][0];
+          const u = new URL(lastUrl, 'http://localhost');
+          expect(u.searchParams.get('exchange_term')).toBe('Fall 2025');
+          expect(u.searchParams.get('exchange_country')).toBe('Germany');
+          expect(u.searchParams.get('exchange_school')).toBe('TUM');
         },
         { timeout: 4000 }
       );

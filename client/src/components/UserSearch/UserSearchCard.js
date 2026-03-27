@@ -21,8 +21,12 @@ const CHIP_STYLES = {
   program: { bgcolor: '#FCE4EC', color: '#C2185B', border: '1px solid #F8BBD0', fontWeight: '500' },
   gradYear: { bgcolor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2', fontWeight: '500' },
   exchangeTerm: { bgcolor: '#E3F2FD', color: '#1565C0', border: '1px solid #BBDEFB', fontWeight: '500' },
+  exchangeCountry: { bgcolor: '#E0F2F1', color: '#00695C', border: '1px solid #80CBC4', fontWeight: '500' },
+  exchangeSchool: { bgcolor: '#F3E5F5', color: '#6A1B9A', border: '1px solid #CE93D8', fontWeight: '500' },
   default: { borderColor: 'divider', fontWeight: 500 },
 };
+
+const tagValue = (tags, type) => tags.find((t) => t.tag_type === type)?.tag_value;
 
 const UserSearchCard = ({ user, onClick }) => {
   const {
@@ -33,32 +37,77 @@ const UserSearchCard = ({ user, onClick }) => {
     program,
     grad_year,
     exchange_term,
+    destination_country,
+    destination_school,
     uw_verified,
     tags = [],
   } = user;
   const displayName = display_name || username || 'Unknown';
 
-  const profileTags = [];
-  if (uw_verified) profileTags.push(<Chip key="uwVerified" label="UW Verified" size="small" sx={CHIP_STYLES.uwVerified} />);
-  if (faculty) profileTags.push(<Chip key="faculty" label={faculty} size="small" sx={CHIP_STYLES.faculty} />);
-  if (program) profileTags.push(<Chip key="program" label={program} size="small" sx={CHIP_STYLES.program} />);
-  if (grad_year) profileTags.push(<Chip key="gradYear" label={`Class of ${grad_year}`} size="small" sx={CHIP_STYLES.gradYear} />);
-  if (exchange_term) profileTags.push(<Chip key="exchangeTerm" label={`${exchange_term} Exchange`} size="small" sx={CHIP_STYLES.exchangeTerm} />);
+  const exchangeTermDisplay =
+    exchange_term || tagValue(tags, 'term') || tagValue(tags, 'exchange_term');
+  const exchangeCountry =
+    destination_country || tagValue(tags, 'country');
+  const exchangeSchool =
+    destination_school || tagValue(tags, 'school');
 
-  const tagTypesShown = new Set(['program', 'year', 'exchange_term']);
-  if (faculty) tagTypesShown.add('faculty');
-  const extraTags = tags.filter((t) => !tagTypesShown.has(t.tag_type));
-  extraTags.forEach((t) => {
-    profileTags.push(
+  const group1 = [];
+  if (faculty) {
+    group1.push(<Chip key="faculty" label={faculty} size="small" sx={CHIP_STYLES.faculty} />);
+  }
+  if (program) {
+    group1.push(<Chip key="program" label={program} size="small" sx={CHIP_STYLES.program} />);
+  }
+  if (grad_year) {
+    group1.push(
+      <Chip key="gradYear" label={`Class of ${grad_year}`} size="small" sx={CHIP_STYLES.gradYear} />
+    );
+  }
+
+  const group2 = [];
+  if (exchangeTermDisplay) {
+    group2.push(
       <Chip
-        key={`${t.tag_type}-${t.tag_value}`}
-        label={`${TAG_LABELS[t.tag_type] || t.tag_type}: ${t.tag_value}`}
+        key="exchangeTerm"
+        label={`${exchangeTermDisplay} Exchange`}
         size="small"
-        variant="outlined"
-        sx={CHIP_STYLES.default}
+        sx={CHIP_STYLES.exchangeTerm}
       />
     );
-  });
+  }
+  if (exchangeCountry) {
+    group2.push(
+      <Chip key="exchangeCountry" label={exchangeCountry} size="small" sx={CHIP_STYLES.exchangeCountry} />
+    );
+  }
+  if (exchangeSchool) {
+    group2.push(
+      <Chip key="exchangeSchool" label={exchangeSchool} size="small" sx={CHIP_STYLES.exchangeSchool} />
+    );
+  }
+
+  const tagTypesHandled = new Set([
+    'program',
+    'year',
+    'country',
+    'school',
+    'term',
+    'exchange_term',
+  ]);
+  if (faculty) tagTypesHandled.add('faculty');
+
+  const extraTags = tags.filter((t) => !tagTypesHandled.has(t.tag_type));
+  const extraChips = extraTags.map((t) => (
+    <Chip
+      key={`${t.tag_type}-${t.tag_value}`}
+      label={`${TAG_LABELS[t.tag_type] || t.tag_type}: ${t.tag_value}`}
+      size="small"
+      variant="outlined"
+      sx={CHIP_STYLES.default}
+    />
+  ));
+
+  const showDivider = group1.length > 0 && group2.length > 0;
 
   return (
     <Paper
@@ -102,9 +151,32 @@ const UserSearchCard = ({ user, onClick }) => {
               {bio}
             </Typography>
           )}
-          {profileTags.length > 0 && (
-            <Stack direction="row" flexWrap="wrap" gap={0.5} useFlexGap>
-              {profileTags}
+          {(uw_verified || group1.length > 0 || group2.length > 0 || extraChips.length > 0) && (
+            <Stack direction="row" flexWrap="wrap" gap={0.5} useFlexGap alignItems="center">
+              {uw_verified && (
+                <Chip
+                  key="uwVerified"
+                  label="UW Verified"
+                  size="small"
+                  sx={CHIP_STYLES.uwVerified}
+                />
+              )}
+              {group1}
+              {showDivider && (
+                <Box
+                  aria-hidden
+                  sx={{
+                    width: 1,
+                    alignSelf: 'stretch',
+                    minHeight: 22,
+                    bgcolor: 'divider',
+                    mx: 0.25,
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+              {group2}
+              {extraChips}
             </Stack>
           )}
         </Box>
