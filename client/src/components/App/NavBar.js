@@ -223,6 +223,7 @@ const NavBar = ({ currentUser, authUser }) => {
 
         <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
+          aria-label="Profile"
           // onClick={handleSignOut}
           onClick={() => navigate('/profile')}
           sx={{
@@ -266,6 +267,7 @@ const NavBar = ({ currentUser, authUser }) => {
 
       <List disablePadding sx={{ pb: 2 }}>
         <ListItemButton
+          aria-label="Settings"
           // onClick={handleSignOut}
           onClick={handleSettingsClick}
           sx={{
