@@ -198,7 +198,7 @@ const UploadReviews = ({ username }) => {
                     }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
                             <Typography sx={headerStyle}>
-                                <AttachMoneyIcon sx={{ color: '#1a1a2e', fontSize: '1.8rem' }} />
+                                <AttachMoneyIcon sx={{ color: '#1a1a2e'}} />
                                 Expenses
                             </Typography>
                             <IconButton

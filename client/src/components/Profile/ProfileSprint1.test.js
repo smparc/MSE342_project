@@ -202,7 +202,7 @@ describe('Profile Sprint 1', () => {
       fireEvent.change(screen.getByLabelText(/Host Course Name/i), { target: { value: '   ' } });
 
       // Click "Add Course"
-      fireEvent.click(screen.getByRole('button', { name: /Add Course/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Submit Course/i }));
 
       // Verify error alert appears
       await waitFor(() => {
@@ -242,7 +242,7 @@ describe('Profile Sprint 1', () => {
       });
 
       // Click "Add Course"
-      fireEvent.click(screen.getByRole('button', { name: /Add Course/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Submit Course/i }));
 
       // Verify the new course appears in the table
       await waitFor(() => {

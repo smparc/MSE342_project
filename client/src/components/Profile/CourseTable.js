@@ -174,7 +174,7 @@ const CourseTable = ({ username, exchangeSchool, readOnly = false }) => {
                 <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between' }}>
                     <Typography sx={{
                         fontFamily: "'DM Serif Display', serif",
-                        fontSize: '1.6rem',
+                        fontSize: '1.3rem',
                         color: '#1a1a2e'
                     }}>
                         Course Equivalencies
@@ -281,11 +281,11 @@ const CourseTable = ({ username, exchangeSchool, readOnly = false }) => {
                                         <Typography sx={{ fontSize: '0.7rem', fontWeight: 900, color: '#6366f1', letterSpacing: '0.1em' }}>WATERLOO INFO</Typography>
                                         <Box>
                                             <Typography sx={inputLabelStyle}>Course Code *</Typography>
-                                            <TextField required fullWidth size="small" value={newUWCode} onChange={(e) => setNewUWCode(e.target.value)} placeholder="e.g. CS 342" />
+                                            <TextField required fullWidth size="small" inputProps={{'aria-label': 'UW Course Code'}} value={newUWCode} onChange={(e) => setNewUWCode(e.target.value)} placeholder="e.g. CS 342" />
                                         </Box>
                                         <Box>
                                             <Typography sx={inputLabelStyle}>Course Name *</Typography>
-                                            <TextField required fullWidth size="small" value={newUWName} onChange={(e) => setNewUWName(e.target.value)} placeholder="e.g. Advanced AI" />
+                                            <TextField required fullWidth size="small" inputProps={{'aria-label': 'UW Course Name'}} value={newUWName} onChange={(e) => setNewUWName(e.target.value)} placeholder="e.g. Advanced AI" />
                                         </Box>
                                     </Stack>
                                 </Grid>
@@ -296,16 +296,16 @@ const CourseTable = ({ username, exchangeSchool, readOnly = false }) => {
                                         <Typography sx={{ fontSize: '0.7rem', fontWeight: 900, color: '#10b981', letterSpacing: '0.1em' }}>HOST INFO</Typography>
                                         <Box>
                                             <Typography sx={inputLabelStyle}>Host University *</Typography>
-                                            <TextField required fullWidth size="small" value={newHostUni} onChange={(e) => setNewHostUni(e.target.value)} placeholder="e.g. Oxford" />
+                                            <TextField required fullWidth size="small" inputProps={{'aria-label': 'Host University'}} value={newHostUni} onChange={(e) => setNewHostUni(e.target.value)} placeholder="e.g. Oxford" />
                                         </Box>
                                         <Box sx={{ display: 'flex', gap: 2 }}>
                                             <Box sx={{ flex: 1 }}>
                                                 <Typography sx={inputLabelStyle}>Host Code *</Typography>
-                                                <TextField required fullWidth size="small" value={newHostCode} onChange={(e) => setNewHostCode(e.target.value)} placeholder="e.g. OX 101" />
+                                                <TextField required fullWidth size="small" inputProps={{'aria-label': 'Host Course Code'}} value={newHostCode} onChange={(e) => setNewHostCode(e.target.value)} placeholder="e.g. OX 101" />
                                             </Box>
                                             <Box sx={{ flex: 1 }}>
                                                 <Typography sx={inputLabelStyle}>Host Name *</Typography>
-                                                <TextField required fullWidth size="small" value={newHostName} onChange={(e) => setNewHostName(e.target.value)} placeholder="e.g. Intro Linear" />
+                                                <TextField required fullWidth size="small" inputProps={{'aria-label': 'Host Course Name'}} value={newHostName} onChange={(e) => setNewHostName(e.target.value)} placeholder="e.g. Intro Linear" />
                                             </Box>
                                         </Box>
                                     </Stack>
