@@ -43,6 +43,7 @@ const UserSearchCard = ({ user, onClick }) => {
     tags = [],
   } = user;
   const displayName = display_name || username || 'Unknown';
+  const isUwVerified = Boolean(uw_verified);
 
   const exchangeTermDisplay =
     exchange_term || tagValue(tags, 'term') || tagValue(tags, 'exchange_term');
@@ -149,7 +150,7 @@ const UserSearchCard = ({ user, onClick }) => {
               {bio}
             </Typography>
           )}
-          {(uw_verified || group1.length > 0 || group2.length > 0 || extraChips.length > 0) && (
+          {(isUwVerified || group1.length > 0 || group2.length > 0 || extraChips.length > 0) && (
             <Stack
               direction="row"
               flexWrap="nowrap"
@@ -164,7 +165,7 @@ const UserSearchCard = ({ user, onClick }) => {
                 '& .MuiChip-root': { flexShrink: 0 },
               }}
             >
-              {uw_verified && (
+              {isUwVerified && (
                 <Chip
                   key="uwVerified"
                   label="UW Verified"
