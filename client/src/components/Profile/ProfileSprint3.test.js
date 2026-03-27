@@ -7,8 +7,6 @@ import NavBar from '../App/NavBar'
 import CourseSearch from '../CourseSearch/index'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { FirebaseContext } from '../Firebase';
-// import { afterEach, beforeEach, describe, expectFailure, it } from 'node:test';
-
 
 const theme = createTheme()
 
