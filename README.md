@@ -1,241 +1,436 @@
-<!-- [![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=22132634)
-# MSE 342 - Project template (based on the repository of MSE 245 - Project Deliverable 2)
+# UW Exchange
 
-
-## Development Tips:
-- Use CodeSpaces for this project.
-- In VSCode terminal on CodeSpaces start a new branch:
-```git checkout -b your-branch-name```
-- As you code, push daily changes to your GitHub repo's `d2` branch:
-```
-git add .
-git commit -m "done feature xyz"
-git push origin your-branch-name
-```
-
-
-### Setting up access to the database from Codespaces
-
-Watch the video on how to set up connection to the database from Codespaces: https://vimeo.com/974744158/db6098a69b?share=copy
-
-Follow the instructions and ensure that you are able to connect to the database from Codespaces.
-   
-Steps:
-
-   1. Download the Private Key file `student_ed25519` from Learn (located under Contents > General lab resources) to your own computer. 
-   
-   2. Open GitHub in the browser. Go to Settings > Codespaces. Click on `New Secret` button. Type the word `STUDENT` in the `Name` field, and paste the content of the Private Key file in the `Value` field. In the `Repository Access` drop-down menu, select the name of your Lab 9 repository. Click `Add Secret` button. 
-   
-   3. Start CodeSpaces. In the Terminal on Codespaces, copy and paste the following:
-
-   ```
-   echo "${STUDENT}"
-   ```
-   
-   If your setup has been correct so far, this will print the content of your private key to the terminal. Verify that it is displayed.
-
-   4. Next, copy and paste the following:
-
-   ```
-   eval `ssh-agent`
-   ```
-
-   You should see the response like this: `Agent pid 28558`
-
-   5. Next, copy and paste the following:
-
-   ```
-   ssh-add - <<< "${STUDENT}"
-   ```
-
-   You should see the following response: `Identity added: (stdin) (student@mse-msci-245)`
-
-
-   6. Next, copy and paste the following. Make sure that you change `<your-user-name>` to your actual UW username (without the angle brackets). 
-   
-   ```
-	ssh -o ServerAliveInterval=30 -L 3306:localhost:3306 <your-user-name>@mse-msci-245.uwaterloo.ca
-   ssh -o ServerAliveInterval=30 -L 3306:localhost:3306 m74park@mse-msci-245.uwaterloo.ca
-   ```
-
-   You should see the prompt change to a line like this:
-
-   ![image](/img/Lab9-img1.png)
-
-   This means that you have successfully logged in to the remote server hosting the database. 
-   
-   Important: Do not close this terminal window!
-
-   7. Start a new terminal in Codespaces by clicking on the following icon in the top-right corner of the terminal:
-![image](/img/Lab9-img2.png)
-   8. In the second terminal, type `yarn dev` to start the app on port 3000.
-
-   9. In the root project directory, edit `config.js`, by adding your UW username on Lines 3 and on line 6. This will let you access the MySQL database named as `<your-username>` from NodeJS.
-       
-
-
-### Installing and initializing MySQL Workbench.
-
-Watch the video on how to install and set up MySQL Workbench on your own computer: https://vimeo.com/974744257/e755329bf8?share=copy. 
-
-Follow the instructions and ensure that you are able to connect to the database from MySQL Workbench.
-
-#### Steps:
-
-1. Install MySQL Workbench from https://www.mysql.com/products/workbench/
-
-2. Open MySQL Workbench:
-
-   Launch MySQL Workbench on your local machine.
-
-3. Create a New Connection:
-
-Click on the + icon next to MySQL Connections to create a new connection.
-
-4. Configure Connection Settings:
-
-Connection Name: `Remote MySQL via SSH`.
-Connection Method: `Standard TCP/IP over SSH`.
-Configure SSH Settings:
-
-SSH Hostname: `mse-msci-245.uwaterloo.ca`
-SSH Username: `your username`
-SSH Key File: Path to your Private Key File, e.g., `/Users/yourusername/.ssh/student_ed25519` (Mac/Linux) or `C:\Users\yourusername\.ssh\student_ed25519` (Windows).
-SSH Password: Leave this blank.
-
-5. Configure MySQL Settings:
-
-MySQL Hostname: `localhost`
-MySQL Server Port: `3306`
-Username: `your username`
-Password: `MSE245-student`
-
-6. Test Connection:
-
-Click the Test Connection button to verify that the connection is working. You should see a success message if everything is configured correctly.
-
-7. Save Connection:
-
-Click OK to save the connection.
-
-8. Final Steps
-
-After setting up and saving the connection, you can double-click the connection in the MySQL Connections list to connect to your remote MySQL server via SSH.
-
-### General tips:
-
-Push changes to GitHub frequently:
-
-```
-git add .
-git commit -m "feature completed"
-git push origin your-branch-name
-```
-
-In your GitHub repo, create new pull request and merge `your-branch-name` branch with the `main` branch.
-
-Created Sprint 1 Branch -->
-
-# WATExchange: International Exchange Social Platform
-
-## 🌎 Project Description
-**WATExchange is a centralized web platform for University of Waterloo students interested in exchange to connect. It streamlines the application process by bridging the gap between prospective exchange students and alumni exchange students. It acts as a centralized platform for finding course equivalencies, sharing personal experiences, messaging with other prospective/alumni exchange students, and learning more information about the application process.
-
+A full-stack web platform built for University of Waterloo students planning, managing, and reflecting on exchange programs. Students can track application deadlines, browse and submit course equivalencies, message each other, manage their exchange profile, and access contacts and advisors — all in one place.
 
 ---
 
-## ✨ Completed Features & User Stories
+## Table of Contents
 
-### 🎓 Course Equivalency & Academic Planning
-* **Searchable Database:** Browse a searchable database of course equivalencies to see which foreign credits will be approved for your degree.
-* **Credit Verification:** Alumni can upload successfully matched courses to the database to help future students verify their credits.
-* **Advanced Filtering:** Filter past equivalencies by faculty, exchange term, school, country, and continent.
-* **Sorting & Bookmarks:** Sort equivalencies (e.g. by recency, rating, university) and save courses to a personal shortlist where supported.
-
-### 👤 Profile & Personalization
-* **Dynamic Bios:** Create and edit personal bios.
-* **Academic Tags:** Add tags for study abroad universities, locations, and exchange terms to connect with similar students.
-* **Experience Sharing:** Alumni can post travel photos
-* **Course Management:** Alumni can share, edit, and delete the specific courses they took directly on their profile.
-
-### 🔍 User Search
-* **Discover Users:** Dedicated Search area to find other students with filters for faculty, class year, and exchange term, plus a text search across name, username, program, exchange country, and exchange university.
-* **Rich Cards:** Results show faculty, program, class year, exchange term, destination country, and host school (with profile tags when present).
-* **Profile Preview:** Open a user from results to see more detail and start a conversation without leaving the flow.
-
-### 📇 Directory & Support
-* **Study Abroad Contacts:** Searchable contact cards for study abroad / international office staff (name, role, department, faculty, email).
-* **Academic Advisors:** Filter advisors by faculty and search by name or program; advisor cards show programs and contact details.
-
-### 📅 Exchange Calendar
-* **Deadline Calendar:** Month view of application and milestone deadlines with status styling (upcoming, due soon, overdue, complete).
-* **Filters:** Narrow milestones by program/type and destination (where applicable).
-* **Application Checklist:** Tab for checklist-style items, progress, and item management aligned with the exchange timeline.
-* **Export:** Download milestones as an `.ics` file for external calendars.
-
-### 💬 Messaging & Conversations
-* **Direct Messaging:** Full conversation history with other users; start chats from profiles or search.
-* **New Conversation:** Create-message flow picks a user and opens a thread; empty drafts are cleaned up when leaving the thread without sending.
-* **Message Times:** Conversation previews and timestamps use a consistent Eastern (North America) display timezone.
-
-### 🔐 Authentication & Access Control
-* **Secure Sign-In:** Users can create accounts and sign in using email authentication.
-* **Protected Content:** Alumni profiles and uploaded content are only accessible to authenticated users.
-* **Session Management:** Logged-in users remain authenticated across sessions until they sign out.
-* **Email Verification:** Users who register with an email address ending in @uwaterloo.ca are automatically assigned a “UW Verified Student” tag to indicate they are University of Waterloo students. Firebase’s built-in email verification was initially considered and attempted however, emails sent to the uwaterloo.ca domain were automatically pre-checked by the university’s email security system. This caused the verification links to be opened before reaching the user, marking them as already used. As a result, domain-based verification was implemented as a less secure alternative.
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Database Schema](#database-schema)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Environment Setup](#environment-setup)
+- [Running the App](#running-the-app)
+- [Running Tests](#running-tests)
+- [API Reference](#api-reference)
+- [Sprint History](#sprint-history)
 
 ---
 
-## 🛠 Technical Stack
-* **Frontend:** React
-* **Backend:** Node.js
-* **Database:** MySQL
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React, custom CSS (DM Sans / DM Serif Display) |
+| Backend | Node.js, Express (ES modules) |
+| Database | MySQL / MariaDB |
+| Authentication | Firebase Auth + Firebase Admin SDK |
+| File uploads | Multer |
+| Testing | Jest, React Testing Library |
+| Dev tooling | Concurrently, Nodemon, Yarn |
 
 ---
 
+## Project Structure
 
-## 👥 Development Team 
-### (Sprint 1)
-
-| Team Member | Responsibility Area |
-| :--- | :--- |
-| **Elly** | Messaging Systems (Direct Messaging, Chat History) |
-| **Cindy** | User search Functionality |
-
-### (Sprint 2)
-
-| Team Member | Responsibility Area |
-| :--- | :--- |
-| **Zeina** | Profile Management (Reviews, Financial Planning) |
-| **Matthew** | Course Equivalency (Sort) & Calendar/Resources (Contacts, Timeline)|
-| **Elly** | Sign In (Authentication, Sign Up, Sign In) |
-
-### (Sprint 3)
-
-| Team Member | Responsibility Area |
-| :--- | :--- |
-| **Zeina** | Landing page, Profile Management (UI updates, delete account, profile tags) |
-| **Matthew** | Calendar (Application checklist, Calendar view), Support (updated UI with tabs), Bookmark courses |
-| **Elly** | Messaging (Start new message, notifications), Search (search by user, filters, message from search) |
+```
+project-root/
+├── client/                        # React frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── App/               # Root app, routing, navbar
+│   │   │   ├── Timeline/          # Exchange timeline & milestones
+│   │   │   ├── ExchangeCalendar/  # Calendar view + checklist
+│   │   │   ├── CourseSearch/      # Course equivalency search & bookmarks
+│   │   │   ├── CourseSubmit/      # Submit a course equivalency
+│   │   │   ├── ContactsList/      # Study abroad contacts
+│   │   │   ├── AdvisorsList/      # Academic advisors
+│   │   │   ├── DeleteAccount/     # Account deletion flow
+│   │   │   ├── UserTypeSelect/    # User type selection
+│   │   │   ├── SignOut/           # Sign out
+│   │   │   ├── UserTags/          # Profile tags display
+│   │   │   ├── Messaging/         # In-app messaging
+│   │   │   ├── Profile/           # User profile
+│   │   │   └── Firebase/          # Firebase config & authFetch helper
+│   │   └── index.js
+│   ├── babel.config.js
+│   ├── jest.config.js
+│   └── package.json
+├── uploads/                       # Uploaded post images (auto-created)
+├── server.js                      # Express backend (ES modules)
+├── config.js                      # MySQL connection config
+├── serviceAccountKey.json         # Firebase Admin key (not in git)
+├── package.json
+└── README.md
+```
 
 ---
 
+## Database Schema
 
-AI declaration:
+The app uses a MySQL database. The main tables are:
 
-Zeina - Used for occasional debugging (syntax errors, package/networking errors, etc.)
-* Used for fixing styling on some MUI components (ex. i learned from AI that a particular component comes with default styling)
-* Used to determine that I need to use Multer for posting photos
-* Used for UI improvements (base UI was already established and coded previously)
-* Used for help with developing landing page
-* Used for help routing landing page issues
+| Table | Purpose |
+|---|---|
+| `users` | User accounts — username (PK), display name, email, faculty, program, grad year, exchange term, user type, password hash, destination info, UW verified flag |
+| `posts` | Photo posts linked to a username |
+| `conversations` | Messaging threads between two users |
+| `messages` | Individual messages within a conversation |
+| `course_equivalencies` | Student-submitted course matches between UW and host universities, includes `is_anonymous` flag |
+| `course_reviews` | Ratings attached to course equivalencies |
+| `user_saved_courses` | Bookmarked course equivalencies per user |
+| `timeline_milestones` | Application deadlines and checklist items, with phase, destination, and prerequisite support |
+| `profile_tags` | Tags derived from user profile (program, year, destination, school, term) |
+| `study_abroad_contacts` | Study abroad office staff contacts |
+| `academic_advisors` | Faculty-specific exchange advisors |
+| `user_expenses` | Cost-of-living estimates per user |
+| `user_ratings` | Exchange experience ratings per user |
 
+### Required migrations (run once after cloning)
 
-Cindy - Used for debugging and design aid
-* Used for making UI (e.g. flex box size) of some new components (e.g. loading screen) look more cohesive with existing components 
-* Used to make mock data for jest tests 
-* Used to help debug the syntax for the API url expression used in the stringMatching test 
+```sql
+-- UW email verification flag
+ALTER TABLE users ADD COLUMN uw_verified BOOLEAN DEFAULT FALSE;
 
-Elly - Used for debugging and UI design
-* Used to align UI elements such as the nav bar and logo
-* Used to update README with Authentication & Access Control information
+-- Anonymous course posting (Sprint 3)
+ALTER TABLE course_equivalencies ADD COLUMN is_anonymous TINYINT(1) DEFAULT 0;
+
+-- Checklist milestone type (Sprint 2)
+ALTER TABLE timeline_milestones
+  MODIFY milestone_type ENUM('UW Internal', 'Host University', 'Checklist');
+
+-- Sprint 2 fields on users
+ALTER TABLE users
+  ADD COLUMN user_type ENUM('current_exchange', 'prospective', 'alumni', 'browsing'),
+  ADD COLUMN password_hash VARCHAR(255),
+  ADD COLUMN destination_country VARCHAR(100),
+  ADD COLUMN destination_school VARCHAR(100);
+
+-- Sprint 2 fields on timeline_milestones
+ALTER TABLE timeline_milestones
+  ADD COLUMN phase ENUM('Info Session', 'Research', 'Application', 'Course Matching', 'Pre-departure Training'),
+  ADD COLUMN destination_country VARCHAR(100);
+
+-- Sprint 2 new tables
+CREATE TABLE IF NOT EXISTS study_abroad_contacts (
+  contact_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  role VARCHAR(100),
+  email VARCHAR(100),
+  phone VARCHAR(20),
+  faculty VARCHAR(100),
+  department VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS academic_advisors (
+  advisor_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100),
+  office VARCHAR(100),
+  faculty VARCHAR(100),
+  programs TEXT,
+  office_hours VARCHAR(200)
+);
+
+-- Seed contacts and advisors
+INSERT INTO study_abroad_contacts (name, role, email, phone, faculty, department) VALUES
+('Dr. Sarah Thompson',  'Study Abroad Coordinator',    'sarah.thompson@uwaterloo.ca',  '519-888-4567 x12345', NULL,          'Waterloo International'),
+('Michael Chen',        'Exchange Program Advisor',     'michael.chen@uwaterloo.ca',    '519-888-4567 x12346', NULL,          'Waterloo International'),
+('Lisa Park',           'Engineering Exchange Advisor', 'lisa.park@uwaterloo.ca',       '519-888-4567 x22101', 'Engineering', 'Engineering Undergraduate Office'),
+('James Wilson',        'Math Exchange Coordinator',    'james.wilson@uwaterloo.ca',    '519-888-4567 x33201', 'Math',        'Math Undergraduate Office'),
+('Amanda Foster',       'Arts Exchange Coordinator',    'amanda.foster@uwaterloo.ca',   '519-888-4567 x44301', 'Arts',        'Arts Undergraduate Office');
+
+INSERT INTO academic_advisors (name, email, office, faculty, programs, office_hours) VALUES
+('Prof. David Kim',     'david.kim@uwaterloo.ca',     'E7 4412',  'Engineering', 'SE,CE,ECE',      'Mon/Wed 2–4pm'),
+('Prof. Aisha Nwosu',   'aisha.nwosu@uwaterloo.ca',   'MC 5304',  'Math',        'CS,CFM,MATH',    'Tue/Thu 1–3pm'),
+('Prof. Rachel Stein',  'rachel.stein@uwaterloo.ca',  'PAS 2082', 'Arts',        'ECON,PSYCH,SOC', 'Mon/Fri 10am–12pm'),
+('Prof. Carlos Rivera', 'carlos.rivera@uwaterloo.ca', 'STC 3004', 'Science',     'BIOL,CHEM,PHYS', 'Wed 3–5pm');
+```
+
+---
+
+## Features
+
+### Exchange Timeline
+- View milestones grouped by application phase (Info Session → Research → Application → Course Matching → Pre-departure Training)
+- Filter by milestone type (UW Internal / Host University) and destination country
+- Days remaining counter on each incomplete milestone
+- Mark milestones complete / incomplete with prerequisite locking
+- Export all milestones as a `.ics` calendar file
+- Destination-specific milestone highlighting
+
+### Exchange Calendar
+- Monthly calendar view with colour-coded milestone dots
+- Filter by program type and destination
+- Click any day to see that day's deadlines in a detail panel
+- Application Checklist tab with 29 default items seeded across all 5 phases
+- Add, edit, and delete custom checklist items
+- Real-time progress bar
+
+### Course Equivalency Database
+- Search by university, course name, course code, or student name
+- Filter by continent, country, faculty, and term
+- Sort by most recently updated, average rating, or university name
+- Bookmark courses to a personal shortlist
+- View who posted each equivalency; click their name to go to their profile
+- Post anonymously — name shown as "Anonymous" to other students
+- Submit new course equivalencies with proof document upload
+- Duplicate detection and pending review status on submission
+
+### Messaging
+- Conversation list with unread counts
+- Real-time message thread view
+- Send messages to other students
+
+### Profile
+- View and edit your own profile (display name, bio, faculty, program, grad year, exchange term)
+- Photo post gallery
+- Profile tags showing program, year, destination, host school, and exchange term
+
+### Contacts & Advisors
+- Study abroad office contacts with email and phone
+- Academic advisors filtered by faculty, with office and hours information
+
+### Account Management
+- Firebase email/password authentication with UW email verification
+- User type selection (current exchange student, prospective, alumni, just browsing)
+- Delete account with password confirmation
+- Sign out
+
+---
+
+## Prerequisites
+
+Make sure you have the following installed:
+
+- **Node.js** v18+
+- **Yarn** (`npm install -g yarn`)
+- **MySQL** or **MariaDB**
+- A **Firebase project** with Email/Password auth enabled
+
+---
+
+## Environment Setup
+
+### 1. Clone the repo and install dependencies
+
+```bash
+git clone <repo-url>
+cd <project-folder>
+
+# Install server dependencies
+npm install
+
+# Install client dependencies
+cd client && npm install && cd ..
+```
+
+### 2. Configure the database connection
+
+Edit `config.js` in the project root:
+
+```js
+export default {
+  host: 'your-db-host',
+  user: 'your-db-user',
+  password: 'your-db-password',
+  database: 'your-db-name',
+  multipleStatements: true,
+};
+```
+
+### 3. Set up Firebase
+
+1. Go to [Firebase Console](https://console.firebase.google.com) → your project → Project Settings → Service Accounts
+2. Click **Generate new private key** and download the JSON file
+3. Rename it `serviceAccountKey.json` and place it in the project root
+
+> ⚠️ Never commit `serviceAccountKey.json` to version control. It is listed in `.gitignore`.
+
+### 4. Configure the React app (optional)
+
+If your backend runs on a port other than 5000, create `client/.env`:
+
+```
+REACT_APP_API_URL=http://localhost:5000
+```
+
+If you leave this blank, the React app proxies to `localhost:5000` by default (configured in `client/package.json`).
+
+### 5. Start the database
+
+```bash
+# On the course server (mse-msci-245):
+# Connect via SSH, then start your local MySQL session if needed.
+
+# On a local machine with MariaDB:
+sudo service mariadb start
+```
+
+### 6. Run database migrations
+
+Connect to your database and run all the SQL in the [Required migrations](#required-migrations-run-once-after-cloning) section above.
+
+---
+
+## Running the App
+
+### Start everything (recommended)
+
+From the project root:
+
+```bash
+yarn dev
+```
+
+This uses `concurrently` to start:
+- **Server** on `http://localhost:5000` (via Nodemon, auto-restarts on changes)
+- **Client** on `http://localhost:3000` (React dev server with hot reload)
+
+### If port 5000 is already in use
+
+```bash
+fuser -k 5000/tcp && yarn dev
+```
+
+### Start server and client separately
+
+```bash
+# Terminal 1 — backend
+yarn server
+
+# Terminal 2 — frontend
+yarn client
+```
+
+---
+
+## Running Tests
+
+All tests live co-located with their component (`ComponentName.test.jsx`).
+
+```bash
+# Run all frontend tests
+cd client
+npm test
+
+# Run tests once (no watch mode, useful for CI)
+npm test -- --watchAll=false
+```
+
+### Test coverage by component
+
+| Component | Tests |
+|---|---|
+| `CourseSearch` | Sprint 1 (search, filters, shortlist) + Sprint 2 (sort) + Sprint 3 (bookmarks, poster name) |
+| `CourseSubmit` | Sprint 1 (validation, submission) + Sprint 3 (anonymous posting) |
+| `Timeline` | Sprint 1 (milestones, progress) + Sprint 2 (phases, days remaining, destination filter) |
+| `ExchangeCalendar` | Story 1 (program/destination filters, clear, empty state) |
+| `ContactsList` | AC1–AC11 (render, search, email links, faculty badge, empty state) |
+| `AdvisorsList` | AC1–AC10 (render, search, faculty filter, programs, office hours) |
+| `DeleteAccount` | AC1–AC7 (confirm flow, password verification, farewell, redirect) |
+| `UserTypeSelect` | AC1–AC8 (options, selection, save, pre-fill) |
+| `SignOut` | AC1–AC5 (sign out, callback, navigate, confirm prompt) |
+| `UserTags` | AC1–AC8 (fetch, tag types, empty state, error handling) |
+
+---
+
+## API Reference
+
+### Authentication
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/users` | ✓ | Create a new user account |
+| `GET` | `/api/users/by-email/:email` | — | Look up user by email (for Firebase login) |
+| `POST` | `/api/auth/signout` | — | Sign out (stateless) |
+
+### Users & Profile
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/user/:username` | — | Get a user's profile |
+| `PUT` | `/api/user/:username` | ✓ | Update profile (display name, bio, faculty, etc.) |
+| `DELETE` | `/api/users/:username` | — | Delete account (requires password in body) |
+| `PUT` | `/api/users/:username/type` | — | Update user type |
+| `GET` | `/api/users/:username/tags` | — | Get profile tags |
+| `POST` | `/api/users/:username/tags` | — | Upsert profile tags from profile fields |
+| `GET` | `/api/users/:username/expenses` | — | Get cost-of-living estimates |
+| `PUT` | `/api/users/:username/expenses` | ✓ | Save cost-of-living estimates |
+| `GET` | `/api/users/:username/ratings` | — | Get exchange experience ratings |
+| `PUT` | `/api/users/:username/ratings` | ✓ | Save exchange experience ratings |
+
+### Posts
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/upload` | ✓ | Upload a photo post |
+| `GET` | `/api/posts/:username` | — | Get all posts for a user |
+| `DELETE` | `/api/posts/:id` | ✓ | Delete a post |
+
+### Messaging
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/messages-list` | — | Get conversation list (`?username=`) |
+| `GET` | `/api/conversations/:id/messages` | — | Get messages in a conversation |
+| `POST` | `/api/conversations/:id/messages` | ✓ | Send a message |
+
+### Course Equivalencies
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/courses` | — | Search courses (`?q=&country=&sort=&page=`) |
+| `GET` | `/api/courses/meta/filters` | — | Get filter dropdown options |
+| `GET` | `/api/courses/:id` | — | Get a single course with author info |
+| `GET` | `/api/courses/user/:username` | — | Get all courses submitted by a user |
+| `POST` | `/api/courses` | ✓ | Submit a new course equivalency |
+| `PUT` | `/api/courses/:id` | ✓ | Update a course equivalency |
+| `DELETE` | `/api/courses/:id` | ✓ | Delete a course equivalency |
+| `GET` | `/api/users/:username/saved-courses` | — | Get bookmarked courses |
+| `POST` | `/api/users/:username/saved-courses` | ✓ | Toggle bookmark on a course |
+
+### Timeline & Milestones
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/users/:username/milestones` | — | Get milestones (`?type=&phase=&destination=`) |
+| `POST` | `/api/users/:username/milestones` | — | Create a milestone |
+| `PATCH` | `/api/milestones/:id` | — | Update a milestone (complete, edit fields) |
+| `DELETE` | `/api/milestones/:id` | — | Delete a milestone |
+| `GET` | `/api/users/:username/milestones/export` | — | Download milestones as `.ics` file |
+
+### Contacts & Advisors
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/contacts` | — | Get all study abroad contacts |
+| `GET` | `/api/advisors` | — | Get all academic advisors |
+
+> **Auth** column: ✓ means the route requires a valid Firebase ID token in the `Authorization` header. Routes marked — are public.
+
+---
+
+## Sprint History
+
+### Sprint 1
+- Course equivalency search with filters, pagination, and partial search
+- Course equivalency submission with proof upload and validation
+- Exchange timeline with milestone tracking, prerequisites, and `.ics` export
+- User profile with photo posts and biography
+- In-app messaging between students
+
+### Sprint 2
+- Timeline phase grouping and days-remaining counter
+- Filter calendar by program type and destination
+- Study abroad contacts list
+- Academic advisors list with faculty filter
+- Sort course equivalencies by date, rating, or university
+- Delete account with password confirmation
+- User type selection
+- Sign out
+- Profile tags
+
+### Sprint 3
+- Exchange Calendar with monthly grid view and day detail panel
+- Application Checklist with 29 default items across 5 phases (add, edit, delete)
+- Bookmark course equivalencies (shortlist)
+- View and click course poster's name; anonymous posting option
+- Search course equivalencies by student name
+- Firebase authentication integrated throughout
